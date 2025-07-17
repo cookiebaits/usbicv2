@@ -2,14 +2,12 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
 import {
   ArrowLeft,
   Eye,
   EyeOff,
   Mail,
   Phone,
-  User,
   Key,
   Check,
   AlertCircle,
@@ -42,6 +40,7 @@ import { useAuth } from '@/lib/auth'
 import { apiFetch } from '@/lib/api'
 import { logout } from '@/lib/auth'
 import { formatDate, formatDateTime } from "@/lib/utils"
+import BgShadows from "@/components/ui/bgShadows"
 
 interface ProfileData {
   firstName: string
@@ -494,32 +493,14 @@ export default function ProfilePage() {
     const lastInitial = profileForm.lastName.charAt(0).toUpperCase() || ""
     return `${firstInitial}${lastInitial}` || "U"
   }
-  const [isLoggingOut, setIsLoggingOut] = useState(false)
-
-  const handleLogout = async () => {
-    setIsLoggingOut(true)
-    try {
-      await logout()
-    } catch (error) {
-      setError("Failed to log out")
-    } finally {
-      setIsLoggingOut(false)
-    }
-  }
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-primary-50 to-secondary-50">
+    <div className="min-h-screen w-full overflow-hidden relative">
+      <BgShadows />
       <div className="p-6 max-w-5xl mx-auto">
         <div className="mb-6">
-          <Button
-            variant="ghost"
-            asChild
-            className="p-0 mb-2 text-primary-700 hover:text-primary-900 hover:bg-primary-100 transition-colors"
-          >
-            <Link href="/dashboard">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Dashboard
-            </Link>
+          <Button variant="outline" size="sm" asChild className="mb-4 bg-white/60 border-primary-200 text-primary-700 hover:bg-primary-50 hover:text-primary-800 hover:border-primary-300">
+            <Link href="/dashboard"><ArrowLeft className="h-4 w-4 mr-2" />Back to Dashboard</Link>
           </Button>
           <h1 className="text-3xl font-extrabold bg-gradient-to-r from-primary-700 to-secondary-700 bg-clip-text text-transparent">
             Profile Settings
@@ -564,22 +545,19 @@ export default function ProfilePage() {
 
           <div className="md:col-span-3">
             <Tabs defaultValue="personal">
-              <TabsList className="grid w-full grid-cols-3 bg-primary-100/70 p-1 rounded-lg mb-6">
+              <TabsList className="grid w-full grid-cols-3 mb-3 bg-gray-200">
                 <TabsTrigger
                   value="personal"
-                  className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary-600 data-[state=active]:to-secondary-600 data-[state=active]:text-white rounded-md transition-all"
                 >
                   Personal
                 </TabsTrigger>
                 <TabsTrigger
                   value="security"
-                  className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary-600 data-[state=active]:to-secondary-600 data-[state=active]:text-white rounded-md transition-all"
                 >
                   Security
                 </TabsTrigger>
                 <TabsTrigger
                   value="2fa"
-                  className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary-600 data-[state=active]:to-secondary-600 data-[state=active]:text-white rounded-md transition-all"
                 >
                   Two-Factor
                 </TabsTrigger>

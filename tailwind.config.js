@@ -101,6 +101,7 @@ module.exports = {
       backgroundImage: {
         "grid-indigo-100":
           "linear-gradient(to right, rgba(224, 231, 255, 0.1) 1px, transparent 1px), linear-gradient(to bottom, rgba(224, 231, 255, 0.1) 1px, transparent 1px)",
+        'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
       },
       backgroundSize: {
         "grid-pattern": "24px 24px",

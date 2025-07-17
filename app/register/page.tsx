@@ -462,7 +462,7 @@ export default function RegisterPage() {
           //   />
           }
           <h2 className="mt-6 text-4xl font-extrabold tracking-tight bg-gradient-to-r from-primary-600 to-secondary-600 bg-clip-text text-transparent">
-            Create your account
+            Create Account
           </h2>
           <p className="mt-2 text-sm text-primary-700">
             Already have an account?{" "}
