@@ -31,20 +31,6 @@ export const formatDateTime = (date: Date | string) => {
   return `${month}/${day}/${year}, ${formattedHours}:${minutes} ${ampm}`;
 };
 
-// export const formatDateTime = (date: Date | string) => {
-//   const d = typeof date === "string" ? new Date(date) : date;
-
-//   const formattedDate = d.toLocaleDateString("en-US"); // MM/DD/YYYY format
-
-//   const formattedTime = d.toLocaleTimeString("en-US", {
-//     hour: "numeric",
-//     minute: "2-digit",
-//     hour12: true,
-//   });
-
-//   return `${formattedDate}, ${formattedTime}`;
-// };
-
 export const formatDate = (date: Date | string) => {
   const d = typeof date === "string" ? new Date(date) : date;
   const year = d.getFullYear();

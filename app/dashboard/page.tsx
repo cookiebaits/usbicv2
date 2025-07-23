@@ -2,8 +2,10 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
-import { ArrowUpRight, CreditCard, Home, LogOut, Menu, Send, User, FileText, ArrowDown, ArrowUp, RefreshCcw, Loader2 } from "lucide-react"
+import { CreditCard, Home, LogOut, Menu, Send, User, FileText, ArrowDown, ArrowUp, RefreshCcw, Loader2, Bitcoin } from "lucide-react"
 import Color from 'color'
+import { FaBitcoinSign } from "react-icons/fa6";
+
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -227,7 +229,7 @@ export default function DashboardPage() {
       case "crypto_buy":
       case "crypto_sell":
       case "bitcoin_transfer":
-        return <CreditCard className="h-5 w-5 text-purple-600" />
+        return <FaBitcoinSign className="h-5 w-5 text-purple-600" />
       default:
         return <CreditCard className="h-5 w-5 text-gray-600" />
     }
@@ -238,7 +240,7 @@ export default function DashboardPage() {
       
       <BgShadows />
 
-      <div className="flex min-h-screen w-[84%] m-auto">
+      <div className="flex min-h-screen w-[1300px] m-auto">
         {/* Mobile Navigation */}
         <Sheet>
           <SheetTrigger asChild>
@@ -304,7 +306,7 @@ export default function DashboardPage() {
                     </Button>
                     <Button variant="ghost" className="w-full justify-start text-black hover:bg-white/10" asChild>
                       <Link href="/dashboard/crypto">
-                        <ArrowUpRight className="mr-2 h-4 w-4" />
+                        <Bitcoin className="mr-2 h-4 w-4" />
                         Crypto
                       </Link>
                     </Button>
@@ -384,7 +386,7 @@ export default function DashboardPage() {
                 </Button>
                 <Button variant="ghost" className="w-[90%] justify-start text-black hover:bg-black/5" asChild>
                   <Link href="/dashboard/crypto">
-                    <ArrowUpRight className="mr-2 h-4 w-4" />
+                    <FaBitcoinSign className="mr-2 h-4 w-4" />
                     Crypto
                   </Link>
                 </Button>

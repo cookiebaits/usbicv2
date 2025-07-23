@@ -14,6 +14,9 @@ import {
   Send,
   Loader2,
   RefreshCcw,
+  Bitcoin,
+  BitcoinIcon,
+  LucideBitcoin,
 } from "lucide-react"
 import Color from 'color'
 
@@ -32,6 +35,7 @@ import { useAuth } from '@/lib/auth'
 import { apiFetch } from '@/lib/api'
 import { formatDate, formatPrice } from "@/lib/utils"
 import BgShadows from "@/components/ui/bgShadows"
+import { FaBitcoinSign } from "react-icons/fa6"
 
 // Transaction interface updated to match Code-02's backend model
 interface Transaction {
@@ -240,7 +244,7 @@ export default function TransactionsPage() {
       case "crypto_buy":
       case "crypto_sell":
       case "bitcoin_transfer":
-        return <CreditCard className="h-5 w-5 text-purple-600" />
+        return <FaBitcoinSign className="h-5 w-5 text-purple-600" />
       default:
         return <CreditCard className="h-5 w-5 text-gray-600" />
     }

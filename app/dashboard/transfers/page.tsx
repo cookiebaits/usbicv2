@@ -16,6 +16,7 @@ import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ZelleLogoProvider, useZelleLogo } from "@/app/zellLogoContext";
+import { Trash2 } from "lucide-react";
 
 import Color from "color";
 import { formatDate, formatPrice } from "@/lib/utils";
@@ -86,6 +87,12 @@ function ZelleTransfer({ checkingBalance, updateAccounts }: { checkingBalance: n
     };
     fetchAndVerifyContacts();
   }, [searchParams]);
+
+  const handleDeleteContact = (id: string) => {
+  const updatedContacts = recentContacts.filter((c) => c.id !== id);
+  setRecentContacts(updatedContacts);
+  localStorage.setItem("recentZelleContacts", JSON.stringify(updatedContacts));
+};
   
   const checkRateLimit = () => {
     const now = Date.now();
@@ -315,29 +322,46 @@ function ZelleTransfer({ checkingBalance, updateAccounts }: { checkingBalance: n
             />
           </div>
           {filteredRecent.length > 0 ? (
-            <div className="space-y-2">
-              {filteredRecent.map((contact) => (
-                <Button
-                  key={contact.id}
-                  variant="outline"
-                  className="w-full justify-start h-auto py-3 border-primary-200 hover:bg-primary-50 text-primary-900"
-                  onClick={() => handleContactSelect(contact)}
-                >
-                  <Avatar className="h-10 w-10 mr-4">
-                    <AvatarFallback className="bg-primary-100 text-primary-700">{contact.initials}</AvatarFallback>
-                  </Avatar>
-                  <div className="text-left overflow-hidden">
-                    <div className="font-medium truncate">{contact.name}</div>
-                    <div className="text-sm text-primary-600 truncate">{contact.email || contact.phone}</div>
-                  </div>
-                </Button>
-              ))}
+  <div className="space-y-2">
+    {filteredRecent.map((contact) => (
+      <div key={contact.id} className="relative">
+        <Button
+          variant="outline"
+          className="w-full justify-start h-auto py-3 pr-12 border-primary-200 hover:bg-primary-50 text-primary-900"
+          onClick={() => handleContactSelect(contact)}
+        >
+          <Avatar className="h-10 w-10 mr-4">
+            <AvatarFallback className="bg-primary-100 text-primary-700">
+              {contact.initials}
+            </AvatarFallback>
+          </Avatar>
+          <div className="text-left overflow-hidden">
+            <div className="font-medium truncate">{contact.name}</div>
+            <div className="text-sm text-primary-600 truncate">
+              {contact.email || contact.phone}
             </div>
-          ) : (
-            <div className="text-center py-8">
-              <p className="text-primary-600">No recent recipients yet</p>
-            </div>
-          )}
+          </div>
+        </Button>
+
+        {/* Delete Button */}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            handleDeleteContact(contact.id);
+          }}
+          className="absolute right-5 top-1/2 -translate-y-1/2 text-primary-500 hover:text-red-600"
+        >
+          <Trash2 className="w-4 h-4" />
+        </button>
+      </div>
+    ))}
+  </div>
+) : (
+  <div className="text-center py-8">
+    <p className="text-primary-600">No recent recipients yet</p>
+  </div>
+)}
+
         </TabsContent>
         <TabsContent value="new" className="mt-4">
           <form onSubmit={handleNewContactSubmit} className="space-y-4">

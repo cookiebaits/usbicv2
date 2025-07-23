@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { CreditCard, Home, LogOut, Menu, Plus, Settings, Users, Loader, User, AlertCircle, MoreHorizontal, Globe } from "lucide-react"
+import { CreditCard, Home, LogOut, Menu, Plus, Settings, Users, Loader, User, AlertCircle, MoreHorizontal, Globe, ArrowDown, ArrowUp, Send, FileText, RefreshCcw, Bitcoin } from "lucide-react"
 import Color from "color"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -33,6 +33,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { formatDateTime, formatPrice, formatDate } from "@/lib/utils"
+import { FaBitcoinSign } from "react-icons/fa6"
 
 interface User {
   id: string
@@ -716,20 +717,21 @@ export default function AdminDashboardPage() {
     switch (type) {
       case "deposit":
       case "interest":
-        return <CreditCard className="h-5 w-5 text-green-600" />
+        return <ArrowDown className="h-5 w-5 text-green-600" />
       case "withdrawal":
-        return <CreditCard className="h-5 w-5 text-red-600" />
+        return <ArrowUp className="h-5 w-5 text-red-600" />
       case "transfer":
-        return <CreditCard className="h-5 w-5 text-primary-600" />
+        return <Send className="h-5 w-5 text-primary-600" />
       case "payment":
         return <CreditCard className="h-5 w-5 text-orange-600" />
       case "fee":
-        return <CreditCard className="h-5 w-5 text-gray-600" />
+        return <FileText className="h-5 w-5 text Bauch-600" />
       case "refund":
-        return <CreditCard className="h-5 w-5 text-yellow-600" />
+        return <RefreshCcw className="h-5 w-5 text-yellow-600" />
       case "crypto_buy":
       case "crypto_sell":
-        return <CreditCard className="h-5 w-5 text-purple-600" />
+      case "bitcoin_transfer":
+        return <FaBitcoinSign className="h-5 w-5 text-purple-600" />
       default:
         return <CreditCard className="h-5 w-5 text-gray-600" />
     }

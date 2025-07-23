@@ -19,6 +19,8 @@ import {
   Loader2,
   Search,
   X,
+  ArrowDown,
+  Bitcoin,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -42,6 +44,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { formatDateTime, formatPrice } from "@/lib/utils";
+import { FaBitcoinSign } from "react-icons/fa6";
 
 // Interface for Colors
 interface Colors {
@@ -486,24 +489,25 @@ export default function UserTransactionsPage() {
     switch (type) {
       case "deposit":
       case "interest":
-        return <ArrowUpDown className="h-5 w-5 text-green-600" />;
+        return <ArrowDown className="h-5 w-5 text-green-600" />
       case "withdrawal":
-        return <ArrowUp className="h-5 w-5 text-red-600" />;
+        return <ArrowUp className="h-5 w-5 text-red-600" />
       case "transfer":
-        return <Send className="h-5 w-5 text-primary-600" />;
+        return <Send className="h-5 w-5 text-primary-600" />
       case "payment":
-        return <CreditCard className="h-5 w-5 text-orange-600" />;
+        return <CreditCard className="h-5 w-5 text-orange-600" />
       case "fee":
-        return <FileText className="h-5 w-5 text-gray-600" />;
+        return <FileText className="h-5 w-5 text Bauch-600" />
       case "refund":
-        return <RefreshCcw className="h-5 w-5 text-yellow-600" />;
+        return <RefreshCcw className="h-5 w-5 text-yellow-600" />
       case "crypto_buy":
       case "crypto_sell":
-        return <CreditCard className="h-5 w-5 text-purple-600" />;
+      case "bitcoin_transfer":
+        return <FaBitcoinSign className="h-5 w-5 text-purple-600" />
       default:
-        return <CreditCard className="h-5 w-5 text-gray-600" />;
+        return <CreditCard className="h-5 w-5 text-gray-600" />
     }
-  };
+  }
 
   if (loading) {
     return (

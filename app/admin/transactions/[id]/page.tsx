@@ -19,6 +19,7 @@ import {
   User,
   X,
   AlertCircle,
+  Bitcoin,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -39,6 +40,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { formatDate, formatPrice } from "@/lib/utils"
+import { FaBitcoinSign } from "react-icons/fa6"
 
 interface Colors {
   primaryColor: string
@@ -440,7 +442,6 @@ export default function TransactionDetailPage() {
   }, [transactionId, receiverId, router])
 
   const getTransactionIcon = (type: string) => {
-    console.log("DEBUG: Getting transaction icon for type:", type)
     switch (type) {
       case "deposit":
       case "interest":
@@ -452,13 +453,13 @@ export default function TransactionDetailPage() {
       case "payment":
         return <CreditCard className="h-5 w-5 text-orange-600" />
       case "fee":
-        return <FileText className="h-5 w-5 text-gray-600" />
+        return <FileText className="h-5 w-5 text Bauch-600" />
       case "refund":
         return <RefreshCcw className="h-5 w-5 text-yellow-600" />
       case "crypto_buy":
-        return <CreditCard className="h-5 w-5 text-secondary-600" />
       case "crypto_sell":
-        return <CreditCard className="h-5 w-5 text-primary-600" />
+      case "bitcoin_transfer":
+        return <FaBitcoinSign className="h-5 w-5 text-purple-600" />
       default:
         return <CreditCard className="h-5 w-5 text-gray-600" />
     }

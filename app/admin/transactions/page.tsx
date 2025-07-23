@@ -16,6 +16,7 @@ import {
   Loader2,
   ArrowLeft,
   MoreHorizontal,
+  Bitcoin,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -37,6 +38,7 @@ import {
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { DateRange } from "react-day-picker"
 import { formatDate, formatPrice } from "@/lib/utils"
+import { FaBitcoinSign } from "react-icons/fa6"
 
 interface Colors {
   primaryColor: string
@@ -365,7 +367,7 @@ export default function AdminTransactionsPage() {
       case "crypto_buy":
       case "crypto_sell":
       case "bitcoin_transfer":
-        return <CreditCard className="h-5 w-5 text-purple-600" />
+        return <FaBitcoinSign className="h-5 w-5 text-purple-600" />
       default:
         return <CreditCard className="h-5 w-5 text-gray-600" />
     }
