@@ -1,1 +1,1 @@
-- Redesigned the User Side
+- Redesigned the Complete Side

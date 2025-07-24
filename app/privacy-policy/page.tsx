@@ -3,10 +3,10 @@
 import { useState, useEffect, useMemo, JSX, Suspense } from "react"; // Added Suspense
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import Color from "color";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { LogoProvider, useLogo } from "@/app/logoContext";
+import { useLogo } from "@/app/logoContext";
+import { fetchColors } from "@/lib/utils";
 
 // Define interfaces for component props
 interface DecorativeCircleProps {
@@ -220,10 +220,6 @@ function BackLinkButton() {
 export default function PrivacyPolicyPage() {
     const { logoUrl } = useLogo();
   const [settings, setSettings] = useState<any>(null);
-  const [colors, setColors] = useState<{
-    primaryColor: string;
-    secondaryColor: string;
-  } | null>(null);
   const [privacyData, setPrivacyData] = useState<{
     privacyPolicy: string;
     updatedAt: string;
@@ -254,52 +250,7 @@ export default function PrivacyPolicyPage() {
 
   // Fetch colors and set CSS variables
   useEffect(() => {
-    const fetchColors = async () => {
-      try {
-        const response = await fetch("/api/colors");
-        if (response.ok) {
-          const data = await response.json();
-          setColors(data);
 
-          const primary = Color(data.primaryColor);
-          const secondary = Color(data.secondaryColor);
-
-          const generateShades = (color: typeof Color.prototype) => ({
-            50: color.lighten(0.5).hex(),
-            100: color.lighten(0.4).hex(),
-            200: color.lighten(0.3).hex(),
-            300: color.lighten(0.2).hex(),
-            400: color.lighten(0.1).hex(),
-            500: color.hex(),
-            600: color.darken(0.1).hex(),
-            700: color.darken(0.2).hex(),
-            800: color.darken(0.3).hex(),
-            900: color.darken(0.4).hex(),
-          });
-
-          const primaryShades = generateShades(primary);
-          const secondaryShades = generateShades(secondary);
-
-          Object.entries(primaryShades).forEach(([shade, color]) => {
-            document.documentElement.style.setProperty(
-              `--primary-${shade}`,
-              color
-            );
-          });
-
-          Object.entries(secondaryShades).forEach(([shade, color]) => {
-            document.documentElement.style.setProperty(
-              `--secondary-${shade}`,
-              color
-            );
-          });
-        } else {
-          console.error("Failed to fetch colors");
-        }
-      } catch (error) {
-        console.error("Error fetching colors:", error);
-      }
-    };
     fetchColors();
   }, []);
 

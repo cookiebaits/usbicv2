@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
-import Color from "color"
 import { ArrowLeft, Check, Loader2, MoreHorizontal, Plus, Search, X } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -28,7 +27,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Checkbox } from "@/components/ui/checkbox"
-import { formatDateTime, formatPrice } from "@/lib/utils"
+import { fetchColors, formatDateTime, formatPrice } from "@/lib/utils"
 
 // Interface for Colors
 interface Colors {
@@ -66,48 +65,8 @@ export default function UsersPage() {
   const [isApproveDialogOpen, setIsApproveDialogOpen] = useState(false)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
 
-  // Colors state
-  const [colors, setColors] = useState<Colors | null>(null)
-
   // Fetch colors and set CSS custom properties
   useEffect(() => {
-    const fetchColors = async () => {
-      try {
-        const response = await fetch("/api/colors")
-        if (!response.ok) throw new Error("Failed to fetch colors")
-        const data: Colors = await response.json()
-        setColors(data)
-
-        const primary = Color(data.primaryColor)
-        const secondary = Color(data.secondaryColor)
-
-        const generateShades = (color: typeof Color.prototype) => ({
-          50: color.lighten(0.5).hex(),
-          100: color.lighten(0.4).hex(),
-          200: color.lighten(0.3).hex(),
-          300: color.lighten(0.2).hex(),
-          400: color.lighten(0.1).hex(),
-          500: color.hex(),
-          600: color.darken(0.1).hex(),
-          700: color.darken(0.2).hex(),
-          800: color.darken(0.3).hex(),
-          900: color.darken(0.4).hex(),
-        })
-
-        const primaryShades = generateShades(primary)
-        const secondaryShades = generateShades(secondary)
-
-        Object.entries(primaryShades).forEach(([shade, color]) => {
-          document.documentElement.style.setProperty(`--primary-${shade}`, color)
-        })
-
-        Object.entries(secondaryShades).forEach(([shade, color]) => {
-          document.documentElement.style.setProperty(`--secondary-${shade}`, color)
-        })
-      } catch (error) {
-        console.error("Error fetching colors:", error)
-      }
-    }
     fetchColors()
   }, [])
 
@@ -350,17 +309,10 @@ export default function UsersPage() {
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-primary-50 to-secondary-50">
       <div className="p-6 max-w-7xl mx-auto">
-        <Button
-          variant="ghost"
-          asChild
-          className="p-0 mb-2 text-primary-700 hover:text-primary-900 hover:bg-primary-100 transition-colors"
-        >
-          <Link href="/admin/dashboard">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Dashboard
-          </Link>
-        </Button>
-        <h1 className="text-2xl font-bold bg-gradient-to-r from-primary-700 to-secondary-700 bg-clip-text text-transparent">
+        <Button variant="outline" size="sm" asChild className="mb-4 bg-white/60 border-primary-200 text-primary-700 hover:bg-primary-50 hover:text-primary-800 hover:border-primary-300">
+            <Link href="/admin/dashboard"><ArrowLeft className="h-4 w-4 mr-2" />Back to Dashboard</Link>
+          </Button>
+        <h1 className="text-2xl mb-4 font-bold bg-gradient-to-r from-primary-700 to-secondary-700 bg-clip-text text-transparent">
           User Management
         </h1>
 

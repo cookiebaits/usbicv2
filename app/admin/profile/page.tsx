@@ -12,6 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { fetchColors } from "@/lib/utils";
 
 interface Colors {
   primaryColor: string;
@@ -45,43 +46,6 @@ export default function AdminProfilePage() {
   const [colors, setColors] = useState<Colors | null>(null);
 
   useEffect(() => {
-    const fetchColors = async () => {
-      try {
-        const response = await fetch("/api/colors");
-        if (!response.ok) throw new Error("Failed to fetch colors");
-        const data: Colors = await response.json();
-        setColors(data);
-
-        const primary = Color(data.primaryColor);
-        const secondary = Color(data.secondaryColor);
-
-        const generateShades = (color: typeof Color.prototype) => ({
-          50: color.lighten(0.5).hex(),
-          100: color.lighten(0.4).hex(),
-          200: color.lighten(0.3).hex(),
-          300: color.lighten(0.2).hex(),
-          400: color.lighten(0.1).hex(),
-          500: color.hex(),
-          600: color.darken(0.1).hex(),
-          700: color.darken(0.2).hex(),
-          800: color.darken(0.3).hex(),
-          900: color.darken(0.4).hex(),
-        });
-
-        const primaryShades = generateShades(primary);
-        const secondaryShades = generateShades(secondary);
-
-        Object.entries(primaryShades).forEach(([shade, color]) => {
-          document.documentElement.style.setProperty(`--primary-${shade}`, color);
-        });
-
-        Object.entries(secondaryShades).forEach(([shade, color]) => {
-          document.documentElement.style.setProperty(`--secondary-${shade}`, color);
-        });
-      } catch (error) {
-        console.error("Error fetching colors:", error);
-      }
-    };
     fetchColors();
   }, []);
 
@@ -267,7 +231,7 @@ export default function AdminProfilePage() {
               <CardContent className="pt-6">
                 <div className="flex flex-col items-center text-center">
                   <Avatar className="h-24 w-24 mb-4 border-4 border-primary-100">
-                    <AvatarFallback className="bg-gradient-to-br from-primary-500 to-secondary-500 text-white">
+                    <AvatarFallback className="bg-primary-50 text-black">
                       {profile.username[0]?.toUpperCase() || 'A'}
                     </AvatarFallback>
                   </Avatar>
@@ -283,16 +247,14 @@ export default function AdminProfilePage() {
 
           <div className="md:col-span-3">
             <Tabs defaultValue="profile">
-              <TabsList className="grid w-full grid-cols-2 bg-primary-100/70 p-1 rounded-lg">
+              <TabsList className="grid w-full grid-cols-2 bg-gray-300 border border-gray-300">
                 <TabsTrigger
                   value="profile"
-                  className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary-600 data-[state=active]:to-secondary-600 data-[state=active]:text-white rounded-md transition-all"
                 >
                   Profile
                 </TabsTrigger>
                 <TabsTrigger
                   value="security"
-                  className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary-600 data-[state=active]:to-secondary-600 data-[state=active]:text-white rounded-md transition-all"
                 >
                   Security
                 </TabsTrigger>

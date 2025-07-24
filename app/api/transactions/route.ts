@@ -16,7 +16,6 @@ export async function GET(req: NextRequest) {
     const decoded = jwt.verify(token, JWT_SECRET) as { userId: string };
     const transactions = await Transaction.find({ userId: decoded.userId })
       .sort({ date: -1 })
-      .limit(10);
     return NextResponse.json({ transactions });
   } catch (error) {
     console.error("Error fetching transactions:", error);

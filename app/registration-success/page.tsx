@@ -4,10 +4,10 @@ import { useState, useEffect } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { CheckCircle, Clock, Mail } from "lucide-react"
-import Color from 'color'
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { fetchColors } from "@/lib/utils"
 
 export default function RegistrationSuccessPage() {
   const router = useRouter()
@@ -15,46 +15,7 @@ export default function RegistrationSuccessPage() {
 
   // Fetch colors
   useEffect(() => {
-    const fetchColors = async () => {
-      try {
-        const response = await fetch('/api/colors')
-        if (response.ok) {
-          const data = await response.json()
-          setColors(data)
 
-          const primary = Color(data.primaryColor)
-          const secondary = Color(data.secondaryColor)
-
-          const generateShades = (color: typeof Color.prototype) => ({
-            50: color.lighten(0.5).hex(),
-            100: color.lighten(0.4).hex(),
-            200: color.lighten(0.3).hex(),
-            300: color.lighten(0.2).hex(),
-            400: color.lighten(0.1).hex(),
-            500: color.hex(),
-            600: color.darken(0.1).hex(),
-            700: color.darken(0.2).hex(),
-            800: color.darken(0.3).hex(),
-            900: color.darken(0.4).hex(),
-          })
-
-          const primaryShades = generateShades(primary)
-          const secondaryShades = generateShades(secondary)
-
-          Object.entries(primaryShades).forEach(([shade, color]) => {
-            document.documentElement.style.setProperty(`--primary-${shade}`, color)
-          })
-
-          Object.entries(secondaryShades).forEach(([shade, color]) => {
-            document.documentElement.style.setProperty(`--secondary-${shade}`, color)
-          })
-        } else {
-          console.error('Failed to fetch colors')
-        }
-      } catch (error) {
-        console.error('Error fetching colors:', error)
-      }
-    }
     fetchColors()
   }, [])
 

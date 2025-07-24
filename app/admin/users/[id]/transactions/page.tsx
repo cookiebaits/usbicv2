@@ -3,7 +3,6 @@
 import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import Color from "color";
 import {
   ArrowLeft,
   ArrowUp,
@@ -43,8 +42,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { formatDateTime, formatPrice } from "@/lib/utils";
+import { fetchColors, formatDateTime, formatPrice } from "@/lib/utils";
 import { FaBitcoinSign } from "react-icons/fa6";
+import { useZelleLogo } from "@/app/zellLogoContext";
 
 // Interface for Colors
 interface Colors {
@@ -105,7 +105,6 @@ export default function UserTransactionsPage() {
   const [loading, setLoading] = useState(true);
   const [success, setSuccess] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [colors, setColors] = useState<Colors | null>(null);
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
@@ -119,51 +118,10 @@ export default function UserTransactionsPage() {
   const [dateFilter, setDateFilter] = useState<string>("all");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
   const [sortField, setSortField] = useState<string>("date");
+  const { zelleLogoUrl } = useZelleLogo();
 
   // Fetch colors and set CSS custom properties
   useEffect(() => {
-    const fetchColors = async () => {
-      try {
-        const response = await fetch("/api/colors");
-        if (!response.ok) throw new Error("Failed to fetch colors");
-        const data: Colors = await response.json();
-        setColors(data);
-
-        const primary = Color(data.primaryColor);
-        const secondary = Color(data.secondaryColor);
-
-        const generateShades = (color: typeof Color.prototype) => ({
-          50: color.lighten(0.5).hex(),
-          100: color.lighten(0.4).hex(),
-          200: color.lighten(0.3).hex(),
-          300: color.lighten(0.2).hex(),
-          400: color.lighten(0.1).hex(),
-          500: color.hex(),
-          600: color.darken(0.1).hex(),
-          700: color.darken(0.2).hex(),
-          800: color.darken(0.3).hex(),
-          900: color.darken(0.4).hex(),
-        });
-
-        const primaryShades = generateShades(primary);
-        const secondaryShades = generateShades(secondary);
-
-        Object.entries(primaryShades).forEach(([shade, color]) => {
-          document.documentElement.style.setProperty(
-            `--primary-${shade}`,
-            color
-          );
-        });
-        Object.entries(secondaryShades).forEach(([shade, color]) => {
-          document.documentElement.style.setProperty(
-            `--secondary-${shade}`,
-            color
-          );
-        });
-      } catch (error) {
-        console.error("Error fetching colors:", error);
-      }
-    };
     fetchColors();
   }, []);
 
@@ -275,9 +233,8 @@ export default function UserTransactionsPage() {
           grouped.push({
             id: transferId,
             userIds,
-            description: `Zelle transfer from ${sender.name || "Unknown"} to ${
-              receiver.name || "Unknown"
-            }`,
+            description: `Zelle transfer from ${sender.name || "Unknown"} to ${receiver.name || "Unknown"
+              }`,
             date,
             amount: Math.abs(senderTx.amount),
             status,
@@ -336,14 +293,13 @@ export default function UserTransactionsPage() {
               grouped.push({
                 id: `${senderTx.id}-${receiverTx.id}`,
                 userIds: [senderTx.userId, receiverTx.userId],
-                description: `Zelle transfer from ${
-                  sender.name || "Unknown"
-                } to ${receiver.name || "Unknown"}`,
+                description: `Zelle transfer from ${sender.name || "Unknown"
+                  } to ${receiver.name || "Unknown"}`,
                 date,
                 amount: Math.abs(senderTx.amount),
                 status:
                   senderTx.status === "completed" &&
-                  receiverTx.status === "completed"
+                    receiverTx.status === "completed"
                     ? "completed"
                     : "pending",
                 accounts: [senderTx.account, receiverTx.account],
@@ -504,6 +460,12 @@ export default function UserTransactionsPage() {
       case "crypto_sell":
       case "bitcoin_transfer":
         return <FaBitcoinSign className="h-5 w-5 text-purple-600" />
+      case "zelle":
+        return zelleLogoUrl ? <img
+          src={zelleLogoUrl || "/default-logo.png"}
+          alt="Zelle Logo"
+          className="h-4 w-auto"
+        /> : <CreditCard className="h-5 w-5 text-gray-600" />;
       default:
         return <CreditCard className="h-5 w-5 text-gray-600" />
     }
@@ -842,15 +804,15 @@ export default function UserTransactionsPage() {
                                 group.status === "completed"
                                   ? "default"
                                   : group.status === "pending"
-                                  ? "secondary"
-                                  : "destructive"
+                                    ? "secondary"
+                                    : "destructive"
                               }
                               className={
                                 group.status === "completed"
                                   ? "bg-green-100 text-green-800 border-green-200 hover:bg-green-200"
                                   : group.status === "pending"
-                                  ? "bg-amber-100 text-amber-800 border-amber-200 hover:bg-amber-200"
-                                  : "bg-red-100 text-red-800 border-red-200 hover:bg-red-200"
+                                    ? "bg-amber-100 text-amber-800 border-amber-200 hover:bg-amber-200"
+                                    : "bg-red-100 text-red-800 border-red-200 hover:bg-red-200"
                               }
                             >
                               {group.status.charAt(0).toUpperCase() +

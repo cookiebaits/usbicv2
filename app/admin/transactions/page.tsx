@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import Color from "color"
 import {
   ArrowDown,
   ArrowUp,
@@ -16,7 +15,6 @@ import {
   Loader2,
   ArrowLeft,
   MoreHorizontal,
-  Bitcoin,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -37,8 +35,9 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { DateRange } from "react-day-picker"
-import { formatDate, formatPrice } from "@/lib/utils"
+import { fetchColors, formatDate, formatPrice } from "@/lib/utils"
 import { FaBitcoinSign } from "react-icons/fa6"
+import { useZelleLogo } from "@/app/zellLogoContext"
 
 interface Colors {
   primaryColor: string
@@ -97,41 +96,9 @@ export default function AdminTransactionsPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
-  const [colors, setColors] = useState<Colors | null>(null)
+  const { zelleLogoUrl } = useZelleLogo();
 
   useEffect(() => {
-    const fetchColors = async () => {
-      try {
-        const response = await fetch("/api/colors")
-        if (!response.ok) throw new Error("Failed to fetch colors")
-        const data: Colors = await response.json()
-        setColors(data)
-        const primary = Color(data.primaryColor)
-        const secondary = Color(data.secondaryColor)
-        const generateShades = (color: typeof Color.prototype) => ({
-          50: color.lighten(0.5).hex(),
-          100: color.lighten(0.4).hex(),
-          200: color.lighten(0.3).hex(),
-          300: color.lighten(0.2).hex(),
-          400: color.lighten(0.1).hex(),
-          500: color.hex(),
-          600: color.darken(0.1).hex(),
-          700: color.darken(0.2).hex(),
-          800: color.darken(0.3).hex(),
-          900: color.darken(0.4).hex(),
-        })
-        const primaryShades = generateShades(primary)
-        const secondaryShades = generateShades(secondary)
-        Object.entries(primaryShades).forEach(([shade, color]) => {
-          document.documentElement.style.setProperty(`--primary-${shade}`, color)
-        })
-        Object.entries(secondaryShades).forEach(([shade, color]) => {
-          document.documentElement.style.setProperty(`--secondary-${shade}`, color)
-        })
-      } catch (error) {
-        console.error("Error fetching colors:", error)
-      }
-    }
     fetchColors()
   }, [])
 
@@ -368,6 +335,12 @@ export default function AdminTransactionsPage() {
       case "crypto_sell":
       case "bitcoin_transfer":
         return <FaBitcoinSign className="h-5 w-5 text-purple-600" />
+      case "zelle":
+        return zelleLogoUrl ? <img
+          src={zelleLogoUrl || "/default-logo.png"}
+          alt="Zelle Logo"
+          className="h-4 w-auto"
+        /> : <CreditCard className="h-5 w-5 text-gray-600" />;
       default:
         return <CreditCard className="h-5 w-5 text-gray-600" />
     }
@@ -404,13 +377,10 @@ export default function AdminTransactionsPage() {
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-primary-50 to-secondary-50">
       <div className="p-6 max-w-7xl mx-auto">
-        <Button variant="ghost" asChild className="p-0 mb-2 text-primary-700 hover:text-primary-900 hover:bg-primary-100">
-          <Link href="/admin/dashboard">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Dashboard
-          </Link>
+        <Button variant="outline" size="sm" asChild className="mb-4 bg-white/60 border-primary-200 text-primary-700 hover:bg-primary-50 hover:text-primary-800 hover:border-primary-300">
+          <Link href="/admin/dashboard"><ArrowLeft className="h-4 w-4 mr-2" />Back to Dashboard</Link>
         </Button>
-        <h1 className="text-2xl font-bold bg-gradient-to-r from-primary-700 to-secondary-700 bg-clip-text text-transparent">
+        <h1 className="text-2xl mb-4 font-bold bg-gradient-to-r from-primary-700 to-secondary-700 bg-clip-text text-transparent">
           Transaction Management
         </h1>
         {error && (

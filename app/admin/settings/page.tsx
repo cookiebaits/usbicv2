@@ -112,31 +112,30 @@ export default function AdminSettingsPage() {
           setColors(colorsData);
 
           const primary = Color(colorsData.primaryColor || "#5f6cd3");
-          const secondary = Color(colorsData.secondaryColor || "#9c65d2");
+          // const secondary = Color(colorsData.secondaryColor || "#9c65d2");
 
           const generateShades = (color: typeof Color.prototype) => ({
-            50: color.lighten(0.5).hex(),
-            100: color.lighten(0.4).hex(),
-            200: color.lighten(0.3).hex(),
-            300: color.lighten(0.2).hex(),
-            400: color.lighten(0.1).hex(),
+            50: color.mix(Color('white'), 0.9).hex(),
+            100: color.mix(Color('white'), 0.8).hex(),
+            200: color.mix(Color('white'), 0.6).hex(),
+            300: color.mix(Color('white'), 0.4).hex(),
+            400: color.mix(Color('white'), 0.2).hex(),
             500: color.hex(),
-            600: color.darken(0.1).hex(),
-            700: color.darken(0.2).hex(),
-            800: color.darken(0.3).hex(),
-            900: color.darken(0.4).hex(),
-          });
-
+            600: color.mix(Color('black'), 0.1).hex(),
+            700: color.mix(Color('black'), 0.2).hex(),
+            800: color.mix(Color('black'), 0.3).hex(),
+            900: color.mix(Color('black'), 0.4).hex(),
+          })
           const primaryShades = generateShades(primary);
-          const secondaryShades = generateShades(secondary);
+          // const secondaryShades = generateShades(secondary);
 
           Object.entries(primaryShades).forEach(([shade, color]) => {
             document.documentElement.style.setProperty(`--primary-${shade}`, color);
           });
 
-          Object.entries(secondaryShades).forEach(([shade, color]) => {
-            document.documentElement.style.setProperty(`--secondary-${shade}`, color);
-          });
+          // Object.entries(secondaryShades).forEach(([shade, color]) => {
+          //   document.documentElement.style.setProperty(`--secondary-${shade}`, color);
+          // });
         } else {
           console.error('Failed to fetch colors');
         }
@@ -249,16 +248,9 @@ export default function AdminSettingsPage() {
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-primary-50 to-secondary-50">
       <div className="p-6 max-w-5xl mx-auto">
-        <Button
-          variant="ghost"
-          asChild
-          className="p-0 mb-2 text-primary-700 hover:text-primary-900 hover:bg-primary-100 transition-colors"
-        >
-          <Link href="/admin/dashboard">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Dashboard
-          </Link>
-        </Button>
+        <Button variant="outline" size="sm" asChild className="mb-4 bg-white/60 border-primary-200 text-primary-700 hover:bg-primary-50 hover:text-primary-800 hover:border-primary-300">
+            <Link href="/admin/dashboard"><ArrowLeft className="h-4 w-4 mr-2" />Back to Dashboard</Link>
+          </Button>
         <h1 className="text-2xl font-bold bg-gradient-to-r from-primary-700 to-secondary-700 bg-clip-text text-transparent">
           Admin Settings
         </h1>
@@ -276,17 +268,15 @@ export default function AdminSettingsPage() {
         )}
 
         <Tabs defaultValue="general">
-          <TabsList className="grid w-full grid-cols-2 mb-6 bg-primary-100/70 p-1 rounded-lg">
+          <TabsList className="grid w-full grid-cols-2 mt-6 bg-gray-300 border border-gray-300">
             <TabsTrigger
               value="general"
-              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary-600 data-[state=active]:to-secondary-600 data-[state=active]:text-white rounded-md transition-all"
             >
               <Globe className="mr-2 h-4 w-4" />
               General
             </TabsTrigger>
             <TabsTrigger
               value="appearance"
-              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary-600 data-[state=active]:to-secondary-600 data-[state=active]:text-white rounded-md transition-all"
             >
               <Palette className="mr-2 h-4 w-4" />
               Appearance
@@ -476,7 +466,7 @@ export default function AdminSettingsPage() {
                     />
                   </div>
                 </div>
-                <div className="space-y-2">
+                {/* <div className="space-y-2">
                   <Label htmlFor="secondaryColor" className="text-primary-800">
                     Secondary Color
                   </Label>
@@ -496,123 +486,123 @@ export default function AdminSettingsPage() {
                       className="border-primary-200 bg-white/80 focus:border-primary-300 focus:ring focus:ring-primary-200 focus:ring-opacity-50"
                     />
                   </div>
+                </div> */}
+                <div className="space-y-2">
+                  <Label className="text-primary-800">Site Logo</Label>
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2">
+                      <Input
+                        id="logoUpload"
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => handleLogoUpload(e, "logoUrl")}
+                        className="hidden"
+                      />
+                      <Button
+                        variant="outline"
+                        onClick={() => document.getElementById("logoUpload")?.click()}
+                        className="bg-white/60 border-primary-200 text-primary-700 hover:bg-primary-50 hover:text-primary-800 hover:border-primary-300"
+                      >
+                        <Upload className="mr-2 h-4 w-4" />
+                        Upload Logo
+                      </Button>
+                    </div>
+                    {settings.logoUrl && (
+                      <img
+                        src={settings.logoUrl}
+                        alt="Logo preview"
+                        style={{
+                          width: settings.logoWidth > 0 ? `${settings.logoWidth}px` : '100px',
+                          height: settings.logoHeight > 0 ? `${settings.logoHeight}px` : 'auto',
+                        }}
+                        className="rounded"
+                        loading="lazy"
+                      />
+                    )}
+                  </div>
+                  <div className="mt-2 grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="logoWidth" className="text-primary-800">Width (px)</Label>
+                      <Input
+                        id="logoWidth"
+                        name="logoWidth"
+                        type="number"
+                        value={settings.logoWidth || ''}
+                        onChange={handleChange}
+                        className="border-primary-200 bg-white/80 focus:border-primary-300 focus:ring focus:ring-primary-200 focus:ring-opacity-50"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="logoHeight" className="text-primary-800">Height (px)</Label>
+                      <Input
+                        id="logoHeight"
+                        name="logoHeight"
+                        type="number"
+                        value={settings.logoHeight || ''}
+                        onChange={handleChange}
+                        className="border-primary-200 bg-white/80 focus:border-primary-300 focus:ring focus:ring-primary-200 focus:ring-opacity-50"
+                      />
+                    </div>
+                  </div>
                 </div>
                 <div className="space-y-2">
-  <Label className="text-primary-800">Site Logo</Label>
-  <div className="flex items-center gap-4">
-    <div className="flex items-center gap-2">
-      <Input
-        id="logoUpload"
-        type="file"
-        accept="image/*"
-        onChange={(e) => handleLogoUpload(e, "logoUrl")}
-        className="hidden"
-      />
-      <Button
-        variant="outline"
-        onClick={() => document.getElementById("logoUpload")?.click()}
-        className="bg-white/60 border-primary-200 text-primary-700 hover:bg-primary-50 hover:text-primary-800 hover:border-primary-300"
-      >
-        <Upload className="mr-2 h-4 w-4" />
-        Upload Logo
-      </Button>
-    </div>
-    {settings.logoUrl && (
-      <img
-        src={settings.logoUrl}
-        alt="Logo preview"
-        style={{
-          width: settings.logoWidth > 0 ? `${settings.logoWidth}px` : '100px',
-          height: settings.logoHeight > 0 ? `${settings.logoHeight}px` : 'auto',
-        }}
-        className="rounded"
-        loading="lazy"
-      />
-    )}
-  </div>
-  <div className="mt-2 grid grid-cols-2 gap-4">
-    <div className="space-y-2">
-      <Label htmlFor="logoWidth" className="text-primary-800">Width (px)</Label>
-      <Input
-        id="logoWidth"
-        name="logoWidth"
-        type="number"
-        value={settings.logoWidth || ''}
-        onChange={handleChange}
-        className="border-primary-200 bg-white/80 focus:border-primary-300 focus:ring focus:ring-primary-200 focus:ring-opacity-50"
-      />
-    </div>
-    <div className="space-y-2">
-      <Label htmlFor="logoHeight" className="text-primary-800">Height (px)</Label>
-      <Input
-        id="logoHeight"
-        name="logoHeight"
-        type="number"
-        value={settings.logoHeight || ''}
-        onChange={handleChange}
-        className="border-primary-200 bg-white/80 focus:border-primary-300 focus:ring focus:ring-primary-200 focus:ring-opacity-50"
-      />
-    </div>
-  </div>
-</div>
-<div className="space-y-2">
-  <Label className="text-primary-800">Zelle Logo</Label>
-  <div className="flex items-center gap-4">
-    <div className="flex items-center gap-2">
-      <Input
-        id="zelleLogoUpload"
-        type="file"
-        accept="image/*"
-        onChange={(e) => handleLogoUpload(e, "zelleLogoUrl")}
-        className="hidden"
-      />
-      <Button
-        variant="outline"
-        onClick={() => document.getElementById("zelleLogoUpload")?.click()}
-        className="bg-white/60 border-primary-200 text-primary-700 hover:bg-primary-50 hover:text-primary-800 hover:border-primary-300"
-      >
-        <Upload className="mr-2 h-4 w-4" />
-        Upload Zelle Logo
-      </Button>
-    </div>
-    {settings.zelleLogoUrl && (
-      <img
-        src={settings.zelleLogoUrl}
-        alt="Zelle Logo preview"
-        style={{
-          width: settings.zelleLogoWidth > 0 ? `${settings.zelleLogoWidth}px` : '100px',
-          height: settings.zelleLogoHeight > 0 ? `${settings.zelleLogoHeight}px` : 'auto',
-        }}
-        className="rounded"
-        loading="lazy"
-      />
-    )}
-  </div>
-  <div className="mt-2 grid grid-cols-2 gap-4">
-    <div className="space-y-2">
-      <Label htmlFor="zelleLogoWidth" className="text-primary-800">Width (px)</Label>
-      <Input
-        id="zelleLogoWidth"
-        name="zelleLogoWidth"
-        type="number"
-        value={settings.zelleLogoWidth || ''}
-        onChange={handleChange}
-        className="border-primary-200 bg-white/80 focus:border-primary-300 focus:ring focus:ring-primary-200 focus:ring-opacity-50"
-      />
-    </div>
-    <div className="space-y-2">
-      <Label htmlFor="zelleLogoHeight" className="text-primary-800">Height (px)</Label>
-      <Input
-        id="zelleLogoHeight"
-        name="zelleLogoHeight"
-        type="number"
-        value={settings.zelleLogoHeight || ''}
-        onChange={handleChange}
-        className="border-primary-200 bg-white/80 focus:border-primary-300 focus:ring focus:ring-primary-200 focus:ring-opacity-50"
-      />
-    </div>
-  </div>
-</div>
+                  <Label className="text-primary-800">Zelle Logo</Label>
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2">
+                      <Input
+                        id="zelleLogoUpload"
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => handleLogoUpload(e, "zelleLogoUrl")}
+                        className="hidden"
+                      />
+                      <Button
+                        variant="outline"
+                        onClick={() => document.getElementById("zelleLogoUpload")?.click()}
+                        className="bg-white/60 border-primary-200 text-primary-700 hover:bg-primary-50 hover:text-primary-800 hover:border-primary-300"
+                      >
+                        <Upload className="mr-2 h-4 w-4" />
+                        Upload Zelle Logo
+                      </Button>
+                    </div>
+                    {settings.zelleLogoUrl && (
+                      <img
+                        src={settings.zelleLogoUrl}
+                        alt="Zelle Logo preview"
+                        style={{
+                          width: settings.zelleLogoWidth > 0 ? `${settings.zelleLogoWidth}px` : '100px',
+                          height: settings.zelleLogoHeight > 0 ? `${settings.zelleLogoHeight}px` : 'auto',
+                        }}
+                        className="rounded"
+                        loading="lazy"
+                      />
+                    )}
+                  </div>
+                  <div className="mt-2 grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="zelleLogoWidth" className="text-primary-800">Width (px)</Label>
+                      <Input
+                        id="zelleLogoWidth"
+                        name="zelleLogoWidth"
+                        type="number"
+                        value={settings.zelleLogoWidth || ''}
+                        onChange={handleChange}
+                        className="border-primary-200 bg-white/80 focus:border-primary-300 focus:ring focus:ring-primary-200 focus:ring-opacity-50"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="zelleLogoHeight" className="text-primary-800">Height (px)</Label>
+                      <Input
+                        id="zelleLogoHeight"
+                        name="zelleLogoHeight"
+                        type="number"
+                        value={settings.zelleLogoHeight || ''}
+                        onChange={handleChange}
+                        className="border-primary-200 bg-white/80 focus:border-primary-300 focus:ring focus:ring-primary-200 focus:ring-opacity-50"
+                      />
+                    </div>
+                  </div>
+                </div>
                 <div className="space-y-2">
                   <Label className="text-primary-800">Account Icons</Label>
                   <div className="grid grid-cols-2 gap-4">
@@ -675,15 +665,15 @@ export default function AdminSettingsPage() {
                           <span className="font-bold">{settings.siteName}</span>
                         </div>
                         <div className="flex gap-2">
-                          <Button style={{ backgroundColor: settings.primaryColor , color: '#ffffff' }}>
+                          <Button style={{ backgroundColor: settings.primaryColor, color: '#ffffff' }}>
                             Primary Button
                           </Button>
                           <Button variant="outline">Secondary Button</Button>
                         </div>
-                        <div className="mt-2 flex items-center gap-2">
+                        {/* <div className="mt-2 flex items-center gap-2">
                           <div style={{ backgroundColor: settings.secondaryColor, width: '20px', height: '20px', borderRadius: '4px' }}></div>
                           <span className="text-sm text-gray-600">Secondary Color</span>
-                        </div>
+                        </div> */}
                       </div>
                     </div>
                   </div>

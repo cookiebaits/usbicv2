@@ -9,8 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import Color from "color";
-import { LogoProvider, useLogo } from "@/app/logoContext";
+import { useLogo } from "@/app/logoContext";
+import { fetchColors } from "@/lib/utils";
 
 
 export default function LoginPage() {
@@ -26,45 +26,10 @@ export default function LoginPage() {
   const [isTwoFactorLoading, setIsTwoFactorLoading] = useState(false);
   const [showTwoFactor, setShowTwoFactor] = useState(false);
   const [twoFactorCode, setTwoFactorCode] = useState("");
-  const [colors, setColors] = useState<{ primaryColor: string; secondaryColor: string } | null>(null);
   const [settings, setSettings] = useState<any>(null);
 
   useEffect(() => {
-    const fetchColors = async () => {
-      try {
-        const response = await fetch("/api/colors");
-        if (response.ok) {
-          const data = await response.json();
-          setColors(data);
-          const primary = Color(data.primaryColor);
-          const secondary = Color(data.secondaryColor);
-          const generateShades = (color: typeof Color.prototype) => ({
-            50: color.lighten(0.5).hex(),
-            100: color.lighten(0.4).hex(),
-            200: color.lighten(0.3).hex(),
-            300: color.lighten(0.2).hex(),
-            400: color.lighten(0.1).hex(),
-            500: color.hex(),
-            600: color.darken(0.1).hex(),
-            700: color.darken(0.2).hex(),
-            800: color.darken(0.3).hex(),
-            900: color.darken(0.4).hex(),
-          });
-          const primaryShades = generateShades(primary);
-          const secondaryShades = generateShades(secondary);
-          Object.entries(primaryShades).forEach(([shade, color]) => {
-            document.documentElement.style.setProperty(`--primary-${shade}`, color);
-          });
-          Object.entries(secondaryShades).forEach(([shade, color]) => {
-            document.documentElement.style.setProperty(`--secondary-${shade}`, color);
-          });
-        } else {
-          console.error("Failed to fetch colors");
-        }
-      } catch (error) {
-        console.error("Error fetching colors:", error);
-      }
-    };
+
     fetchColors();
 
     const fetchSettings = async () => {
@@ -290,7 +255,7 @@ export default function LoginPage() {
                     Verification Code
                   </Label>
                   <p className="text-sm text-primary-600 mb-2">
-                    We've sent a code to your email. Please enter it below.
+                    We've sent you the code. Please check your device and enter the code below.
                   </p>
                   <Input
                     id="twoFactorCode"

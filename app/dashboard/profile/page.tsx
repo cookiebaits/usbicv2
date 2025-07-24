@@ -35,11 +35,10 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
-import Color from 'color'
 import { useAuth } from '@/lib/auth'
 import { apiFetch } from '@/lib/api'
 import { logout } from '@/lib/auth'
-import { formatDate, formatDateTime } from "@/lib/utils"
+import { fetchColors, formatDate, formatDateTime } from "@/lib/utils"
 import BgShadows from "@/components/ui/bgShadows"
 
 interface ProfileData {
@@ -83,51 +82,11 @@ export default function ProfilePage() {
   const [isLoading, setIsLoading] = useState(false)
   const [success, setSuccess] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [colors, setColors] = useState<{ primaryColor: string; secondaryColor: string } | null>(null)
   const [is2FAEnabled, setIs2FAEnabled] = useState<boolean>(false) // State for 2FA toggle
 
   // Fetch colors (public endpoint, no auth required)
   useEffect(() => {
-    const fetchColors = async () => {
-      try {
-        const response = await fetch('/api/colors')
-        if (response.ok) {
-          const data = await response.json()
-          setColors(data)
 
-          const primary = Color(data.primaryColor)
-          const secondary = Color(data.secondaryColor)
-
-          const generateShades = (color: typeof Color.prototype) => ({
-            50: color.lighten(0.5).hex(),
-            100: color.lighten(0.4).hex(),
-            200: color.lighten(0.3).hex(),
-            300: color.lighten(0.2).hex(),
-            400: color.lighten(0.1).hex(),
-            500: color.hex(),
-            600: color.darken(0.1).hex(),
-            700: color.darken(0.2).hex(),
-            800: color.darken(0.3).hex(),
-            900: color.darken(0.4).hex(),
-          })
-
-          const primaryShades = generateShades(primary)
-          const secondaryShades = generateShades(secondary)
-
-          Object.entries(primaryShades).forEach(([shade, color]) => {
-            document.documentElement.style.setProperty(`--primary-${shade}`, color)
-          })
-
-          Object.entries(secondaryShades).forEach(([shade, color]) => {
-            document.documentElement.style.setProperty(`--secondary-${shade}`, color)
-          })
-        } else {
-          console.error('Failed to fetch colors')
-        }
-      } catch (error) {
-        console.error('Error fetching colors:', error)
-      }
-    }
     fetchColors()
   }, [])
 
@@ -545,7 +504,7 @@ export default function ProfilePage() {
 
           <div className="md:col-span-3">
             <Tabs defaultValue="personal">
-              <TabsList className="grid w-full grid-cols-3 mb-3 bg-gray-200">
+              <TabsList className="grid w-full grid-cols-3 mb-3 bg-gray-300 border border-gray-300">
                 <TabsTrigger
                   value="personal"
                 >

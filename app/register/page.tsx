@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { LogoProvider, useLogo } from "@/app/logoContext";
+import { useLogo } from "@/app/logoContext";
 
 import {
   Select,
@@ -18,7 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import Color from "color";
+import { fetchColors } from "@/lib/utils";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -45,45 +45,9 @@ export default function RegisterPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [pendingUserId, setPendingUserId] = useState<string | null>(null);
   const [step, setStep] = useState(1);
-  const [colors, setColors] = useState<{ primaryColor: string; secondaryColor: string } | null>(null);
   const [settings, setSettings] = useState<any>(null);
 
   useEffect(() => {
-    const fetchColors = async () => {
-      try {
-        const response = await fetch("/api/colors");
-        if (response.ok) {
-          const data = await response.json();
-          setColors(data);
-          const primary = Color(data.primaryColor);
-          const secondary = Color(data.secondaryColor);
-          const generateShades = (color: typeof Color.prototype) => ({
-            50: color.lighten(0.5).hex(),
-            100: color.lighten(0.4).hex(),
-            200: color.lighten(0.3).hex(),
-            300: color.lighten(0.2).hex(),
-            400: color.lighten(0.1).hex(),
-            500: color.hex(),
-            600: color.darken(0.1).hex(),
-            700: color.darken(0.2).hex(),
-            800: color.darken(0.3).hex(),
-            900: color.darken(0.4).hex(),
-          });
-          const primaryShades = generateShades(primary);
-          const secondaryShades = generateShades(secondary);
-          Object.entries(primaryShades).forEach(([shade, color]) => {
-            document.documentElement.style.setProperty(`--primary-${shade}`, color);
-          });
-          Object.entries(secondaryShades).forEach(([shade, color]) => {
-            document.documentElement.style.setProperty(`--secondary-${shade}`, color);
-          });
-        } else {
-          console.error("Failed to fetch colors");
-        }
-      } catch (error) {
-        console.error("Error fetching colors:", error);
-      }
-    };
     fetchColors();
 
     const fetchSettings = async () => {

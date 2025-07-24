@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { LogoProvider } from '@/app/logoContext'; // Adjust path if needed
+import { LogoProvider } from '@/app/logoContext';
 import { ZelleLogoProvider } from './zellLogoContext';
 import './globals.css'
 import { LogVisit } from '@/components/LogVisit';
@@ -7,7 +7,6 @@ import { LogVisit } from '@/components/LogVisit';
 export const metadata: Metadata = {
   title: 'Free International Banking',
   description: 'Created by Venhash',
-  generator: 'v0.dev',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
