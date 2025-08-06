@@ -9,8 +9,8 @@ interface DecodedToken {
 
 export function useAuth() {
   const router = useRouter()
-  // const INACTIVITY_TIMEOUT = 3 * 60 * 1000
-  const INACTIVITY_TIMEOUT = 60 * 60 * 1000
+  const INACTIVITY_TIMEOUT = 3 * 60 * 1000
+  // const INACTIVITY_TIMEOUT = 60 * 60 * 1000
 
   useEffect(() => {
     const token = localStorage.getItem('token')
