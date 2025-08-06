@@ -15,6 +15,7 @@ import {
   Loader2,
   ArrowLeft,
   MoreHorizontal,
+  ArrowLeftRight,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -324,7 +325,7 @@ export default function AdminTransactionsPage() {
       case "withdrawal":
         return <ArrowUp className="h-5 w-5 text-red-600" />
       case "transfer":
-        return <Send className="h-5 w-5 text-primary-600" />
+        return <ArrowLeftRight className="h-5 w-5 text-purple-600" />
       case "payment":
         return <CreditCard className="h-5 w-5 text-orange-600" />
       case "fee":
@@ -411,7 +412,7 @@ export default function AdminTransactionsPage() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               <div>
                 <div className="relative">
                   <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -473,7 +474,7 @@ export default function AdminTransactionsPage() {
                   </SelectContent>
                 </Select>
               </div>
-              <div>
+              {/* <div>
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
                   <SelectTrigger>
                     <SelectValue placeholder="Status" />
@@ -485,7 +486,7 @@ export default function AdminTransactionsPage() {
                     <SelectItem value="failed">Failed</SelectItem>
                   </SelectContent>
                 </Select>
-              </div>
+              </div> */}
             </div>
             <div className="mt-4 flex items-center">
               <span className="text-sm font-medium mr-2">Amount:</span>

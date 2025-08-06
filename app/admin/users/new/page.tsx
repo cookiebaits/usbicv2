@@ -299,7 +299,7 @@ export default function NewUserPage() {
 
         <form onSubmit={handleSubmit}>
           <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "basic" | "account" | "financial")}>
-            <TabsList className="bg-gray-300 border border-gray-300">
+            <TabsList className="bg-primary-100">
               <TabsTrigger
                 value="basic"
               >

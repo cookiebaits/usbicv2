@@ -1,3 +1,429 @@
+For the past 2 days, I am facing a major inconsistency issue in my project. It works well in local environment but don't when I deploy using vercel on sub domain: usbicv2.vercel.app. The project has site settings page in admin panel from where admin can change logo, theme, logo dimensions etc. The issue occurring is that in the deployed website, when I change logo dimensions from admin panel, I can see updated dimensions in database but the logo in TopBar still show up with old dimensions but the logo on home (app.js) page is shown with the updated dimensions. If admin change site colors then he see updated colors applied in website but on site settings he still sees the old colors mentioned although new colors are applied throughout. Then admin change contact number from general settings and on changing contact, the old theme applied back out of nowhere. If it can be the issue with cache then I will suggest to remove complete cache from my code but doesn't seem to be the issue with cache because even after 12 hours I still see the same issues and even after clearing cache of my browser or opening in different browsers, I still see same logo with old dimensions in TopBar but logo with new dimensions in app.js home page. But it all works well in local environment. When I run code locally and do any change then everything works well. Below I am sharing all components/files code which may be helpful for you in identifying the issues or problems causing this.
+
+
+
+layout.tsx:
+import type { Metadata } from "next";
+import { LogoProvider } from "@/app/logoContext";
+import { ZelleLogoProvider } from "./zellLogoContext";
+import "./globals.css";
+import { LogVisit } from "@/components/LogVisit";
+import TopBar from "@/components/TopBar";
+
+export const metadata: Metadata = {
+  title: "Free International Banking",
+  description: "Developed by Venhash Solutions",
+};
+
+async function fetchSettings() {
+  try {
+    const response = await fetch(`${process.env.hostName}/api/home`);
+    if (response.ok) {
+      return await response.json();
+    }
+    return null;
+  } catch (error) {
+    return null;
+  }
+}
+
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const settings = await fetchSettings();
+
+  return (
+    <html lang="en">
+      <body>
+        <ZelleLogoProvider>
+          <LogoProvider>
+            <LogVisit />
+            <TopBar settings={settings}>
+              {children}
+            </TopBar>
+          </LogoProvider>
+        </ZelleLogoProvider>
+      </body>
+    </html>
+  );
+}
+
+
+
+
+TopBar.tsx:
+"use client";
+
+import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { LogOut } from "lucide-react";
+import { logout } from "@/lib/auth";
+import { TopBarContext } from '../app/TopBarContext';
+
+interface TopBarProps {
+    settings: any;
+    children: React.ReactNode;
+}
+
+export default function TopBar({ settings, children }: TopBarProps) {
+    const pathname = usePathname();
+    const [topBarHeight, setTopBarHeight] = useState<number>(0);
+
+    const isAdmin = pathname.startsWith("/admin");
+    const isDashboard = pathname.startsWith("/dashboard");
+
+    const handleLogout = () => {
+        logout(isAdmin ? "admin" : "user");
+    };
+
+    useEffect(() => {
+        const topBarElement = document.getElementById("top-bar");
+        if (topBarElement) {
+            const height = topBarElement.getBoundingClientRect().height;
+            setTopBarHeight(height);
+        }
+    }, [settings]);
+
+    if (
+        pathname === "/" ||
+        pathname === "/admin/login" ||
+        pathname === "/admin/forgot-password"
+    ) {
+        return <>{children}</>;
+    }
+
+    if (!isAdmin && !isDashboard) {
+        return <>{children}</>;
+    }
+
+    return (
+        <TopBarContext.Provider value={{ topBarHeight }}>
+            <div
+                id="top-bar"
+                className="fixed top-0 left-0 w-full shadow-md bg-barColor backdrop-blur-lg p-4 z-50"
+            >
+                <div className="w-[1260px] m-auto flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                        {settings?.logoUrl ? (
+                            <img
+                                src={settings.logoUrl}
+                                alt="Site Logo"
+                                style={{
+                                    width: settings.logoWidth > 0 ? `${settings.logoWidth}px` : "auto",
+                                    height: settings.logoHeight > 0 ? `${settings.logoHeight}px` : "32px",
+                                    filter: "brightness(100%)",
+                                }}
+                            />
+                        ) : (
+                            <div style={{ height: "32px" }}></div>
+                        )}
+                    </div>
+                    <Button
+                        variant="ghost"
+                        className="text-black hover:bg-primary-100 text-sm"
+                        onClick={handleLogout}
+                    >
+                        <LogOut className="mr-2 h-4 w-4" />
+                        Logout
+                    </Button>
+                </div>
+            </div>
+            <div style={{ paddingTop: `${topBarHeight}px` }}>
+                {children}
+            </div>
+        </TopBarContext.Provider>
+    );
+}
+
+
+
+
+
+Settings.ts:
+import mongoose, { Schema, Document } from 'mongoose';
+
+export interface ISettings extends Document {
+  siteName: string;
+  supportEmail: string;
+  supportPhone: string;
+  instagramUrl?: string;
+  twitterUrl?: string;
+  facebookUrl?: string;
+  privacyPolicy: string;
+  termsOfService: string;
+  primaryColor?: string;
+  secondaryColor?: string;
+  logoUrl?: string;
+  logoWidth?: number;
+  logoHeight?: number;
+  zelleLogoUrl?: string;
+  zelleLogoWidth?: number;
+  zelleLogoHeight?: number;
+  checkingIcon?: string;
+  savingsIcon?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+const SettingsSchema: Schema = new Schema({
+  siteName: { type: String, required: true },
+  supportEmail: { type: String, required: true },
+  supportPhone: { type: String, required: true },
+  instagramUrl: { type: String, required: false },
+  twitterUrl: { type: String, required: false },
+  facebookUrl: { type: String, required: false },
+  privacyPolicy: { type: String, required: true },
+  termsOfService: { type: String, required: true },
+  primaryColor: { type: String, required: false },
+  secondaryColor: { type: String, required: false },
+  logoUrl: { type: String, required: false },
+  logoWidth: { type: Number, required: false },
+  logoHeight: { type: Number, required: false },
+  zelleLogoUrl: { type: String, required: false },
+  zelleLogoWidth: { type: Number, required: false },
+  zelleLogoHeight: { type: Number, required: false },
+  checkingIcon: { type: String, required: false },
+  savingsIcon: { type: String, required: false },
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now }
+});
+
+// Update updatedAt on save
+SettingsSchema.pre('save', function(next) {
+  this.updatedAt = new Date();
+  next();
+});
+
+export default mongoose.models.Settings || mongoose.model<ISettings>('Settings', SettingsSchema);
+
+
+
+
+
+
+
+Same part of code from app/page.tsx:
+export default function Home() {
+  const [settings, setSettings] = useState<any>(null);
+  const { logoUrl } = useLogo();
+
+  // Fetch settings for logo and social media URLs
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const response = await fetch("/api/home");
+        if (response.ok) {
+          const data = await response.json();
+          setSettings(data);
+        } else {
+          console.error("Failed to fetch settings");
+        }
+      } catch (error) {
+        console.error("Error fetching settings:", error);
+      }
+    };
+    fetchSettings();
+  }, []);
+
+  // Fetch colors from the new endpoint and set CSS variables
+  useEffect(() => {
+    fetchColors();
+  }, []);
+
+  return (
+    <div className="flex flex-col min-h-screen relative">
+      <style jsx global>{`
+        ${enhancedStyles}
+      `}</style>
+      <header className="sticky top-0 z-50 shadow-sm bg-barColor backdrop-blur-lg">
+        <div className="container m-auto flex p-4 items-center px-2 sm:px-4 lg:px-6">
+          <div className="flex items-center">
+            {settings?.logoUrl && (
+              <img
+                src={settings.logoUrl}
+                alt="Site Logo"
+                style={{
+                  width: settings.logoWidth > 0 ? `${settings.logoWidth}px` : 'auto',
+                  height: settings.logoHeight > 0 ? `${settings.logoHeight}px` : '32px',
+                  filter: 'brightness(100%)'
+                }}
+              />
+            )}
+          </div>
+          <div className="ml-auto flex items-center gap-4">
+            <Button
+              variant="outline"
+              className="bg-white/80 text-primary-600 hover:bg-primary-600 hover:text-white"
+              asChild
+            >
+              <Link href="/login">Sign In</Link>
+            </Button>
+            <Button className="bg-gradient-to-r from-primary-600 to-secondary-600 hover:from-primary-700 hover:to-secondary-700 text-white shadow-md hover:shadow-lg transition-all"><Link href="/register">Register</Link></Button>
+          </div>
+        </div>
+      </header>
+
+
+
+
+app/api/admin/settings/route.ts:
+import { NextRequest, NextResponse } from 'next/server';
+import mongoose from 'mongoose';
+import Settings from '@/models/Settings';
+import jwt from 'jsonwebtoken';
+
+const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
+
+export async function GET(request: NextRequest) {
+  try {
+    const token = request.headers.get("cookie")
+      ?.split("; ")
+      .find((row) => row.startsWith("adminToken="))
+      ?.split("=")[1];
+
+    if (!token) {
+      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+    }
+
+    jwt.verify(token, JWT_SECRET);
+
+    await mongoose.connect(process.env.MONGODB_URI!);
+
+    const settings = await Settings.findOne().lean();
+    if (!settings) {
+      return NextResponse.json({ error: 'Settings not found' }, { status: 404 });
+    }
+
+    const response = NextResponse.json(settings);
+    response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=60, stale-while-revalidate=60');
+    return response;
+  } catch (error) {
+    console.error('Settings fetch error:', error);
+    return NextResponse.json({ error: 'Invalid token or server error' }, { status: 500 });
+  }
+}
+
+export async function PUT(request: NextRequest) {
+  try {
+    const token = request.headers.get("cookie")
+      ?.split("; ")
+      .find((row) => row.startsWith("adminToken="))
+      ?.split("=")[1];
+
+    if (!token) {
+      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+    }
+
+    jwt.verify(token, JWT_SECRET);
+
+    const data = await request.json();
+
+    if (!data.siteName || !data.supportEmail || !data.supportPhone || !data.privacyPolicy || !data.termsOfService) {
+      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    }
+
+    await mongoose.connect(process.env.MONGODB_URI!);
+
+    const settings = await Settings.findOneAndUpdate(
+      {},
+      {
+        siteName: data.siteName,
+        supportEmail: data.supportEmail,
+        supportPhone: data.supportPhone,
+        instagramUrl: data.instagramUrl || '',
+        twitterUrl: data.twitterUrl || '',
+        facebookUrl: data.facebookUrl || '',
+        privacyPolicy: data.privacyPolicy,
+        termsOfService: data.termsOfService,
+        primaryColor: data.primaryColor || '#5f6cd3',
+        secondaryColor: data.secondaryColor || '#9c65d2',
+        logoUrl: data.logoUrl || '',
+        logoWidth: data.logoWidth,
+        logoHeight: data.logoHeight,
+        zelleLogoUrl: data.zelleLogoUrl || '',
+        zelleLogoWidth: data.zelleLogoWidth,
+        zelleLogoHeight: data.zelleLogoHeight,
+        checkingIcon: data.checkingIcon || '',
+        savingsIcon: data.savingsIcon || ''
+      },
+      { upsert: true, new: true }
+    );
+
+    const response = NextResponse.json({ message: 'Settings updated successfully', settings });
+    response.headers.set('Cache-Control', 'public, max-age=1, s-maxage=1, stale-while-revalidate=1');
+    return response;
+  } catch (error) {
+    console.error('Settings update error:', error);
+    return NextResponse.json({ error: 'Invalid token or server error' }, { status: 500 });
+  }
+}
+
+
+
+
+
+app/api/home/route.ts:
+import { NextRequest, NextResponse } from 'next/server';
+import mongoose from 'mongoose';
+import Settings, { ISettings } from '@/models/Settings';
+
+// Connect to MongoDB
+async function connectDB() {
+  if (mongoose.connection.readyState === 0) {
+    await mongoose.connect(process.env.MONGODB_URI!);
+  }
+}
+
+export async function GET(request: NextRequest) {
+  try {
+    await connectDB();
+    // Fetch settings with lean() and select all needed fields, including dimensions
+    const settings = (await Settings.findOne()
+      .select('logoUrl logoWidth logoHeight facebookUrl twitterUrl instagramUrl zelleLogoUrl zelleLogoWidth zelleLogoHeight')
+      .lean()) as unknown as ISettings;
+    
+    if (!settings) {
+      return NextResponse.json({ error: 'Settings not found' }, { status: 404 });
+    }
+
+    // Destructure the properties with defaults for dimensions
+    const {
+      logoUrl,
+      logoWidth = 0,
+      logoHeight = 0,
+      facebookUrl,
+      twitterUrl,
+      instagramUrl,
+      zelleLogoUrl,
+      zelleLogoWidth = 0,
+      zelleLogoHeight = 0,
+    } = settings;
+    
+    const response = NextResponse.json({
+      logoUrl,
+      logoWidth,
+      logoHeight,
+      facebookUrl,
+      twitterUrl,
+      instagramUrl,
+      zelleLogoUrl,
+      zelleLogoWidth,
+      zelleLogoHeight,
+    });
+    
+    // Add caching headers
+    response.headers.set('Cache-Control', 'public, max-age=1, s-maxage=1, stale-while-revalidate=1');
+    return response;
+  } catch (error) {
+    console.error('Settings fetch error:', error);
+    return NextResponse.json({ error: 'Server error' }, { status: 500 });
+  }
+}
+
+
+
+
+
+app/admin/settings/page.tsx:
 "use client";
 
 import type React from "react";

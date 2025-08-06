@@ -102,7 +102,7 @@ export default function CryptoPage() {
         amount: Math.abs(tx.cryptoAmount) || 0,
         value: Math.abs(tx.amount) || 0,
         price: tx.cryptoPrice || 0,
-        date: new Date(tx.date).toLocaleString() || new Date().toLocaleString(),
+        date: new Date(tx.date).toLocaleString('en-US') || new Date().toLocaleString('en-US'),
       }))
   }
 
@@ -765,7 +765,7 @@ export default function CryptoPage() {
         {/* Buy/Sell/Send Tabs */}
         <div className="mb-8">
           <Tabs defaultValue="buy">
-            <TabsList className="bg-gray-300 border border-gray-300">
+            <TabsList className="bg-primary-100">
               <TabsTrigger
                 value="buy"
               >

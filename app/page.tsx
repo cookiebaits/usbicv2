@@ -286,10 +286,6 @@ function AnimatedCounter({
 export default function Home() {
   const [settings, setSettings] = useState<any>(null);
   const { logoUrl } = useLogo();
-  const [colors, setColors] = useState<{
-    primaryColor: string;
-    secondaryColor: string;
-  } | null>(null);
 
   // Fetch settings for logo and social media URLs
   useEffect(() => {
@@ -319,8 +315,8 @@ export default function Home() {
       <style jsx global>{`
         ${enhancedStyles}
       `}</style>
-      <header className="sticky top-0 z-50 border-b border-gray-300 bg-white/10 backdrop-blur-lg">
-        <div className="container m-auto flex h-16 items-center px-2 sm:px-4 lg:px-6">
+      <header className="sticky top-0 z-50 shadow-sm bg-barColor backdrop-blur-lg">
+        <div className="container m-auto flex p-4 items-center px-2 sm:px-4 lg:px-6">
           <div className="flex items-center">
             {settings?.logoUrl && (
               <img

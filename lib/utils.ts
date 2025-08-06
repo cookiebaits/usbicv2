@@ -1,6 +1,9 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 import Color from 'color'
+import { parse, format, isValid } from 'date-fns';
+
+
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -32,12 +35,59 @@ export const formatDateTime = (date: Date | string) => {
   return `${month}/${day}/${year}, ${formattedHours}:${minutes} ${ampm}`;
 };
 
-export const formatDate = (date: Date | string) => {
-  const d = typeof date === "string" ? new Date(date) : date;
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${month}/${day}/${year}`;
+
+
+export const formatDate = (date: Date | string | null | undefined): string => {
+
+  if (!date) {
+    console.warn(`Invalid date input: ${date}`);
+    return "Invalid Date";
+  }
+
+  let d: Date;
+
+  if (typeof date === "string") {
+    const normalizedDate = date.replace(/(am|pm)/i, (match) => match.toUpperCase());
+
+    const formats = [
+      "M/d/yyyy, h:mm:ss a", // 7/17/2025, 11:01:03 PM
+      "dd/MM/yyyy, h:mm:ss a", // 17/07/2025, 10:58:02 PM
+      "yyyy-MM-dd'T'HH:mm:ss.SSSX", // 2025-07-17T18:01:03.000Z
+      "yyyy-MM-dd'T'HH:mm:ss.SSS", // 2025-07-17T18:01:03.000
+      "yyyy-MM-dd'T'HH:mm:ss", // 2025-07-17T18:01:03
+      "yyyy-MM-dd", // 2025-07-17
+      "MM/dd/yyyy", // 07/17/2025
+      "dd/MM/yyyy", // 17/07/2025
+    ];
+
+    for (const formatStr of formats) {
+      const parsed = parse(normalizedDate, formatStr, new Date());
+      if (isValid(parsed)) {
+        d = parsed;
+        return format(d, "MM/dd/yyyy");
+      }
+    }
+
+    d = new Date(date);
+    if (isValid(d)) {
+      return format(d, "MM/dd/yyyy");
+    }
+
+    console.warn(`Invalid date input: ${date}`);
+    return "Invalid Date";
+  } else if (date instanceof Date) {
+    d = date;
+  } else {
+    console.warn(`Invalid date input type: ${typeof date}`);
+    return "Invalid Date";
+  }
+
+  if (!isValid(d)) {
+    console.warn(`Invalid date input: ${date}`);
+    return "Invalid Date";
+  }
+
+  return format(d, "MM/dd/yyyy");
 };
 
 
@@ -58,7 +108,7 @@ export const fetchColors = async () => {
       const data = await response.json()
 
       const primary = Color(data.primaryColor)
-      // const secondary = Color(data.secondaryColor)
+      const secondary = Color(data.secondaryColor)
 
       const generateShades = (color: typeof Color.prototype) => ({
         50: color.mix(Color('white'), 0.9).hex(),
@@ -73,29 +123,14 @@ export const fetchColors = async () => {
         900: color.mix(Color('black'), 0.4).hex(),
       })
 
-      // const generateShades = (color: typeof Color.prototype) => ({
-      //   50: color.lighten(0.5).hex(),
-      //   100: color.lighten(0.4).hex(),
-      //   200: color.lighten(0.3).hex(),
-      //   300: color.lighten(0.2).hex(),
-      //   400: color.lighten(0.1).hex(),
-      //   500: color.hex(),
-      //   600: color.darken(0.1).hex(),
-      //   700: color.darken(0.2).hex(),
-      //   800: color.darken(0.3).hex(),
-      //   900: color.darken(0.4).hex(),
-      // })
-
       const primaryShades = generateShades(primary)
-      // const secondaryShades = generateShades(secondary)
 
       Object.entries(primaryShades).forEach(([shade, color]) => {
         document.documentElement.style.setProperty(`--primary-${shade}`, color)
       })
 
-      // Object.entries(secondaryShades).forEach(([shade, color]) => {
-      //   document.documentElement.style.setProperty(`--secondary-${shade}`, color)
-      // })
+      document.documentElement.style.setProperty(`--barColor`, secondary.hex())
+
     } else {
       console.error('Failed to fetch colors')
     }

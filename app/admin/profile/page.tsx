@@ -247,7 +247,7 @@ export default function AdminProfilePage() {
 
           <div className="md:col-span-3">
             <Tabs defaultValue="profile">
-              <TabsList className="grid w-full grid-cols-2 bg-gray-300 border border-gray-300">
+              <TabsList className="grid w-full grid-cols-2 bg-primary-100">
                 <TabsTrigger
                   value="profile"
                 >

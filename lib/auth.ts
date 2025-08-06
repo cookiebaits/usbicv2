@@ -9,8 +9,8 @@ interface DecodedToken {
 
 export function useAuth() {
   const router = useRouter()
-  const INACTIVITY_TIMEOUT = 3 * 60 * 1000
-  // const INACTIVITY_TIMEOUT = 60 * 60 * 1000
+  // const INACTIVITY_TIMEOUT = 3 * 60 * 1000
+  const INACTIVITY_TIMEOUT = 60 * 60 * 1000
 
   useEffect(() => {
     const token = localStorage.getItem('token')
@@ -25,13 +25,13 @@ export function useAuth() {
       const currentTime = Date.now()
 
       if (currentTime >= expirationTime) {
-        logout()
+        logout("user")
         return
       }
 
       // Token expiration timeout
       const tokenTimeout = setTimeout(() => {
-        logout()
+        logout("user")
       }, expirationTime - currentTime)
 
       // Inactivity timeout setup
@@ -42,7 +42,7 @@ export function useAuth() {
           clearTimeout(inactivityTimer)
         }
         inactivityTimer = setTimeout(() => {
-          logout()
+          logout("user")
         }, INACTIVITY_TIMEOUT)
       }
 
@@ -81,12 +81,27 @@ export function useAuth() {
       }
     } catch (error) {
       console.error('Invalid token:', error)
-      logout()
+      logout("user")
     }
   }, [router])
 }
 
-export function logout() {
-  localStorage.removeItem('token')
-  window.location.href = '/login' // Immediate redirect
+export async function logout(side: string) {
+
+  if (side === "user") {
+    localStorage.removeItem('token')
+    window.location.href = '/login' // Immediate redirect
+  }
+  else {
+    try {
+      await fetch("/api/admin/logout", {
+        method: "POST",
+        credentials: "include",
+      })
+      window.location.href = "/admin/login"
+    } catch (error) {
+      console.error("Logout error:", error)
+      window.location.href = "/admin/login"
+    }
+  }
 }

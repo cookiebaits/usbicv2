@@ -19,6 +19,7 @@ import {
   X,
   AlertCircle,
   Bitcoin,
+  ArrowLeftRight,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -408,7 +409,7 @@ export default function TransactionDetailPage() {
       case "withdrawal":
         return <ArrowUp className="h-5 w-5 text-red-600" />
       case "transfer":
-        return <Send className="h-5 w-5 text-primary-600" />
+        return <ArrowLeftRight className="h-5 w-5 text-purple-600" />
       case "payment":
         return <CreditCard className="h-5 w-5 text-orange-600" />
       case "fee":

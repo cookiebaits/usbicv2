@@ -19,14 +19,15 @@ export async function GET(request: NextRequest) {
     jwt.verify(token, JWT_SECRET);
 
     await mongoose.connect(process.env.MONGODB_URI!);
-    
+
     const settings = await Settings.findOne().lean();
     if (!settings) {
       return NextResponse.json({ error: 'Settings not found' }, { status: 404 });
     }
-    
+
     const response = NextResponse.json(settings);
-    response.headers.set('Cache-Control', 'public, max-age=86400, s-maxage=86400, stale-while-revalidate=43200');
+    // response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=60, stale-while-revalidate=60');
+    response.headers.set('Cache-Control', 'no-store');
     return response;
   } catch (error) {
     console.error('Settings fetch error:', error);
@@ -48,13 +49,13 @@ export async function PUT(request: NextRequest) {
     jwt.verify(token, JWT_SECRET);
 
     const data = await request.json();
-    
+
     if (!data.siteName || !data.supportEmail || !data.supportPhone || !data.privacyPolicy || !data.termsOfService) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
     await mongoose.connect(process.env.MONGODB_URI!);
-    
+
     const settings = await Settings.findOneAndUpdate(
       {},
       {
@@ -81,7 +82,8 @@ export async function PUT(request: NextRequest) {
     );
 
     const response = NextResponse.json({ message: 'Settings updated successfully', settings });
-    response.headers.set('Cache-Control', 'public, max-age=1, s-maxage=1, stale-while-revalidate=1');
+    // response.headers.set('Cache-Control', 'public, max-age=1, s-maxage=1, stale-while-revalidate=1');
+    response.headers.set('Cache-Control', 'no-store');
     return response;
   } catch (error) {
     console.error('Settings update error:', error);

@@ -49,6 +49,7 @@ const userSchema = new mongoose.Schema({
   },
   pendingZelleTransfer: {
     recipientId: { type: String, default: null }, // Set to null for external transfers
+    recipientName: { type: String },
     recipientType: { type: String }, // "email" or "phone" for external transfers
     recipientValue: { type: String }, // The email or phone number for external transfers
     amount: { type: Number },

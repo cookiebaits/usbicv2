@@ -49,6 +49,7 @@ module.exports = {
           800: 'var(--primary-800)',
           900: 'var(--primary-900)',
         },
+        barColor: "var(--barColor)",
         destructive: {
           DEFAULT: "hsl(var(--destructive))",
           foreground: "hsl(var(--destructive-foreground))",

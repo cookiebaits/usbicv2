@@ -47,7 +47,8 @@ export async function GET(request: NextRequest) {
     });
     
     // Add caching headers
-    response.headers.set('Cache-Control', 'public, max-age=1, s-maxage=1, stale-while-revalidate=1');
+    // response.headers.set('Cache-Control', 'public, max-age=1, s-maxage=1, stale-while-revalidate=1');
+    response.headers.set('Cache-Control', 'no-store');
     return response;
   } catch (error) {
     console.error('Settings fetch error:', error);

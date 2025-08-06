@@ -11,7 +11,7 @@ export async function apiFetch(url: string, options: RequestInit = {}): Promise<
   const response = await fetch(url, { ...options, headers })
 
   if (response.status === 401) {
-    logout()
+    logout("user")
     throw new Error('Unauthorized')
   }
 

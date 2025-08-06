@@ -504,7 +504,7 @@ export default function ProfilePage() {
 
           <div className="md:col-span-3">
             <Tabs defaultValue="personal">
-              <TabsList className="grid w-full grid-cols-3 mb-3 bg-gray-300 border border-gray-300">
+              <TabsList className="grid w-full grid-cols-3 mb-3 bg-primary-100">
                 <TabsTrigger
                   value="personal"
                 >
@@ -762,7 +762,7 @@ export default function ProfilePage() {
                     <Button
                       variant="outline"
                       className="border-primary-200 text-primary-700 hover:bg-primary-50"
-                      onClick={() => logout()}
+                      onClick={() => logout("user")}
                     >
                       Log Out
                     </Button>

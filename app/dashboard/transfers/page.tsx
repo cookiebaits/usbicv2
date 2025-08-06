@@ -305,7 +305,7 @@ function ZelleTransfer({ checkingBalance, updateAccounts }: { checkingBalance: n
   const renderSelectContactStep = () => (
     <div className="space-y-6">
       <Tabs defaultValue="recent">
-        <TabsList className="bg-gray-200">
+        <TabsList className="bg-primary-100">
           <TabsTrigger value="recent">Recent</TabsTrigger>
           <TabsTrigger value="new">New Recipient</TabsTrigger>
         </TabsList>

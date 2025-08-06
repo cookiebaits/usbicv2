@@ -1,1 +1,3 @@
-- Redesigned the Complete Side
+-- Fixed Site Settings Reverting Back issue
+-- Fixed Date showing as NaN/NaN/NaN issue
+-- Showing current month transactions by default on Transactions Page

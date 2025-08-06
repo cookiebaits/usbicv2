@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
-import { CreditCard, Home, LogOut, Menu, Send, User, FileText, ArrowDown, ArrowUp, RefreshCcw, Loader2, Bitcoin } from "lucide-react"
+import { CreditCard, Home, LogOut, Menu, Send, User, FileText, ArrowDown, ArrowUp, RefreshCcw, Loader2, Bitcoin, ArrowLeftRight } from "lucide-react"
 import { FaBitcoinSign } from "react-icons/fa6";
 
 
@@ -14,6 +14,7 @@ import { apiFetch } from '@/lib/api'
 import { fetchColors, formatDate, formatPrice } from "@/lib/utils"
 import BgShadows from "@/components/ui/bgShadows"
 import { useZelleLogo } from "../zellLogoContext";
+import { useTopBarHeight } from '../TopBarContext';
 
 // Transaction interface
 interface Transaction {
@@ -68,6 +69,7 @@ export default function DashboardPage() {
   const [settings, setSettings] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(true);
   const { zelleLogoUrl } = useZelleLogo();
+  const topBarHeight = useTopBarHeight();
 
   // Fetch colors and settings
   useEffect(() => {
@@ -179,7 +181,7 @@ export default function DashboardPage() {
       case "withdrawal":
         return <ArrowUp className="h-5 w-5 text-red-600" />
       case "transfer":
-        return <Send className="h-5 w-5 text-primary-600" />
+        return <ArrowLeftRight className="h-5 w-5 text-purple-600" />
       case "payment":
         return <CreditCard className="h-5 w-5 text-orange-600" />
       case "fee":
@@ -205,31 +207,8 @@ export default function DashboardPage() {
     <div className="overflow-hidden relative">
 
       <BgShadows />
-      <div className="fixed top-0 left-0 w-full border-b border-gray-300 bg-white/40 backdrop-blur-lg p-4 z-50">
-        <div className="w-[1260px] m-auto flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            {settings?.logoUrl ? (
-              <img
-                src={settings.logoUrl}
-                alt="Site Logo"
-                style={{
-                  width: settings.logoWidth > 0 ? `${settings.logoWidth}px` : 'auto',
-                  height: settings.logoHeight > 0 ? `${settings.logoHeight}px` : '32px',
-                  filter: 'brightness(100%)',
-                }}
-              />
-            ) : (
-              <div style={{ height: '32px' }}></div>
-            )}
-          </div>
-          <Button variant="ghost" className="text-black hover:bg-primary-50" onClick={logout}>
-            <LogOut className="mr-2 h-4 w-4" />
-            Logout
-          </Button>
-        </div>
-      </div>
 
-      <div className="flex min-h-screen w-[1300px] m-auto mt-14">
+      <div className="flex min-h-screen w-[1300px] m-auto">
         {/* Mobile Navigation */}
         <Sheet>
           <SheetTrigger asChild>
@@ -257,11 +236,6 @@ export default function DashboardPage() {
                     />
                   ) : (
                     <div style={{ height: '32px' }}></div>
-                    // <img
-                    //   src="/zelle-logo.svg"
-                    //   alt="Zelle"
-                    //   style={{ width: 'auto', height: '32px', filter: 'brightness(100%)' }}
-                    // />
                   )}
                 </div>
               </div>
@@ -310,7 +284,7 @@ export default function DashboardPage() {
                         Profile
                       </Link>
                     </Button>
-                    <Button variant="ghost" className="w-full justify-start text-black hover:bg-white/10" onClick={logout}>
+                    <Button variant="ghost" className="w-full justify-start text-black hover:bg-white/10" onClick={() => logout("user")}>
                       <LogOut className="mr-2 h-4 w-4" />
                       Logout
                     </Button>
@@ -322,36 +296,37 @@ export default function DashboardPage() {
         </Sheet>
 
         {/* Desktop Sidebar */}
-        <div className="hidden md:flex text-white w-64 flex-col fixed inset-y-0 mt-14">
+        <div className="hidden md:flex text-white w-64 flex-col fixed inset-y-0"
+          style={{ top: `${topBarHeight}px` }}>
           <nav className="flex-1 overflow-auto py-4 pt-10">
             <div className="px-1 py-2">
-              <h2 className="mb-4 px-4 text-xs font-semibold tracking-tight text-black">Main</h2>
+              <h2 className="mb-4 px-4 text-sm font-semibold tracking-tight text-black">Main</h2>
               <div className="space-y-4">
-                <Button variant="ghost" className="w-[90%] justify-start text-black hover:bg-black/5" asChild>
+                <Button variant="ghost" className="w-[90%] justify-start text-black hover:bg-black/5 text-lg" asChild>
                   <Link href="/dashboard">
                     <Home className="mr-2 h-4 w-4" />
                     Dashboard
                   </Link>
                 </Button>
-                <Button variant="ghost" className="w-[90%] justify-start text-black hover:bg-black/5" asChild>
+                <Button variant="ghost" className="w-[90%] justify-start text-black hover:bg-black/5 text-lg" asChild>
                   <Link href="/dashboard/accounts">
                     <CreditCard className="mr-2 h-4 w-4" />
                     Accounts
                   </Link>
                 </Button>
-                <Button variant="ghost" className="w-[90%] justify-start text-black hover:bg-black/5" asChild>
+                <Button variant="ghost" className="w-[90%] justify-start text-black hover:bg-black/5 text-lg" asChild>
                   <Link href="/dashboard/transactions">
                     <FileText className="mr-2 h-4 w-4" />
                     Transactions
                   </Link>
                 </Button>
-                <Button variant="ghost" className="w-[90%] justify-start text-black hover:bg-black/5" asChild>
+                <Button variant="ghost" className="w-[90%] justify-start text-black hover:bg-black/5 text-lg" asChild>
                   <Link href="/dashboard/transfers">
                     <Send className="mr-2 h-4 w-4" />
                     Transfers
                   </Link>
                 </Button>
-                <Button variant="ghost" className="w-[90%] justify-start text-black hover:bg-black/5" asChild>
+                <Button variant="ghost" className="w-[90%] justify-start text-black hover:bg-black/5 text-lg" asChild>
                   <Link href="/dashboard/crypto">
                     <FaBitcoinSign className="mr-2 h-4 w-4" />
                     BTC Wallet
@@ -360,15 +335,15 @@ export default function DashboardPage() {
               </div>
             </div>
             <div className="px-1 py-2 pt-4">
-              <h2 className="mb-4 px-4 text-xs font-semibold tracking-tight text-black">Settings</h2>
+              <h2 className="mb-4 px-4 text-sm font-semibold tracking-tight text-black">Settings</h2>
               <div className="space-y-1">
-                <Button variant="ghost" className="w-[90%] justify-start text-black hover:bg-black/5" asChild>
+                <Button variant="ghost" className="w-[90%] justify-start text-black hover:bg-black/5 text-lg" asChild>
                   <Link href="/dashboard/profile">
                     <User className="mr-2 h-4 w-4" />
                     Profile
                   </Link>
                 </Button>
-                <Button variant="ghost" className="w-[90%] justify-start text-black hover:bg-black/5" onClick={logout}>
+                <Button variant="ghost" className="w-[90%] justify-start text-black hover:bg-black/5 text-lg" onClick={() => logout("user")}>
                   <LogOut className="mr-2 h-4 w-4" />
                   Logout
                 </Button>
@@ -380,7 +355,7 @@ export default function DashboardPage() {
         {/* Main Content */}
         <div className="pt-4 md:pl-64 flex-1 flex flex-col">
           <main className="sm:pl-0 sm:p-6 flex-1">
-            <h1 className="text-2xl font-bold mb-6 hidden md:block bg-clip-text text-transparent bg-gradient-to-r from-primary-600 to-secondary-600">
+            <h1 className="text-3xl font-bold mb-6 hidden md:block bg-clip-text text-transparent bg-gradient-to-r from-primary-600 to-secondary-600">
               Dashboard
             </h1>
 

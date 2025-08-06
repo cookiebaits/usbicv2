@@ -3,8 +3,7 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { CreditCard, Home, LogOut, Menu, Plus, Settings, Users, Loader, User, AlertCircle, MoreHorizontal, Globe, ArrowDown, ArrowUp, Send, FileText, RefreshCcw, Bitcoin } from "lucide-react"
-import Color from "color"
+import { CreditCard, Home, LogOut, Menu, Plus, Settings, Users, Loader, User, AlertCircle, MoreHorizontal, Globe, ArrowDown, ArrowUp, Send, FileText, RefreshCcw, ArrowLeftRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -35,6 +34,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { formatDateTime, formatPrice, formatDate, fetchColors } from "@/lib/utils"
 import { FaBitcoinSign } from "react-icons/fa6"
 import { useZelleLogo } from "@/app/zellLogoContext"
+import { useTopBarHeight } from "@/app/TopBarContext"
 
 interface User {
   id: string
@@ -142,6 +142,7 @@ export default function AdminDashboardPage() {
   const [settings, setSettings] = useState<any>(null)
   const [loadingActions, setLoadingActions] = useState<{ [key: string]: boolean }>({})
   const { zelleLogoUrl } = useZelleLogo();
+  const topBarHeight = useTopBarHeight();
 
   // New states for user selection dialog
   const [isUserSelectionOpen, setIsUserSelectionOpen] = useState(false)
@@ -686,7 +687,7 @@ export default function AdminDashboardPage() {
       case "withdrawal":
         return <ArrowUp className="h-5 w-5 text-red-600" />
       case "transfer":
-        return <Send className="h-5 w-5 text-primary-600" />
+        return <ArrowLeftRight className="h-5 w-5 text-purple-600" />
       case "payment":
         return <CreditCard className="h-5 w-5 text-orange-600" />
       case "fee":
@@ -738,50 +739,26 @@ export default function AdminDashboardPage() {
   return (
     <div className="bg-gradient-to-br from-primary-50 to-secondary-50">
 
-      <div className="fixed top-0 left-0 w-full border-b border-gray-300 bg-white/40 backdrop-blur-lg p-4 z-50">
-        <div className="w-[1260px] m-auto flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            {settings?.logoUrl ? (
-              <img
-                src={settings.logoUrl}
-                alt="Site Logo"
-                style={{
-                  width: settings.logoWidth > 0 ? `${settings.logoWidth}px` : 'auto',
-                  height: settings.logoHeight > 0 ? `${settings.logoHeight}px` : '32px',
-                  filter: 'brightness(100%)',
-                }}
-              />
-            ) : (
-              <div style={{ height: '32px' }}></div>
-            )}
-          </div>
-          <Button variant="ghost" className="text-black hover:bg-primary-50" onClick={handleLogout}>
-            <LogOut className="mr-2 h-4 w-4" />
-            Logout
-          </Button>
-        </div>
-      </div>
-
-      <div className="flex min-h-screen w-[1300px] m-auto relative pt-14">
+      <div className="flex min-h-screen w-[1300px] m-auto relative">
         {/* Main Sidebar (Desktop) */}
-        <div className="hidden md:flex text-white w-64 flex-col fixed inset-y-0 pt-20">
+        <div className="hidden md:flex text-white w-64 flex-col fixed inset-y-0 mt-6" style={{ top: `${topBarHeight}px` }}>
           <nav className="flex-1 overflow-auto py-4">
             <div className="px-3 py-2">
-              <h2 className="mb-4 px-4 text-xs font-semibold tracking-tight text-black">Dashboard</h2>
+              <h2 className="mb-4 px-4 text-sm font-semibold tracking-tight text-black">Dashboard</h2>
               <div className="space-y-4">
-                <Button variant="ghost" className="w-[90%] justify-start text-black hover:bg-black/5" asChild>
+                <Button variant="ghost" className="w-[90%] justify-start text-black hover:bg-black/5 text-lg" asChild>
                   <Link href="/admin/dashboard">
                     <Home className="mr-2 h-4 w-4" />
                     Overview
                   </Link>
                 </Button>
-                <Button variant="ghost" className="w-[90%] justify-start text-black hover:bg-black/5" asChild>
+                <Button variant="ghost" className="w-[90%] justify-start text-black hover:bg-black/5 text-lg" asChild>
                   <Link href="/admin/users">
                     <Users className="mr-2 h-4 w-4" />
                     Users
                   </Link>
                 </Button>
-                <Button variant="ghost" className="w-[90%] justify-start text-black hover:bg-black/5" asChild>
+                <Button variant="ghost" className="w-[90%] justify-start text-black hover:bg-black/5 text-lg" asChild>
                   <Link href="/admin/transactions">
                     <CreditCard className="mr-2 h-4 w-4" />
                     Transactions
@@ -790,21 +767,21 @@ export default function AdminDashboardPage() {
               </div>
             </div>
             <div className="px-3 py-2 pt-4">
-              <h2 className="mb-4 px-4 text-xs font-semibold tracking-tight text-black">Settings</h2>
+              <h2 className="mb-4 px-4 text-sm font-semibold tracking-tight text-black">Settings</h2>
               <div className="space-y-4">
-                <Button variant="ghost" className="w-[90%] justify-start text-black hover:bg-black/5" asChild>
+                <Button variant="ghost" className="w-[90%] justify-start text-black hover:bg-black/5 text-lg" asChild>
                   <Link href="/admin/profile">
                     <User className="mr-2 h-4 w-4" />
                     Profile
                   </Link>
                 </Button>
-                <Button variant="ghost" className="w-[90%] justify-start text-black hover:bg-black/5" asChild>
+                <Button variant="ghost" className="w-[90%] justify-start text-black hover:bg-black/5 text-lg" asChild>
                   <Link href="/admin/settings">
                     <Settings className="mr-2 h-4 w-4" />
                     Site Settings
                   </Link>
                 </Button>
-                <Button variant="ghost" className="w-[90%] justify-start text-black hover:bg-black/5" asChild>
+                <Button variant="ghost" className="w-[90%] justify-start text-black hover:bg-black/5 text-lg" asChild>
                   <Link href="/admin/iplogs">
                     <Globe className="mr-2 h-4 w-4" />
                     IP Logs
@@ -812,7 +789,7 @@ export default function AdminDashboardPage() {
                 </Button>
                 <Button
                   variant="ghost"
-                  className="w-[90%] justify-start text-black hover:bg-black/5"
+                  className="w-[90%] justify-start text-black hover:bg-black/5 text-lg"
                   onClick={handleLogout}
                 >
                   <LogOut className="mr-2 h-4 w-4" />
@@ -826,7 +803,7 @@ export default function AdminDashboardPage() {
         {/* Main Content */}
         <div className="md:pl-64 flex flex-1 flex-col overflow-hidden">
           <main className="pb-10 sm:pt-10 flex-1">
-            <h2 className="text-2xl sm:text-2xl font-bold mb-6 bg-gradient-to-r from-primary-700 to-secondary-700 bg-clip-text text-transparent">
+            <h2 className="text-3xl sm:text-3xl font-bold mb-6 bg-gradient-to-r from-primary-700 to-secondary-700 bg-clip-text text-transparent">
               Admin Dashboard
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
