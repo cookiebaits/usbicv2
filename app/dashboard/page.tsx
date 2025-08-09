@@ -302,33 +302,33 @@ export default function DashboardPage() {
             <div className="px-1 py-2">
               <h2 className="mb-4 px-4 text-sm font-semibold tracking-tight text-black">Main</h2>
               <div className="space-y-4">
-                <Button variant="ghost" className="w-[90%] justify-start text-black hover:bg-black/5 text-lg" asChild>
+                <Button variant="ghost" className="w-[90%] justify-start text-black hover:bg-black/5 text-xl" asChild>
                   <Link href="/dashboard">
-                    <Home className="mr-2 h-4 w-4" />
+                    <Home className="mr-1 h-4 w-4" />
                     Dashboard
                   </Link>
                 </Button>
-                <Button variant="ghost" className="w-[90%] justify-start text-black hover:bg-black/5 text-lg" asChild>
+                <Button variant="ghost" className="w-[90%] justify-start text-black hover:bg-black/5 text-xl" asChild>
                   <Link href="/dashboard/accounts">
-                    <CreditCard className="mr-2 h-4 w-4" />
+                    <CreditCard className="mr-1 h-4 w-4" />
                     Accounts
                   </Link>
                 </Button>
-                <Button variant="ghost" className="w-[90%] justify-start text-black hover:bg-black/5 text-lg" asChild>
+                <Button variant="ghost" className="w-[90%] justify-start text-black hover:bg-black/5 text-xl" asChild>
                   <Link href="/dashboard/transactions">
-                    <FileText className="mr-2 h-4 w-4" />
+                    <FileText className="mr-1 h-4 w-4" />
                     Transactions
                   </Link>
                 </Button>
-                <Button variant="ghost" className="w-[90%] justify-start text-black hover:bg-black/5 text-lg" asChild>
+                <Button variant="ghost" className="w-[90%] justify-start text-black hover:bg-black/5 text-xl" asChild>
                   <Link href="/dashboard/transfers">
-                    <Send className="mr-2 h-4 w-4" />
+                    <Send className="mr-1 h-4 w-4" />
                     Transfers
                   </Link>
                 </Button>
-                <Button variant="ghost" className="w-[90%] justify-start text-black hover:bg-black/5 text-lg" asChild>
+                <Button variant="ghost" className="w-[90%] justify-start text-black hover:bg-black/5 text-xl" asChild>
                   <Link href="/dashboard/crypto">
-                    <FaBitcoinSign className="mr-2 h-4 w-4" />
+                    <FaBitcoinSign className="mr-1 h-4 w-4" />
                     BTC Wallet
                   </Link>
                 </Button>
@@ -337,14 +337,14 @@ export default function DashboardPage() {
             <div className="px-1 py-2 pt-4">
               <h2 className="mb-4 px-4 text-sm font-semibold tracking-tight text-black">Settings</h2>
               <div className="space-y-1">
-                <Button variant="ghost" className="w-[90%] justify-start text-black hover:bg-black/5 text-lg" asChild>
+                <Button variant="ghost" className="w-[90%] justify-start text-black hover:bg-black/5 text-xl" asChild>
                   <Link href="/dashboard/profile">
-                    <User className="mr-2 h-4 w-4" />
+                    <User className="mr-1 h-4 w-4" />
                     Profile
                   </Link>
                 </Button>
-                <Button variant="ghost" className="w-[90%] justify-start text-black hover:bg-black/5 text-lg" onClick={() => logout("user")}>
-                  <LogOut className="mr-2 h-4 w-4" />
+                <Button variant="ghost" className="w-[90%] justify-start text-black hover:bg-black/5 text-xl" onClick={() => logout("user")}>
+                  <LogOut className="mr-1 h-4 w-4" />
                   Logout
                 </Button>
               </div>

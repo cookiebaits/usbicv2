@@ -67,7 +67,7 @@ export default function TopBar({ children }: TopBarProps) {
                 className="fixed top-0 left-0 w-full shadow-md bg-barColor backdrop-blur-lg p-4 z-50"
             >
                 <div className="w-[1260px] m-auto flex items-center justify-between">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2" onClick={() => pathname.includes("admin")? window.location.href = '/admin/dashboard' : window.location.href = '/dashboard'}>
                         {settings?.logoUrl ? (
                             <img
                                 src={settings.logoUrl}
@@ -76,6 +76,7 @@ export default function TopBar({ children }: TopBarProps) {
                                     width: settings.logoWidth > 0 ? `${settings.logoWidth}px` : "auto",
                                     height: settings.logoHeight > 0 ? `${settings.logoHeight}px` : "32px",
                                     filter: "brightness(100%)",
+                                    cursor: "pointer"
                                 }}
                             />
                         ) : (

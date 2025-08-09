@@ -76,7 +76,7 @@ export default function LoginPage() {
         setShowTwoFactor(true);
       } else {
         localStorage.setItem("token", data.token);
-        router.push(data.redirect);
+        window.location.href = data.redirect;
       }
       setIsLoginLoading(false);
     } catch (error) {
@@ -104,7 +104,8 @@ export default function LoginPage() {
       }
 
       localStorage.setItem("token", data.token);
-      router.push(data.redirect);
+      // router.push(data.redirect);
+      window.location.href = data.redirect;
     } catch (error) {
       setError("Invalid verification code or an unexpected error occurred.");
       setIsTwoFactorLoading(false);

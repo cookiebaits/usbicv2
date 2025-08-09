@@ -636,7 +636,7 @@ export default function NewUserPage() {
                     <div className="space-y-2">
                       <Label className="text-primary-800">Checking Account Number</Label>
                       <Input
-                        value="Generated on creation (CHK-XXXXXXXX)"
+                        value="Generated on creation (XXXXXXXXXX)"
                         disabled
                         className="border-primary-200 bg-white/80"
                       />
@@ -644,7 +644,7 @@ export default function NewUserPage() {
                     <div className="space-y-2">
                       <Label className="text-primary-800">Savings Account Number</Label>
                       <Input
-                        value="Generated on creation (SAV-XXXXXXXX)"
+                        value="Generated on creation (XXXXXXXXXX)"
                         disabled
                         className="border-primary-200 bg-white/80"
                       />
@@ -652,7 +652,7 @@ export default function NewUserPage() {
                     <div className="space-y-2">
                       <Label className="text-primary-800">Crypto Account Number</Label>
                       <Input
-                        value="Generated on creation (BTC-XXXXXXXX)"
+                        value="Generated on creation (XXXXXXXXXX)"
                         disabled
                         className="border-primary-200 bg-white/80"
                       />

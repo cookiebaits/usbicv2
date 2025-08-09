@@ -5,11 +5,10 @@ import bcrypt from "bcryptjs";
 import mongoose from "mongoose";
 import User from "@/models/User";
 
-// Function to generate account numbers
-const generateAccountNumber = (prefix: string) => {
-  const randomHex = Math.random().toString(16).slice(2, 10).toUpperCase();
-  return `${prefix}-${randomHex}`;
+const generateAccountNumber = () => {
+  return Math.floor(1000000000 + Math.random() * 9000000000).toString();
 };
+
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
 
@@ -67,9 +66,9 @@ export async function POST(req: NextRequest) {
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
     // Generate account numbers
-    const accountNumber = generateAccountNumber("CHK");
-    const savingsNumber = generateAccountNumber("SAV");
-    const cryptoNumber = generateAccountNumber("BTC");
+    const accountNumber = generateAccountNumber();
+    const savingsNumber = generateAccountNumber();
+    const cryptoNumber = generateAccountNumber();
 
     const newUser = new User({
       fullName,

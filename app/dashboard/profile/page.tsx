@@ -78,7 +78,7 @@ export default function ProfilePage() {
   const [newPreferredMethod, setNewPreferredMethod] = useState("")
   const [show2FAModal, setShow2FAModal] = useState(false)
   const [verificationCode, setVerificationCode] = useState("")
-  const [verificationType, setVerificationType] = useState<"password" | "method" | null>(null)
+  const [verificationType, setVerificationType] = useState<"password" | "method" | "disable2FA" | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [success, setSuccess] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -323,6 +323,30 @@ export default function ProfilePage() {
         setNewPreferredMethod("")
         setTimeout(() => setSuccess(null), 3000)
       }
+      else if (verificationType === "disable2FA") {
+        const response = await apiFetch("/api/2Fa", {
+          method: "PUT",
+          body: JSON.stringify({
+            userId,
+            enabled: false,
+            step: "verifyCode",
+            verificationCode
+          }),
+        });
+
+        if (!response.ok) {
+          const data = await response.json();
+          throw new Error(data.error || "Failed to disable 2FA");
+        }
+
+        setIs2FAEnabled(false);
+        setSuccess("2FA disabled successfully");
+        setShow2FAModal(false);
+        setVerificationCode("");
+        setVerificationType(null);
+        setTimeout(() => setSuccess(null), 3000);
+      }
+
     } catch (error) {
       if (error instanceof Error && error.message !== 'Unauthorized') {
         setError(error.message)
@@ -334,49 +358,73 @@ export default function ProfilePage() {
     }
   }
 
-  // Handle 2FA toggle
+
   const handle2FAToggle = async (checked: boolean) => {
     if (!userId) {
-      setError("User ID is missing. Please try refreshing the page.")
-      return
+      setError("User ID is missing. Please try refreshing the page.");
+      return;
     }
 
-    setIs2FAEnabled(checked)
-    setIsLoading(true)
-    setError(null)
-    setSuccess(null)
+    setError(null);
+    setSuccess(null);
 
-    try {
-      const response = await apiFetch("/api/2Fa", {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          userId: userId, // Ensure userId is explicitly passed as a string
-          enabled: checked,
-        }),
-      })
+    if (!checked) {
+      // Request code for disabling
+      setIsLoading(true);
+      try {
+        const response = await apiFetch("/api/2Fa", {
+          method: "PUT",
+          body: JSON.stringify({
+            userId,
+            enabled: false,
+            step: "requestCode"
+          }),
+        });
 
-      if (!response.ok) {
-        const data = await response.json()
-        throw new Error(data.error || "Failed to update 2FA setting")
+        if (!response.ok) {
+          const data = await response.json();
+          throw new Error(data.error || "Failed to send verification code");
+        }
+
+        setVerificationType("disable2FA");
+        setShow2FAModal(true);
+        setVerificationCode("");
+        setSuccess("Verification code sent to your email.");
+      } catch (error) {
+        setError(error instanceof Error ? error.message : "An error occurred");
+      } finally {
+        setIsLoading(false);
       }
-
-      setSuccess(`2FA ${checked ? "enabled" : "disabled"} successfully`)
-      setTimeout(() => setSuccess(null), 3000)
-    } catch (error) {
-      console.error("Error updating 2FA:", error)
-      setError(error instanceof Error ? error.message : "An unknown error occurred")
-      setIs2FAEnabled(!checked) // Revert state on failure
-    } finally {
-      setIsLoading(false)
+    } else {
+      // Directly enable
+      setIsLoading(true);
+      try {
+        const response = await apiFetch("/api/2Fa", {
+          method: "PUT",
+          body: JSON.stringify({
+            userId,
+            enabled: true
+          }),
+        });
+        if (!response.ok) {
+          const data = await response.json();
+          throw new Error(data.error || "Failed to enable 2FA");
+        }
+        setIs2FAEnabled(true);
+        setSuccess("2FA enabled successfully");
+      } catch (error) {
+        setError(error instanceof Error ? error.message : "An error occurred");
+      } finally {
+        setIsLoading(false);
+      }
     }
-  }
+  };
+
+
 
   const render2FAModal = () => (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <Card className="w-full max-w-md backdrop-blur-sm bg-white/60 border border-primary-100 shadow-lg">
+      <Card className="w-full max-w-md backdrop-blur-sm bg-white border border-primary-100 shadow-lg">
         <CardHeader className="relative z-10">
           <CardTitle className="text-xl font-bold text-primary-900">Two-Factor Authentication</CardTitle>
           <CardDescription className="text-primary-700">

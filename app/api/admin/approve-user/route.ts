@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import dbConnect from "@/lib/mongodb";
 import PendingUser from "@/models/pendingUser";
 import User from "@/models/User";
-import crypto from "crypto";
 
 export async function POST(req: NextRequest) {
   try {
@@ -26,7 +25,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "User already approved" }, { status: 400 });
     }
 
-    // Create new user in the User collection
+    const generateAccountNumber = (length: number) => {
+      let num = "";
+      for (let i = 0; i < length; i++) {
+        num += Math.floor(Math.random() * 10);
+      }
+      return num;
+    };
+
     const newUser = new User({
       fullName: pendingUser.fullName,
       email: pendingUser.email,
@@ -39,9 +45,9 @@ export async function POST(req: NextRequest) {
       username: pendingUser.username,
       password: pendingUser.password,
       isVerified: true,
-      accountNumber: `CHK-${crypto.randomBytes(4).toString("hex").toUpperCase()}`,
-      savingsNumber: `SAV-${crypto.randomBytes(4).toString("hex").toUpperCase()}`,
-      cryptoNumber: `BTC-${crypto.randomBytes(4).toString("hex").toUpperCase()}`,
+      accountNumber: generateAccountNumber(10),
+      savingsNumber: generateAccountNumber(10),
+      cryptoNumber: generateAccountNumber(10),
       balance: 0,
       savingsBalance: 0,
       cryptoBalance: 0,

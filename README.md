@@ -1,3 +1,4 @@
--- Fixed Site Settings Reverting Back issue
--- Fixed Date showing as NaN/NaN/NaN issue
--- Showing current month transactions by default on Transactions Page
+1. Asking for 2FA on disabling 2FA
+2. set spacing and font size
+3. Generating Numeric Account numbers
+4. Navigating to dashboard on clicking logo
