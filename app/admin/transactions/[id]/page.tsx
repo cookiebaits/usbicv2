@@ -75,7 +75,7 @@ interface Transaction {
   date: string
   status: "completed" | "pending" | "failed" | "refunded"
   category: string
-  accountType: "checking" | "savings" | "crypto"
+  account: "checking" | "savings" | "crypto"
   memo?: string
   relatedTransactionId?: string
   cryptoAmount?: number
@@ -401,7 +401,9 @@ export default function TransactionDetailPage() {
     fetchTransactionData()
   }, [transactionId, receiverId, router])
 
-  const getTransactionIcon = (type: string) => {
+  const getTransactionIcon = (type: string, category?: string, accountType?: string) => {
+    if (category === "admin" && accountType === "crypto")
+      return <FaBitcoinSign className="h-5 w-5 text-purple-600" />
     switch (type) {
       case "deposit":
       case "interest":
@@ -711,6 +713,8 @@ export default function TransactionDetailPage() {
     transferTitle = `${senderUser.fullName} - ${senderTransaction.description}`
   }
 
+  console.log(senderTransaction);
+
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-primary-50 to-secondary-50">
       <div className="container mx-auto p-6">
@@ -935,7 +939,7 @@ export default function TransactionDetailPage() {
                 <div className="space-y-4">
                   <div className="flex items-center gap-3">
                     <div className="h-10 w-10 rounded-full flex items-center justify-center bg-muted">
-                      {getTransactionIcon(senderTransaction.type)}
+                      {getTransactionIcon(senderTransaction.type, senderTransaction?.category, senderTransaction?.account)}
                     </div>
                     <div>
                       <p className="font-medium text-primary-900">{senderTransaction.description}</p>
@@ -1163,7 +1167,7 @@ export default function TransactionDetailPage() {
                   <div className="space-y-4">
                     <div className="flex items-center gap-3">
                       <div className="h-10 w-10 rounded-full flex items-center justify-center bg-muted">
-                        {getTransactionIcon(receiverTransaction.type)}
+                        {getTransactionIcon(receiverTransaction.type, receiverTransaction?.category, receiverTransaction?.account)}
                       </div>
                       <div>
                         <p className="font-medium text-primary-900">{receiverTransaction.description}</p>

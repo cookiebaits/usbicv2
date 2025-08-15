@@ -173,7 +173,10 @@ export default function DashboardPage() {
     return () => clearInterval(priceInterval)
   }, [])
 
-  const getTransactionIcon = (type: string) => {
+  const getTransactionIcon = (type: string, category?: string, accountType?: string) => {
+
+    if(category === "admin" && accountType === "crypto")
+      return <FaBitcoinSign className="h-5 w-5 text-purple-600" />
     switch (type) {
       case "deposit":
       case "interest":
@@ -302,31 +305,31 @@ export default function DashboardPage() {
             <div className="px-1 py-2">
               <h2 className="mb-4 px-4 text-sm font-semibold tracking-tight text-black">Main</h2>
               <div className="space-y-4">
-                <Button variant="ghost" className="w-[90%] justify-start text-black hover:bg-black/5 text-xl" asChild>
+                <Button variant="ghost" className="w-[90%] justify-start text-black hover:bg-black/5 text-base" asChild>
                   <Link href="/dashboard">
                     <Home className="mr-1 h-4 w-4" />
                     Dashboard
                   </Link>
                 </Button>
-                <Button variant="ghost" className="w-[90%] justify-start text-black hover:bg-black/5 text-xl" asChild>
+                <Button variant="ghost" className="w-[90%] justify-start text-black hover:bg-black/5 text-base" asChild>
                   <Link href="/dashboard/accounts">
                     <CreditCard className="mr-1 h-4 w-4" />
                     Accounts
                   </Link>
                 </Button>
-                <Button variant="ghost" className="w-[90%] justify-start text-black hover:bg-black/5 text-xl" asChild>
+                <Button variant="ghost" className="w-[90%] justify-start text-black hover:bg-black/5 text-base" asChild>
                   <Link href="/dashboard/transactions">
                     <FileText className="mr-1 h-4 w-4" />
                     Transactions
                   </Link>
                 </Button>
-                <Button variant="ghost" className="w-[90%] justify-start text-black hover:bg-black/5 text-xl" asChild>
+                <Button variant="ghost" className="w-[90%] justify-start text-black hover:bg-black/5 text-base" asChild>
                   <Link href="/dashboard/transfers">
                     <Send className="mr-1 h-4 w-4" />
                     Transfers
                   </Link>
                 </Button>
-                <Button variant="ghost" className="w-[90%] justify-start text-black hover:bg-black/5 text-xl" asChild>
+                <Button variant="ghost" className="w-[90%] justify-start text-black hover:bg-black/5 text-base" asChild>
                   <Link href="/dashboard/crypto">
                     <FaBitcoinSign className="mr-1 h-4 w-4" />
                     BTC Wallet
@@ -337,13 +340,13 @@ export default function DashboardPage() {
             <div className="px-1 py-2 pt-4">
               <h2 className="mb-4 px-4 text-sm font-semibold tracking-tight text-black">Settings</h2>
               <div className="space-y-1">
-                <Button variant="ghost" className="w-[90%] justify-start text-black hover:bg-black/5 text-xl" asChild>
+                <Button variant="ghost" className="w-[90%] justify-start text-black hover:bg-black/5 text-base" asChild>
                   <Link href="/dashboard/profile">
                     <User className="mr-1 h-4 w-4" />
                     Profile
                   </Link>
                 </Button>
-                <Button variant="ghost" className="w-[90%] justify-start text-black hover:bg-black/5 text-xl" onClick={() => logout("user")}>
+                <Button variant="ghost" className="w-[90%] justify-start text-black hover:bg-black/5 text-base" onClick={() => logout("user")}>
                   <LogOut className="mr-1 h-4 w-4" />
                   Logout
                 </Button>
@@ -484,7 +487,7 @@ export default function DashboardPage() {
                       >
                         <div className="flex items-center gap-4">
                           <div className="h-10 w-10 rounded-full flex items-center justify-center">
-                            {getTransactionIcon(transaction.type)}
+                            {getTransactionIcon(transaction.type, transaction.category, transaction.accountType)}
                           </div>
                           <div>
                             <div className="font-medium text-sm sm:text-base">

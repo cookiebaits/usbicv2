@@ -20,7 +20,7 @@ export async function PUT(req: NextRequest) {
     }
 
     // --- Disabling 2FA: Step 1 - Request code ---
-    if (enabled === false && step === "requestCode") {
+    if (step === "requestCode") {
       const code = crypto.randomBytes(3).toString("hex").toUpperCase();
       user.twoFactorCode = code;
       await user.save();
@@ -47,8 +47,15 @@ export async function PUT(req: NextRequest) {
     }
 
     // --- Enabling 2FA (no verification needed) ---
-    if (enabled === true) {
+    if (enabled === true && step === "verifyCode") {
+      if (!verificationCode) {
+        return NextResponse.json({ error: "Verification code is required" }, { status: 400 });
+      }
+      if (user.twoFactorCode !== verificationCode) {
+        return NextResponse.json({ error: "Invalid verification code" }, { status: 400 });
+      }
       user.twoFactorEnabled = true;
+      user.twoFactorCode = undefined;
       await user.save();
 
       return NextResponse.json({ message: "2FA enabled successfully" }, { status: 200 });

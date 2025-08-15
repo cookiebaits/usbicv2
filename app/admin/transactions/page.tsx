@@ -63,6 +63,7 @@ interface Transaction {
   status: string
   account: string
   memo?: string
+  category?: string
   transferId?: string
   cryptoAmount?: number
   cryptoPrice?: number
@@ -317,7 +318,9 @@ export default function AdminTransactionsPage() {
     setAmountFilter("all")
   }
 
-  const getTransactionIcon = (type: string) => {
+  const getTransactionIcon = (type: string, category?: string, accountType?: string) => {
+    if (category === "admin" && accountType === "crypto")
+      return <FaBitcoinSign className="h-5 w-5 text-purple-600" />
     switch (type) {
       case "deposit":
       case "interest":
@@ -567,7 +570,6 @@ export default function AdminTransactionsPage() {
 
                     // Find the transaction to get cryptoAmount for display
                     const transaction = transactions.find((tx) => group.transactionIds.includes(tx.id))
-                    // Determine the amount to display
                     let displayAmount: number | undefined
                     let isCrypto = false
                     if (group.accounts.includes("crypto")) {
@@ -598,7 +600,7 @@ export default function AdminTransactionsPage() {
                         <td className="p-4">
                           <div className="flex items-center gap-3">
                             <div className="h-8 w-8 rounded-full flex items-center justify-center bg-muted">
-                              {getTransactionIcon(group.type)}
+                              {getTransactionIcon(group.type, transaction?.category, transaction?.account)}
                             </div>
                             <div>
                               <div className="font-medium">{group.description}</div>

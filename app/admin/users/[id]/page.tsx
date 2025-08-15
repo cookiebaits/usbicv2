@@ -704,6 +704,29 @@ export default function UserManagementPage() {
                   <div className="space-y-4 pt-4">
                     <h3 className="text-lg font-medium text-primary-900">Add Transaction</h3>
                     <div className="space-y-4">
+
+                      <div className="space-y-2">
+                        <Label htmlFor="currencyType" className="text-primary-800">
+                          Currency Type
+                        </Label>
+                        <Select
+                          value={newTransaction.currencyType || ""}
+                          onValueChange={(value) =>
+                            setNewTransaction({ ...newTransaction, currencyType: value as "fiat" | "crypto" })
+                          }
+                        >
+                          <SelectTrigger
+                            id="currencyType"
+                            className="border-primary-200 bg-white/80 focus:border-primary-300 focus:ring focus:ring-primary-200 focus:ring-opacity-50"
+                          >
+                            <SelectValue placeholder="Select currency type" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="fiat">Fiat (USD)</SelectItem>
+                            <SelectItem value="crypto">Crypto (BTC)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
                       <div className="space-y-2">
                         <Label htmlFor="transactionType" className="text-primary-800">
                           Transaction Type
@@ -717,8 +740,8 @@ export default function UserManagementPage() {
                               amount: "",
                               description: "",
                               date: new Date().toISOString().split("T")[0],
-                              accountType: ["deposit", "withdrawal", "credit", "debit"].includes(newType) ? "checking" : undefined,
-                              currencyType: ["deposit", "withdrawal", "credit", "debit"].includes(newType) ? "fiat" : undefined,
+                              accountType: newTransaction.accountType,
+                              currencyType: newTransaction.currencyType,
                             });
                           }}
                         >
@@ -731,35 +754,9 @@ export default function UserManagementPage() {
                           <SelectContent>
                             <SelectItem value="deposit">Deposit</SelectItem>
                             <SelectItem value="withdrawal">Withdrawal</SelectItem>
-                            {/*<SelectItem value="credit">Credit</SelectItem>*/}
-                            {/* <SelectItem value="debit">Debit</SelectItem>*/}
                           </SelectContent>
                         </Select>
                       </div>
-                      {["deposit", "withdrawal", "credit", "debit"].includes(newTransaction.type) && (
-                        <div className="space-y-2">
-                          <Label htmlFor="currencyType" className="text-primary-800">
-                            Currency Type
-                          </Label>
-                          <Select
-                            value={newTransaction.currencyType || ""}
-                            onValueChange={(value) =>
-                              setNewTransaction({ ...newTransaction, currencyType: value as "fiat" | "crypto" })
-                            }
-                          >
-                            <SelectTrigger
-                              id="currencyType"
-                              className="border-primary-200 bg-white/80 focus:border-primary-300 focus:ring focus:ring-primary-200 focus:ring-opacity-50"
-                            >
-                              <SelectValue placeholder="Select currency type" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="fiat">Fiat (USD)</SelectItem>
-                              <SelectItem value="crypto">Crypto (BTC)</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      )}
                       {newTransaction.currencyType === "fiat" && ["deposit", "withdrawal", "credit", "debit"].includes(newTransaction.type) && (
                         <div className="space-y-2">
                           <Label htmlFor="accountType" className="text-primary-800">

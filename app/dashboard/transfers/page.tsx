@@ -573,7 +573,7 @@ function ZelleTransfer({ checkingBalance, updateAccounts }: { checkingBalance: n
       <div className="text-center">
         <h3 className="text-lg font-medium text-primary-900">Verify Transfer</h3>
         <p className="text-sm text-primary-600">
-          Enter the 6-digit code sent to your email
+          We've sent you the code. Please check your device and enter the code below.
         </p>
       </div>
       <form onSubmit={handleVerify} className="space-y-4">
@@ -1282,7 +1282,7 @@ function TransferContent() {
       <div className="text-center">
         <h3 className="text-lg font-medium text-primary-900">Verify Transfer</h3>
         <p className="text-sm text-primary-600">
-          Enter the 6-digit code sent to your email
+          We've sent you the code. Please check your device and enter the code below.
         </p>
       </div>
       <form onSubmit={handleInternalVerify} className="space-y-4">
@@ -1535,7 +1535,7 @@ function TransferContent() {
     <div className="space-y-6">
       <div className="text-center">
         <h3 className="text-lg font-medium text-primary-900">Verify Transfer</h3>
-        <p className="text-sm text-primary-600">Enter the 6-digit code sent to your email</p>
+        <p className="text-sm text-primary-600">We've sent you the code. Please check your device and enter the code below.</p>
       </div>
       <form onSubmit={handleExternalVerify} className="space-y-4">
         {error && (

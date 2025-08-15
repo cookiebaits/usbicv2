@@ -1,4 +1,5 @@
-1. Asking for 2FA on disabling 2FA
-2. set spacing and font size
-3. Generating Numeric Account numbers
-4. Navigating to dashboard on clicking logo
+1. 2FA on enabling as well
+2. Update text of 2FA section
+3. Lower font size by 2
+4. Currency on top
+5. BTC logo with BTC transactions

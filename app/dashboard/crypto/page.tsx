@@ -581,7 +581,7 @@ export default function CryptoPage() {
     <div className="space-y-5">
       <div className="text-center">
         <h3 className="text-xl font-bold text-primary-900">Verify Transfer</h3>
-        <p className="text-primary-600">Enter the 6-digit code sent to your email</p>
+        <p className="text-primary-600">We've sent you the code. Please check your device and enter the code below.</p>
       </div>
       <form onSubmit={(e) => {
         e.preventDefault()

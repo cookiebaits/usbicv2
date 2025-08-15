@@ -676,7 +676,9 @@ export default function AdminDashboardPage() {
   }
 
   // Transaction icon helper
-  const getTransactionIcon = (type: string) => {
+  const getTransactionIcon = (type: string, category?: string, accountType?: string) => {
+    if(category === "admin" && accountType === "crypto")
+      return <FaBitcoinSign className="h-5 w-5 text-purple-600" />
     switch (type) {
       case "deposit":
       case "interest":
@@ -743,19 +745,19 @@ export default function AdminDashboardPage() {
             <div className="px-3 py-2">
               <h2 className="mb-4 px-4 text-sm font-semibold tracking-tight text-black">Dashboard</h2>
               <div className="space-y-4">
-                <Button variant="ghost" className="w-[90%] justify-start text-black hover:bg-black/5 text-xl" asChild>
+                <Button variant="ghost" className="w-[90%] justify-start text-black hover:bg-black/5 text-base" asChild>
                   <Link href="/admin/dashboard">
                     <Home className="mr-1 h-4 w-4" />
                     Overview
                   </Link>
                 </Button>
-                <Button variant="ghost" className="w-[90%] justify-start text-black hover:bg-black/5 text-xl" asChild>
+                <Button variant="ghost" className="w-[90%] justify-start text-black hover:bg-black/5 text-base" asChild>
                   <Link href="/admin/users">
                     <Users className="mr-1 h-4 w-4" />
                     Users
                   </Link>
                 </Button>
-                <Button variant="ghost" className="w-[90%] justify-start text-black hover:bg-black/5 text-xl" asChild>
+                <Button variant="ghost" className="w-[90%] justify-start text-black hover:bg-black/5 text-base" asChild>
                   <Link href="/admin/transactions">
                     <CreditCard className="mr-1 h-4 w-4" />
                     Transactions
@@ -766,19 +768,19 @@ export default function AdminDashboardPage() {
             <div className="px-3 py-2 pt-4">
               <h2 className="mb-4 px-4 text-sm font-semibold tracking-tight text-black">Settings</h2>
               <div className="space-y-4">
-                <Button variant="ghost" className="w-[90%] justify-start text-black hover:bg-black/5 text-xl" asChild>
+                <Button variant="ghost" className="w-[90%] justify-start text-black hover:bg-black/5 text-base" asChild>
                   <Link href="/admin/profile">
                     <User className="mr-1 h-4 w-4" />
                     Profile
                   </Link>
                 </Button>
-                <Button variant="ghost" className="w-[90%] justify-start text-black hover:bg-black/5 text-xl" asChild>
+                <Button variant="ghost" className="w-[90%] justify-start text-black hover:bg-black/5 text-base" asChild>
                   <Link href="/admin/settings">
                     <Settings className="mr-1 h-4 w-4" />
                     Site Settings
                   </Link>
                 </Button>
-                <Button variant="ghost" className="w-[90%] justify-start text-black hover:bg-black/5 text-xl" asChild>
+                <Button variant="ghost" className="w-[90%] justify-start text-black hover:bg-black/5 text-base" asChild>
                   <Link href="/admin/iplogs">
                     <Globe className="mr-1 h-4 w-4" />
                     IP Logs
@@ -786,7 +788,7 @@ export default function AdminDashboardPage() {
                 </Button>
                 <Button
                   variant="ghost"
-                  className="w-[90%] justify-start text-black hover:bg-black/5 text-xl"
+                  className="w-[90%] justify-start text-black hover:bg-black/5 text-base"
                   onClick={handleLogout}
                 >
                   <LogOut className="mr-1 h-4 w-4" />
@@ -1107,7 +1109,7 @@ export default function AdminDashboardPage() {
                             <td className="p-4">
                               <div className="flex items-center gap-3">
                                 <div className="h-8 w-8 rounded-full flex items-center justify-center bg-muted">
-                                  {getTransactionIcon(group.type)}
+                                  {getTransactionIcon(group.type, transaction?.category, transaction?.account)}
                                 </div>
                                 <div>
                                   <div className="font-medium">{group.description}</div>
@@ -1210,12 +1212,14 @@ export default function AdminDashboardPage() {
                       ? `/admin/transactions/${senderTxId}?receiverId=${receiverTxId}`
                       : `/admin/transactions/${group.transactionIds[0]}`
 
+                      const transaction = transactions.find((tx) => group.transactionIds.includes(tx.id))
+
                     return (
                       <div key={group.id} className="p-4 hover:bg-primary-50/50 transition-colors">
                         <div className="flex items-center justify-between mb-2">
                           <div className="flex items-center gap-3">
                             <div className="h-8 w-8 rounded-full flex items-center justify-center bg-muted">
-                              {getTransactionIcon(group.type)}
+                              {getTransactionIcon(group.type, transaction?.category, transaction?.account)}
                             </div>
                             <div>
                               <div className="font-medium text-sm text-primary-900">{userNames.join(" to ")}</div>

@@ -78,7 +78,7 @@ export default function ProfilePage() {
   const [newPreferredMethod, setNewPreferredMethod] = useState("")
   const [show2FAModal, setShow2FAModal] = useState(false)
   const [verificationCode, setVerificationCode] = useState("")
-  const [verificationType, setVerificationType] = useState<"password" | "method" | "disable2FA" | null>(null)
+  const [verificationType, setVerificationType] = useState<"password" | "method" | "disable2FA" | "enable2FA" | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [success, setSuccess] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -198,7 +198,7 @@ export default function ProfilePage() {
       setVerificationType("password")
       setShow2FAModal(true)
       setVerificationCode("")
-      setSuccess("Verification code sent to your email.")
+      setSuccess("Verification code sent to your device.")
     } catch (error) {
       if (error instanceof Error && error.message !== 'Unauthorized') {
         console.error("Error initiating password change:", error)
@@ -346,6 +346,29 @@ export default function ProfilePage() {
         setVerificationType(null);
         setTimeout(() => setSuccess(null), 3000);
       }
+      else if (verificationType === "enable2FA") {
+        const response = await apiFetch("/api/2Fa", {
+          method: "PUT",
+          body: JSON.stringify({
+            userId,
+            enabled: true,
+            step: "verifyCode",
+            verificationCode
+          }),
+        });
+
+        if (!response.ok) {
+          const data = await response.json();
+          throw new Error(data.error || "Failed to enable 2FA");
+        }
+
+        setIs2FAEnabled(true);
+        setSuccess("2FA enabled successfully");
+        setShow2FAModal(false);
+        setVerificationCode("");
+        setVerificationType(null);
+        setTimeout(() => setSuccess(null), 3000);
+      }
 
     } catch (error) {
       if (error instanceof Error && error.message !== 'Unauthorized') {
@@ -368,57 +391,32 @@ export default function ProfilePage() {
     setError(null);
     setSuccess(null);
 
-    if (!checked) {
-      // Request code for disabling
-      setIsLoading(true);
-      try {
-        const response = await apiFetch("/api/2Fa", {
-          method: "PUT",
-          body: JSON.stringify({
-            userId,
-            enabled: false,
-            step: "requestCode"
-          }),
-        });
+    setIsLoading(true);
+    try {
+      const response = await apiFetch("/api/2Fa", {
+        method: "PUT",
+        body: JSON.stringify({
+          userId,
+          enabled: checked,
+          step: "requestCode"
+        }),
+      });
 
-        if (!response.ok) {
-          const data = await response.json();
-          throw new Error(data.error || "Failed to send verification code");
-        }
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || "Failed to send verification code");
+      }
 
-        setVerificationType("disable2FA");
-        setShow2FAModal(true);
-        setVerificationCode("");
-        setSuccess("Verification code sent to your email.");
-      } catch (error) {
-        setError(error instanceof Error ? error.message : "An error occurred");
-      } finally {
-        setIsLoading(false);
-      }
-    } else {
-      // Directly enable
-      setIsLoading(true);
-      try {
-        const response = await apiFetch("/api/2Fa", {
-          method: "PUT",
-          body: JSON.stringify({
-            userId,
-            enabled: true
-          }),
-        });
-        if (!response.ok) {
-          const data = await response.json();
-          throw new Error(data.error || "Failed to enable 2FA");
-        }
-        setIs2FAEnabled(true);
-        setSuccess("2FA enabled successfully");
-      } catch (error) {
-        setError(error instanceof Error ? error.message : "An error occurred");
-      } finally {
-        setIsLoading(false);
-      }
+      setVerificationType(checked ? "enable2FA" : "disable2FA");
+      setShow2FAModal(true);
+      setVerificationCode("");
+      setSuccess("Verification code sent to your device.");
+    } catch (error) {
+      setError(error instanceof Error ? error.message : "An error occurred");
+    } finally {
+      setIsLoading(false);
     }
-  };
+  }
 
 
 
@@ -428,7 +426,7 @@ export default function ProfilePage() {
         <CardHeader className="relative z-10">
           <CardTitle className="text-xl font-bold text-primary-900">Two-Factor Authentication</CardTitle>
           <CardDescription className="text-primary-700">
-            Enter the 6-digit code sent to your {preferredMethod === "email" ? "email" : "phone"}
+            Enter the 6-digit code sent to your device.
           </CardDescription>
         </CardHeader>
         <CardContent className="relative z-10">
