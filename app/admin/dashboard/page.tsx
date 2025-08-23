@@ -677,18 +677,20 @@ export default function AdminDashboardPage() {
 
   // Transaction icon helper
   const getTransactionIcon = (type: string, category?: string, accountType?: string) => {
-    if(category === "admin" && accountType === "crypto")
-      return <FaBitcoinSign className="h-5 w-5 text-purple-600" />
+
+    if (category === "admin" && accountType === "crypto")
+      return <FaBitcoinSign className="h-5 w-5 text-yellow-500" />
     switch (type) {
       case "deposit":
       case "interest":
-        return <ArrowDown className="h-5 w-5 text-green-600" />
       case "withdrawal":
-        return <ArrowUp className="h-5 w-5 text-red-600" />
       case "transfer":
-        return <ArrowLeftRight className="h-5 w-5 text-purple-600" />
       case "payment":
-        return <CreditCard className="h-5 w-5 text-orange-600" />
+        return <img
+          src="/arrow-top-bottom.png"
+          alt="Double Arrow Icon"
+          className="h-5 w-auto"
+        />
       case "fee":
         return <FileText className="h-5 w-5 text Bauch-600" />
       case "refund":
@@ -696,30 +698,16 @@ export default function AdminDashboardPage() {
       case "crypto_buy":
       case "crypto_sell":
       case "bitcoin_transfer":
-        return <FaBitcoinSign className="h-5 w-5 text-purple-600" />
+        return <FaBitcoinSign className="h-5 w-5 text-yellow-500" />
       case "zelle":
-        return zelleLogoUrl ? <img
-          src={zelleLogoUrl || "/default-logo.png"}
+        return <img
+          src="/zellez.png"
           alt="Zelle Logo"
-          className="h-4 w-auto"
-        /> : <CreditCard className="h-5 w-5 text-gray-600" />;
+          className="h-5 w-auto"
+        />
       default:
         return <CreditCard className="h-5 w-5 text-gray-600" />
     }
-  }
-
-  // Handle status change
-  const handleStatusChange = (transactionId: string, newStatus: "completed" | "pending" | "failed") => {
-    setTransactions((prev) =>
-      prev.map((transaction) =>
-        transaction.id === transactionId ? { ...transaction, status: newStatus } : transaction
-      )
-    )
-    setGroupedTransactions((prev) =>
-      prev.map((group) =>
-        group.transactionIds.includes(transactionId) ? { ...group, status: newStatus } : group
-      )
-    )
   }
 
   // Render loading state or redirect if not authenticated
@@ -1048,7 +1036,7 @@ export default function AdminDashboardPage() {
                   <table className="w-full">
                     <thead>
                       <tr className="border-b bg-primary-50/50">
-                        <th className="text-left p-4 text-primary-800">ID</th>
+                        {/* <th className="text-left p-4 text-primary-800">ID</th> */}
                         <th className="text-left p-4 text-primary-800">Users</th>
                         <th className="text-left p-4 text-primary-800">Description</th>
                         <th className="text-left p-4 text-primary-800">Date</th>
@@ -1090,9 +1078,9 @@ export default function AdminDashboardPage() {
 
                         return (
                           <tr key={group.id} className="hover:bg-primary-50/50 transition-colors">
-                            <td className="p-4 font-mono text-xs">
+                            {/* <td className="p-4 font-mono text-xs">
                               {isGroup ? `Group: ${group.id}` : group.id}
-                            </td>
+                            </td> */}
                             <td className="p-4">
                               <div>
                                 <div className="font-medium text-primary-900">{userNames.join(" to ")}</div>
@@ -1112,9 +1100,15 @@ export default function AdminDashboardPage() {
                                   {getTransactionIcon(group.type, transaction?.category, transaction?.account)}
                                 </div>
                                 <div>
-                                  <div className="font-medium">{group.description}</div>
+                                  <div className="font-medium">{(transaction?.category === "admin" && transaction?.type === "withdrawal") ? `Withdraw: ${transaction?.description}`
+                                    : (transaction?.category === "admin" && transaction?.type === "deposit") ? `Deposit: ${transaction?.description}`
+                                      : (transaction?.type === "bitcoin_transfer") ? `BTC Send: ${transaction?.memo || transaction?.description}`
+                                        : (transaction?.type === "transfer" && transaction?.category === "External Transfer") ? `External Transfer: ${transaction?.description}`
+                                          : (transaction?.type === "transfer" && transaction?.category === "Transfer") ? `Internal Transfer: ${transaction?.description}`
+                                            : transaction?.description}</div>
                                   <div className="text-sm text-muted-foreground capitalize">
-                                    {group.type.replace("_", " ")}
+                                    {transaction?.type !== "bitcoin_transfer" && group.type.replace("_", " ")}
+                                    {transaction?.type === "bitcoin_transfer" && `Wallet: ${transaction?.recipientWallet}`}
                                   </div>
                                 </div>
                               </div>
@@ -1212,7 +1206,7 @@ export default function AdminDashboardPage() {
                       ? `/admin/transactions/${senderTxId}?receiverId=${receiverTxId}`
                       : `/admin/transactions/${group.transactionIds[0]}`
 
-                      const transaction = transactions.find((tx) => group.transactionIds.includes(tx.id))
+                    const transaction = transactions.find((tx) => group.transactionIds.includes(tx.id))
 
                     return (
                       <div key={group.id} className="p-4 hover:bg-primary-50/50 transition-colors">
@@ -1266,10 +1260,10 @@ export default function AdminDashboardPage() {
                           </DropdownMenu>
                         </div>
                         <div className="space-y-2 text-sm">
-                          <div>
+                          {/* <div>
                             <span className="text-primary-500">ID:</span>{" "}
                             <span className="font-mono">{isGroup ? `Group: ${group.id}` : group.id}</span>
-                          </div>
+                          </div> */}
                           <div>
                             <span className="text-primary-500">Description:</span> {group.description}
                           </div>

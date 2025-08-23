@@ -402,18 +402,20 @@ export default function TransactionDetailPage() {
   }, [transactionId, receiverId, router])
 
   const getTransactionIcon = (type: string, category?: string, accountType?: string) => {
+
     if (category === "admin" && accountType === "crypto")
-      return <FaBitcoinSign className="h-5 w-5 text-purple-600" />
+      return <FaBitcoinSign className="h-5 w-5 text-yellow-500" />
     switch (type) {
       case "deposit":
       case "interest":
-        return <ArrowDown className="h-5 w-5 text-green-600" />
       case "withdrawal":
-        return <ArrowUp className="h-5 w-5 text-red-600" />
       case "transfer":
-        return <ArrowLeftRight className="h-5 w-5 text-purple-600" />
       case "payment":
-        return <CreditCard className="h-5 w-5 text-orange-600" />
+        return <img
+          src="/arrow-top-bottom.png"
+          alt="Double Arrow Icon"
+          className="h-5 w-auto"
+        />
       case "fee":
         return <FileText className="h-5 w-5 text Bauch-600" />
       case "refund":
@@ -421,13 +423,13 @@ export default function TransactionDetailPage() {
       case "crypto_buy":
       case "crypto_sell":
       case "bitcoin_transfer":
-        return <FaBitcoinSign className="h-5 w-5 text-purple-600" />
+        return <FaBitcoinSign className="h-5 w-5 text-yellow-500" />
       case "zelle":
-        return zelleLogoUrl ? <img
-          src={zelleLogoUrl || "/default-logo.png"}
+        return <img
+          src="/zellez.png"
           alt="Zelle Logo"
-          className="h-4 w-auto"
-        /> : <CreditCard className="h-5 w-5 text-gray-600" />;
+          className="h-5 w-auto"
+        />
       default:
         return <CreditCard className="h-5 w-5 text-gray-600" />
     }

@@ -81,7 +81,6 @@ export async function GET(req: NextRequest) {
 
     // Fetch all transactions, sorted by date in descending order, and populate user details
     const transactions = await Transaction.find()
-      .sort({ date: -1 }) // Sort by date in descending order (latest first)
       .populate("userId", "fullName email accountNumber savingsNumber")
       .lean() as unknown as ITransaction[];
 
@@ -244,6 +243,7 @@ export async function GET(req: NextRequest) {
       processedIds.add(txId);
     }
 
+    // processedTransactions.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     return NextResponse.json({ transactions: processedTransactions }, { status: 200 });
   } catch (error) {
     console.error("Error fetching transactions:", error);

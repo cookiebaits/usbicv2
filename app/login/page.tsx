@@ -208,7 +208,7 @@ export default function LoginPage() {
                         placeholder="Enter your password"
                         className="pr-10 bg-white border-primary-200 focus:border-primary-300 focus:ring focus:ring-primary-200 focus:ring-opacity-50"
                       />
-                      <button
+                      {/* <button
                         type="button"
                         className="absolute inset-y-0 right-0 pr-3 flex items-center"
                         onClick={() => setShowPassword(!showPassword)}
@@ -218,7 +218,7 @@ export default function LoginPage() {
                         ) : (
                           <Eye className="h-4 w-4 text-primary-500" />
                         )}
-                      </button>
+                      </button> */}
                     </div>
                   </div>
                 </div>

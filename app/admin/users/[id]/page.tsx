@@ -72,6 +72,7 @@ export default function UserManagementPage() {
   // User state
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isTransactionLoading, setIsTransactionLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const from = searchParams.get("from");
@@ -275,6 +276,8 @@ export default function UserManagementPage() {
   const handleAddTransaction = async () => {
     setError(null);
     setSuccess(null);
+    setIsTransactionLoading(true);
+    
 
     if (!newTransaction.amount || !newTransaction.description) {
       setError("Please fill in all fields");
@@ -413,6 +416,7 @@ export default function UserManagementPage() {
     } else {
       setError("Invalid transaction type");
     }
+    setIsTransactionLoading(false);
   };
 
   // Map user status to badge variant
@@ -828,8 +832,9 @@ export default function UserManagementPage() {
                       <Button
                         className="w-full bg-gradient-to-r from-primary-600 to-secondary-600 hover:from-primary-700 hover:to-secondary-700 text-white shadow-md hover:shadow-lg transition-all duration-200 transform hover:-translate-y-1"
                         onClick={handleAddTransaction}
+                        disabled={isTransactionLoading}
                       >
-                        Add Transaction
+                        {isTransactionLoading ? "Loading..." : "Add Transaction"}
                       </Button>
                     </div>
                   </div>

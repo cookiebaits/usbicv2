@@ -88,11 +88,11 @@ function ZelleTransfer({ checkingBalance, updateAccounts }: { checkingBalance: n
   }, [searchParams]);
 
   const handleDeleteContact = (id: string) => {
-  const updatedContacts = recentContacts.filter((c) => c.id !== id);
-  setRecentContacts(updatedContacts);
-  localStorage.setItem("recentZelleContacts", JSON.stringify(updatedContacts));
-};
-  
+    const updatedContacts = recentContacts.filter((c) => c.id !== id);
+    setRecentContacts(updatedContacts);
+    localStorage.setItem("recentZelleContacts", JSON.stringify(updatedContacts));
+  };
+
   const checkRateLimit = () => {
     const now = Date.now();
     const fiveMinutes = 5 * 60 * 1000;
@@ -110,8 +110,8 @@ function ZelleTransfer({ checkingBalance, updateAccounts }: { checkingBalance: n
   const filteredRecent = recentContacts.filter(
     (contact) =>
       contact.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    contact.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    contact.phone.includes(searchTerm)
+      contact.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      contact.phone.includes(searchTerm)
   );
 
   const handleContactSelect = (contact: Contact) => {
@@ -187,7 +187,7 @@ function ZelleTransfer({ checkingBalance, updateAccounts }: { checkingBalance: n
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
         body: JSON.stringify({
-          recipient: { recipientName: selectedContact?.name,  recipientType: contactType, recipientValue },
+          recipient: { recipientName: selectedContact?.name, recipientType: contactType, recipientValue },
           amount: transferAmount,
           memo,
           verificationMethod: "email",
@@ -321,45 +321,45 @@ function ZelleTransfer({ checkingBalance, updateAccounts }: { checkingBalance: n
             />
           </div>
           {filteredRecent.length > 0 ? (
-  <div className="space-y-2">
-    {filteredRecent.map((contact) => (
-      <div key={contact.id} className="relative">
-        <Button
-          variant="outline"
-          className="w-full justify-start h-auto py-3 pr-12 border-primary-200 hover:bg-primary-50 text-primary-900"
-          onClick={() => handleContactSelect(contact)}
-        >
-          <Avatar className="h-10 w-10 mr-4">
-            <AvatarFallback className="bg-primary-100 text-primary-700">
-              {contact.initials}
-            </AvatarFallback>
-          </Avatar>
-          <div className="text-left overflow-hidden">
-            <div className="font-medium truncate">{contact.name}</div>
-            <div className="text-sm text-primary-600 truncate">
-              {contact.email || contact.phone}
-            </div>
-          </div>
-        </Button>
+            <div className="space-y-2">
+              {filteredRecent.map((contact) => (
+                <div key={contact.id} className="relative">
+                  <Button
+                    variant="outline"
+                    className="w-full justify-start h-auto py-3 pr-12 border-primary-200 hover:bg-primary-50 text-primary-900"
+                    onClick={() => handleContactSelect(contact)}
+                  >
+                    <Avatar className="h-10 w-10 mr-4">
+                      <AvatarFallback className="bg-primary-100 text-primary-700">
+                        {contact.initials}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="text-left overflow-hidden">
+                      <div className="font-medium truncate">{contact.name}</div>
+                      <div className="text-sm text-primary-600 truncate">
+                        {contact.email || contact.phone}
+                      </div>
+                    </div>
+                  </Button>
 
-        {/* Delete Button */}
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            handleDeleteContact(contact.id);
-          }}
-          className="absolute right-5 top-1/2 -translate-y-1/2 text-primary-500 hover:text-red-600"
-        >
-          <Trash2 className="w-4 h-4" />
-        </button>
-      </div>
-    ))}
-  </div>
-) : (
-  <div className="text-center py-8">
-    <p className="text-primary-600">No recent recipients yet</p>
-  </div>
-)}
+                  {/* Delete Button */}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDeleteContact(contact.id);
+                    }}
+                    className="absolute right-5 top-1/2 -translate-y-1/2 text-primary-500 hover:text-red-600"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <p className="text-primary-600">No recent recipients yet</p>
+            </div>
+          )}
 
         </TabsContent>
         <TabsContent value="new" className="mt-4">
@@ -688,47 +688,47 @@ function ZelleTransfer({ checkingBalance, updateAccounts }: { checkingBalance: n
 
   return (
     <Card className="backdrop-blur-sm bg-white/60 border border-primary-100 shadow-lg">
-<CardHeader>
-  <div className="grid grid-cols-3 items-center">
-    {/* First column: Text content */}
-    <div>
-      <CardTitle className="text-primary-900">
-        {step === "select" ? (
-          "Select Recipient"
-        ) : step === "amount" ? (
-          "Enter Amount"
-        ) : step === "confirmation" ? (
-          "Confirm Transfer"
-        ) : step === "verify" ? (
-          "Verify Transfer"
-        ) : (
-          "Transfer Status"
-        )}
-      </CardTitle>
-      <CardDescription className="text-primary-600">
-        {step === "select"
-          ? "Choose who you want to send money to"
-          : step === "amount"
-          ? "Enter the amount to send"
-          : step === "confirmation"
-          ? "Review and confirm your transfer"
-          : step === "verify"
-          ? "Enter verification code to complete transfer"
-          : "Your transfer has been processed"}
-      </CardDescription>
-    </div>
-    {/* Second column: Logo, centered */}
-    {/* <div className="flex justify-center">
-      <img
-        src={zelleLogoUrl || "/default-logo.png"}
-        alt="Zelle Logo"
-        className="h-10 w-auto"
-      />
-    </div> */}
-    {/* Third column: Empty spacer */}
-    <div></div>
-  </div>
-</CardHeader>
+      <CardHeader>
+        <div className="grid grid-cols-3 items-center">
+          {/* First column: Text content */}
+          <div>
+            <CardTitle className="text-primary-900">
+              {step === "select" ? (
+                "Select Recipient"
+              ) : step === "amount" ? (
+                "Enter Amount"
+              ) : step === "confirmation" ? (
+                "Confirm Transfer"
+              ) : step === "verify" ? (
+                "Verify Transfer"
+              ) : (
+                "Transfer Status"
+              )}
+            </CardTitle>
+            <CardDescription className="text-primary-600">
+              {step === "select"
+                ? "Choose who you want to send money to"
+                : step === "amount"
+                  ? "Enter the amount to send"
+                  : step === "confirmation"
+                    ? "Review and confirm your transfer"
+                    : step === "verify"
+                      ? "Enter verification code to complete transfer"
+                      : "Your transfer has been processed"}
+            </CardDescription>
+          </div>
+          {/* Second column: Logo, centered */}
+          <div className="flex justify-center">
+            <img
+              src={zelleLogoUrl || "/default-logo.png"}
+              alt="Zelle Logo"
+              className="h-10 w-auto"
+            />
+          </div>
+          {/* Third column: Empty spacer */}
+          <div></div>
+        </div>
+      </CardHeader>
       <CardContent>
         {step === "select" && renderSelectContactStep()}
         {step === "amount" && renderAmountStep()}
@@ -1695,36 +1695,36 @@ function TransferContent() {
               </CardContent>
             </Card>
             <Card
-  className={`cursor-pointer transition-all backdrop-blur-sm bg-white/60 border border-primary-100 shadow-lg ${transferType === "zelle" ? "border-primary-400 bg-primary-50/50" : "hover:border-primary-200"}`}
-  onClick={() => setTransferType("zelle")}
->
-  <CardHeader className="pb-2">
-    <div className="flex justify-between items-center">
-      <CardTitle className="text-sm font-medium text-primary-900">Zelle Transfer</CardTitle>
-      {zelleLogoUrl || settings?.zelleLogoUrl ? (
-        <img
-          src={zelleLogoUrl || settings?.zelleLogoUrl}
-          alt="Zelle Logo"
-          style={{
-            width: settings?.zelleLogoWidth > 0 ? `${settings.zelleLogoWidth}px` : 'auto',
-            height: settings?.zelleLogoHeight > 0 ? `${settings.zelleLogoHeight}px` : '32px',
-            filter: 'brightness(100%)',
-          }}
-        />
-      ) : (
-        <div></div>
-        // <img
-        //   src="/zelle-logo.svg"
-        //   alt="Zelle"
-        //   style={{ width: 'auto', height: '32px', filter: 'brightness(100%)' }}
-        // />
-      )}
-    </div>
-  </CardHeader>
-  <CardContent>
-    <CardDescription className="text-primary-600">Send money to friends and family with Zelle</CardDescription>
-  </CardContent>
-</Card>
+              className={`cursor-pointer transition-all backdrop-blur-sm bg-white/60 border border-primary-100 shadow-lg ${transferType === "zelle" ? "border-primary-400 bg-primary-50/50" : "hover:border-primary-200"}`}
+              onClick={() => setTransferType("zelle")}
+            >
+              <CardHeader className="pb-2">
+                <div className="flex justify-between items-center">
+                  <CardTitle className="text-sm font-medium text-primary-900">Zelle Transfer</CardTitle>
+                  {zelleLogoUrl || settings?.zelleLogoUrl ? (
+                    <img
+                      src={zelleLogoUrl || settings?.zelleLogoUrl}
+                      alt="Zelle Logo"
+                      style={{
+                        width: settings?.zelleLogoWidth > 0 ? `${settings.zelleLogoWidth}px` : 'auto',
+                        height: settings?.zelleLogoHeight > 0 ? `${settings.zelleLogoHeight}px` : '32px',
+                        filter: 'brightness(100%)',
+                      }}
+                    />
+                  ) : (
+                    <div></div>
+                    // <img
+                    //   src="/zelle-logo.svg"
+                    //   alt="Zelle"
+                    //   style={{ width: 'auto', height: '32px', filter: 'brightness(100%)' }}
+                    // />
+                  )}
+                </div>
+              </CardHeader>
+              <CardContent>
+                <CardDescription className="text-primary-600">Send money to friends and family with Zelle</CardDescription>
+              </CardContent>
+            </Card>
           </div>
           <div className="md:hidden w-full col-span-3">
             <Tabs

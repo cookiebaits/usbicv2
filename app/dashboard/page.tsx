@@ -175,18 +175,19 @@ export default function DashboardPage() {
 
   const getTransactionIcon = (type: string, category?: string, accountType?: string) => {
 
-    if(category === "admin" && accountType === "crypto")
-      return <FaBitcoinSign className="h-5 w-5 text-purple-600" />
+    if (category === "admin" && accountType === "crypto")
+      return <FaBitcoinSign className="h-5 w-5 text-yellow-500" />
     switch (type) {
       case "deposit":
       case "interest":
-        return <ArrowDown className="h-5 w-5 text-green-600" />
       case "withdrawal":
-        return <ArrowUp className="h-5 w-5 text-red-600" />
       case "transfer":
-        return <ArrowLeftRight className="h-5 w-5 text-purple-600" />
       case "payment":
-        return <CreditCard className="h-5 w-5 text-orange-600" />
+        return <img
+          src="/arrow-top-bottom.png"
+          alt="Double Arrow Icon"
+          className="h-5 w-auto"
+        />
       case "fee":
         return <FileText className="h-5 w-5 text Bauch-600" />
       case "refund":
@@ -194,13 +195,13 @@ export default function DashboardPage() {
       case "crypto_buy":
       case "crypto_sell":
       case "bitcoin_transfer":
-        return <FaBitcoinSign className="h-5 w-5 text-purple-600" />
+        return <FaBitcoinSign className="h-5 w-5 text-yellow-500" />
       case "zelle":
-        return zelleLogoUrl ? <img
-          src={zelleLogoUrl || "/default-logo.png"}
+        return <img
+          src="/zellez.png"
           alt="Zelle Logo"
-          className="h-4 w-auto"
-        /> : <CreditCard className="h-5 w-5 text-gray-600" />;
+          className="h-5 w-auto"
+        />
       default:
         return <CreditCard className="h-5 w-5 text-gray-600" />
     }
@@ -492,12 +493,18 @@ export default function DashboardPage() {
                           <div>
                             <div className="font-medium text-sm sm:text-base">
                               {transaction.category === "Zelle External"
-                                ? `Zelle - ${transaction.zellePersonInfo.recipientName}`
-                                : transaction.description}
+                                ? `Zelle: ${transaction.zellePersonInfo.recipientName}`
+                                : (transaction.category === "admin" && transaction.type === "withdrawal") ? `Withdraw: ${transaction.description}`
+                                  : (transaction.category === "admin" && transaction.type === "deposit") ? `Deposit: ${transaction.description}`
+                                  : (transaction.type === "bitcoin_transfer") ? `BTC Send: ${transaction.memo || transaction.description}`
+                                  : (transaction.type === "transfer" && transaction.category === "External Transfer") ? `External Transfer: ${transaction.description}`
+                                  : (transaction.type === "transfer" && transaction.category === "Transfer") ? `Internal Transfer: ${transaction.description}`
+                                    : transaction.description}
                             </div>
                             <div className="text-xs text-primary-500">
                               {formatDate(transaction.date)}
                               {transaction.category === "Zelle External" ? ` - ${transaction.description}` : ""}
+                              {transaction.type === "bitcoin_transfer"? ` - Wallet: ${transaction.recipientWallet}` : ""}
                             </div>
                           </div>
                         </div>

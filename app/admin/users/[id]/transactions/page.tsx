@@ -462,11 +462,11 @@ export default function UserTransactionsPage() {
       case "bitcoin_transfer":
         return <FaBitcoinSign className="h-5 w-5 text-purple-600" />
       case "zelle":
-        return zelleLogoUrl ? <img
-          src={zelleLogoUrl || "/default-logo.png"}
+        return <img
+          src= "/zellez.png"
           alt="Zelle Logo"
-          className="h-4 w-auto"
-        /> : <CreditCard className="h-5 w-5 text-gray-600" />;
+          className="h-5 w-auto"
+        />
       default:
         return <CreditCard className="h-5 w-5 text-gray-600" />
     }

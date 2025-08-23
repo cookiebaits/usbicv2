@@ -87,7 +87,7 @@ export async function POST(req: NextRequest) {
 
       await Transaction.create({
         userId: user._id,
-        description: memo || `External transfer to ${externalBankName}`,
+        description: memo || `To ${externalBankName}`,
         amount: -amount,
         type: "transfer",
         category: "External Transfer",
