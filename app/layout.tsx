@@ -22,7 +22,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <LogoProvider>
             <LogVisit />
             <TopBar>
-              <div>Page Not Found</div>
+              {children}
             </TopBar>
           </LogoProvider>
         </ZelleLogoProvider>

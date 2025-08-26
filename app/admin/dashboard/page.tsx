@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { CreditCard, Home, LogOut, Plus, Settings, Users, Loader, User, AlertCircle, MoreHorizontal, Globe, ArrowDown, ArrowUp, FileText, RefreshCcw, ArrowLeftRight } from "lucide-react"
+import { CreditCard, Home, LogOut, Plus, Settings, Users, Loader, User, AlertCircle, MoreHorizontal, Globe, ArrowDown, ArrowUp, FileText, RefreshCcw } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -33,6 +33,7 @@ import { formatDateTime, formatPrice, formatDate, fetchColors } from "@/lib/util
 import { FaBitcoinSign } from "react-icons/fa6"
 import { useZelleLogo } from "@/app/zellLogoContext"
 import { useTopBarHeight } from "@/app/TopBarContext"
+import { IoIosArrowDropdown, IoIosArrowDropup } from "react-icons/io";
 
 interface User {
   id: string
@@ -46,7 +47,6 @@ interface User {
   lastLogin: string
 }
 
-// Interface for Transaction
 interface Transaction {
   id: string
   userId: string
@@ -66,20 +66,6 @@ interface Transaction {
   cryptoPrice?: number
 }
 
-// Interface for TransactionGroup
-interface TransactionGroup {
-  id: string
-  userIds: string[]
-  description: string
-  date: string
-  amount: number
-  status: string
-  accounts: string[]
-  transactionIds: string[]
-  type: string
-}
-
-// Interface for PendingUser
 interface PendingUser {
   _id: string
   fullName: string
@@ -93,7 +79,6 @@ interface PendingUser {
   zipCode: string
 }
 
-// Interface for Colors
 interface Colors {
   primaryColor: string
   secondaryColor: string
@@ -103,12 +88,11 @@ export default function AdminDashboardPage() {
   const router = useRouter()
   const { logoUrl } = useLogo()
 
-  // State management
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false)
   const [isLoadingAuth, setIsLoadingAuth] = useState<boolean>(true)
   const [users, setUsers] = useState<User[]>([])
   const [transactions, setTransactions] = useState<Transaction[]>([])
-  const [groupedTransactions, setGroupedTransactions] = useState<TransactionGroup[]>([])
+  const [userTransactions, setUserTransactions] = useState<Map<string, Transaction[]>>(new Map())
   const [pendingUsers, setPendingUsers] = useState<PendingUser[]>([])
   const [stats, setStats] = useState({
     totalUsers: 0,
@@ -140,25 +124,33 @@ export default function AdminDashboardPage() {
   const [loadingActions, setLoadingActions] = useState<{ [key: string]: boolean }>({})
   const { zelleLogoUrl } = useZelleLogo();
   const topBarHeight = useTopBarHeight();
-
-  // New states for user selection dialog
+  const [expandedUsers, setExpandedUsers] = useState<Set<string>>(new Set())
   const [isUserSelectionOpen, setIsUserSelectionOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
 
-  // Filtered users based on search query
   const filteredUsers = users.filter((user) =>
     user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     user.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
     user.email.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
-  // Handle user selection
   const handleUserSelect = (userId: string) => {
     setIsUserSelectionOpen(false)
     router.push(`/admin/users/${userId}?from=dashboard`)
   }
 
-  // Fetch colors and settings
+  const toggleExpand = (userId: string) => {
+    setExpandedUsers((prev) => {
+      const newSet = new Set(prev)
+      if (newSet.has(userId)) {
+        newSet.delete(userId)
+      } else {
+        newSet.add(userId)
+      }
+      return newSet
+    })
+  }
+
   useEffect(() => {
 
     const fetchSettings = async () => {
@@ -179,7 +171,6 @@ export default function AdminDashboardPage() {
     fetchSettings()
   }, [])
 
-  // Authentication check and data fetching
   useEffect(() => {
     const checkAuth = async () => {
       try {
@@ -197,19 +188,17 @@ export default function AdminDashboardPage() {
 
         const fetchData = async () => {
           try {
-            // Fetch users
             const usersRes = await fetch("/api/admin/users", { credentials: "include" })
             if (!usersRes.ok) throw new Error("Failed to fetch users")
             const usersData = await usersRes.json()
             const usersArray: User[] = usersData.users || []
 
-            // Fetch transactions
             const transactionsRes = await fetch("/api/admin/transactions", { credentials: "include" })
             if (!transactionsRes.ok) throw new Error("Failed to fetch transactions")
             const transactionsData = await transactionsRes.json()
-            const transactionsArray: Transaction[] = transactionsData.transactions || []
+            let transactionsArray: Transaction[] = transactionsData.transactions || []
+            transactionsArray.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
 
-            // Fetch pending users
             const pendingRes = await fetch("/api/admin/pending-users", { credentials: "include" })
             if (!pendingRes.ok) {
               const errorData = await pendingRes.json()
@@ -227,7 +216,6 @@ export default function AdminDashboardPage() {
               )
             }
 
-            // Update state
             setUsers(usersArray)
             setTransactions(transactionsArray)
             setPendingUsers(pendingUsersArray)
@@ -256,130 +244,20 @@ export default function AdminDashboardPage() {
     checkAuth()
   }, [router])
 
-  // Group transactions
   useEffect(() => {
-    const userMap = new Map(users.map((user) => [user.id, user]))
-    const transferGroups = new Map<string, Transaction[]>()
-    const remainingTransactions: Transaction[] = []
-
+    const map = new Map<string, Transaction[]>()
     transactions.forEach((tx) => {
-      if (tx.transferId) {
-        const key = tx.transferId
-        if (!transferGroups.has(key)) transferGroups.set(key, [])
-        transferGroups.get(key)!.push(tx)
-      } else {
-        remainingTransactions.push(tx)
+      if (!map.has(tx.userId)) {
+        map.set(tx.userId, [])
       }
+      map.get(tx.userId)!.push(tx)
     })
-
-    const grouped: TransactionGroup[] = []
-    transferGroups.forEach((txs, transferId) => {
-      const userIds = [...new Set(txs.map((tx) => tx.userId))]
-      const date = txs[0].date
-      const status = txs.every((tx) => tx.status === "completed") ? "completed" : "pending"
-      const accounts = [...new Set(txs.map((tx) => tx.account))]
-      const transactionIds = txs.map((tx) => tx.id)
-
-      if (txs.length === 2) {
-        const senderTx = txs.find((tx) => tx.amount < 0)
-        const receiverTx = txs.find((tx) => tx.amount > 0)
-        if (senderTx && receiverTx) {
-          const sender = userMap.get(senderTx.userId)
-          const receiver = userMap.get(receiverTx.userId)
-          grouped.push({
-            id: transferId,
-            userIds,
-            description: `${sender?.name || "Unknown"} to ${receiver?.name || "Unknown"}`,
-            date,
-            amount: Math.abs(senderTx.amount),
-            status,
-            accounts,
-            transactionIds,
-            type: "transfer",
-          })
-        }
-      } else {
-        txs.forEach((tx) => {
-          grouped.push({
-            id: tx.id,
-            userIds: [tx.userId],
-            description: tx.description,
-            date: tx.date,
-            amount: Math.abs(tx.amount),
-            status: tx.status,
-            accounts: [tx.account],
-            transactionIds: [tx.id],
-            type: tx.type,
-          })
-        })
-      }
+    map.forEach((list) => {
+      list.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     })
+    setUserTransactions(map)
+  }, [transactions])
 
-    const txByDate = new Map<string, Transaction[]>()
-    remainingTransactions.forEach((tx) => {
-      const key = tx.date
-      if (!txByDate.has(key)) txByDate.set(key, [])
-      txByDate.get(key)!.push(tx)
-    })
-
-    txByDate.forEach((txs, date) => {
-      const unpaired: Transaction[] = [...txs]
-      while (unpaired.length >= 2) {
-        let paired = false
-        for (let i = 0; i < unpaired.length - 1; i++) {
-          for (let j = i + 1; j < unpaired.length; j++) {
-            const tx1 = unpaired[i]
-            const tx2 = unpaired[j]
-            if (
-              tx1.amount === -tx2.amount &&
-              (tx1.type === "deposit" || tx1.type === "transfer") &&
-              (tx2.type === "deposit" || tx2.type === "transfer")
-            ) {
-              const senderTx = tx1.amount < 0 ? tx1 : tx2
-              const receiverTx = tx1.amount < 0 ? tx2 : tx1
-              const sender = userMap.get(senderTx.userId)
-              const receiver = userMap.get(receiverTx.userId)
-              grouped.push({
-                id: `${senderTx.id}-${receiverTx.id}`,
-                userIds: [senderTx.userId, receiverTx.userId],
-                description: `Zelle transfer from ${sender?.name || "Unknown"} to ${receiver?.name || "Unknown"}`,
-                date,
-                amount: Math.abs(senderTx.amount),
-                status: senderTx.status === "completed" && receiverTx.status === "completed" ? "completed" : "pending",
-                accounts: [senderTx.account, receiverTx.account],
-                transactionIds: [senderTx.id, receiverTx.id],
-                type: "transfer",
-              })
-              unpaired.splice(j, 1)
-              unpaired.splice(i, 1)
-              paired = true
-              break
-            }
-          }
-          if (paired) break
-        }
-        if (!paired) break
-      }
-      unpaired.forEach((tx) => {
-        grouped.push({
-          id: tx.id,
-          userIds: [tx.userId],
-          description: tx.description,
-          date: tx.date,
-          amount: Math.abs(tx.amount),
-          status: tx.status,
-          accounts: [tx.account],
-          transactionIds: [tx.id],
-          type: tx.type,
-        })
-      })
-    })
-    grouped.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-
-    setGroupedTransactions(grouped.slice(0, 5)) // Limit to 5 for dashboard
-  }, [transactions, users])
-
-  // Handle adding a new transaction
   const scams = async () => {
     setTransactionError(null)
     if (!newTransaction.userId || !newTransaction.amount || !newTransaction.description) {
@@ -391,7 +269,6 @@ export default function AdminDashboardPage() {
       setTransactionError("Please enter a valid amount")
       return
     }
-    // Check for sufficient balance for withdrawal
     if (newTransaction.type === "withdrawal") {
       const selectedUser = users.find((user) => user.id === newTransaction.userId)
       if (selectedUser) {
@@ -463,7 +340,8 @@ export default function AdminDashboardPage() {
     }
   }
 
-  // Handle crypto transaction
+  console.log(users);
+
   const handleCryptoTransaction = async () => {
     setTransactionError(null)
     const amount = Number.parseFloat(newTransaction.amount)
@@ -540,7 +418,6 @@ export default function AdminDashboardPage() {
     }
   }
 
-  // Handle approving a pending user
   const handleApproveUser = async (pendingUserId: string) => {
     if (!pendingUserId || typeof pendingUserId !== "string") {
       console.error("Invalid pendingUserId:", pendingUserId)
@@ -591,7 +468,6 @@ export default function AdminDashboardPage() {
         }))
       } else {
         console.warn("Approved user not found in pendingUsers:", pendingUserId)
-        // Refresh pending users to sync state
         const pendingRes = await fetch("/api/admin/pending-users", { credentials: "include" })
         if (pendingRes.ok) {
           const pendingData = await pendingRes.json()
@@ -612,7 +488,6 @@ export default function AdminDashboardPage() {
             : "Failed to approve user"
       setApprovalError(errorMessage)
 
-      // Refresh pending users to ensure UI is in sync
       try {
         const pendingRes = await fetch("/api/admin/pending-users", { credentials: "include" })
         if (pendingRes.ok) {
@@ -631,7 +506,6 @@ export default function AdminDashboardPage() {
     }
   }
 
-  // Handle rejecting a pending user
   const handleRejectUser = async (pendingUserId: string) => {
     setLoadingActions((prev) => ({ ...prev, [pendingUserId]: true }))
     setApprovalError(null)
@@ -661,7 +535,6 @@ export default function AdminDashboardPage() {
     }
   }
 
-  // Handle logout
   const handleLogout = async () => {
     try {
       await fetch("/api/admin/logout", {
@@ -675,7 +548,6 @@ export default function AdminDashboardPage() {
     }
   }
 
-  // Transaction icon helper
   const getTransactionIcon = (type: string, category?: string, accountType?: string) => {
 
     if (category === "admin" && accountType === "crypto")
@@ -710,7 +582,6 @@ export default function AdminDashboardPage() {
     }
   }
 
-  // Render loading state or redirect if not authenticated
   if (isLoadingAuth) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-primary-50">
@@ -720,14 +591,13 @@ export default function AdminDashboardPage() {
   }
 
   if (!isAuthenticated) {
-    return null // The router will redirect to login
+    return null
   }
 
   return (
     <div className="bg-gradient-to-br from-primary-50 to-secondary-50">
 
       <div className="flex min-h-screen w-[1300px] m-auto relative">
-        {/* Main Sidebar (Desktop) */}
         <div className="hidden md:flex text-white w-64 flex-col fixed inset-y-0 mt-6" style={{ top: `${topBarHeight}px` }}>
           <nav className="flex-1 overflow-auto py-4">
             <div className="px-3 py-2">
@@ -787,7 +657,6 @@ export default function AdminDashboardPage() {
           </nav>
         </div>
 
-        {/* Main Content */}
         <div className="md:pl-64 flex flex-1 flex-col overflow-hidden">
           <main className="pb-10 sm:pt-10 flex-1">
             <h2 className="text-3xl sm:text-3xl font-bold mb-6 bg-gradient-to-r from-primary-700 to-secondary-700 bg-clip-text text-transparent">
@@ -864,31 +733,227 @@ export default function AdminDashboardPage() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-primary-100">
-                      {users.map((user) => (
-                        <tr key={user.id} className="hover:bg-primary-50/50 transition-colors">
-                          <td className="p-2 sm:p-4">
-                            <div className="flex items-center gap-2 sm:gap-3">
-                              <Avatar className="h-6 w-6 sm:h-8 sm:w-8 border-2 border-primary-100">
-                                <AvatarFallback className="bg-gradient-to-br from-primary-500 to-secondary-500 text-white">
-                                  {user.name
-                                    .split(" ")
-                                    .map((n) => n[0])
-                                    .join("")}
-                                </AvatarFallback>
-                              </Avatar>
-                              <div>
-                                <div className="font-medium text-sm text-primary-900">{user.name}</div>
-                                <div className="text-xs text-primary-600 hidden sm:block">{user.email}</div>
+                      {users.map((user) => {
+                        const expanded = expandedUsers.has(user.id)
+                        const recentTx = userTransactions.get(user.id)?.slice(0, 5) || []
+                        console.log(recentTx);
+                        return (
+                          <>
+                            <tr
+                              key={user.id}
+                              className="hover:bg-primary-50 transition-colors cursor-pointer"
+                              onClick={() => toggleExpand(user.id)}
+                            >
+                              <td className="p-2 sm:p-4">
+                                <div className="flex items-center gap-2 sm:gap-3">
+                                  <Avatar className="h-6 w-6 sm:h-8 sm:w-8 border-2 border-primary-100">
+                                    <AvatarFallback className="bg-gradient-to-br from-primary-500 to-secondary-500 text-white">
+                                      {user.name
+                                        .split(" ")
+                                        .map((n) => n[0])
+                                        .join("")}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                  <div>
+                                    <div className="font-medium text-sm text-primary-900">{user.name}</div>
+                                    <div className="text-xs text-primary-600 hidden sm:block">{user.email}</div>
+                                  </div>
+                                </div>
+                              </td>
+                              <td className="p-2 sm:p-4 font-mono text-xs hidden md:table-cell text-primary-700">
+                                {user.accountNumber}
+                              </td>
+                              <td className="p-2 sm:p-4 text-right font-medium text-sm text-primary-900">
+                                ${formatPrice(user.balance)}
+                              </td>
+                              <td className="p-2 sm:p-4 text-center hidden sm:table-cell">
+                                <Badge
+                                  variant={
+                                    user.status === "active"
+                                      ? "default"
+                                      : user.status === "pending"
+                                        ? "secondary"
+                                        : "destructive"
+                                  }
+                                  className={
+                                    user.status === "active"
+                                      ? "bg-green-100 text-green-800 border-green-200 hover:bg-green-200"
+                                      : user.status === "pending"
+                                        ? "bg-amber-100 text-amber-800 border-amber-200 hover:bg-amber-200"
+                                        : "bg-red-100 text-red-800 border-red-200 hover:bg-red-200"
+                                  }
+                                >
+                                  {user.status}
+                                </Badge>
+                              </td>
+                              <td className="p-2 sm:p-4 text-xs hidden lg:table-cell text-primary-700">
+                                {formatDateTime(user.lastLogin)}
+                              </td>
+                              <td className="p-2 sm:p-4 text-center hidden md:table-cell">
+                                <Badge
+                                  variant="outline"
+                                  className={
+                                    user.twoFactorEnabled
+                                      ? "bg-green-50 text-green-600 border-green-200"
+                                      : "bg-gray-50 text-gray-600 border-gray-200"
+                                  }
+                                >
+                                  {user.twoFactorEnabled ? "Enabled" : "Disabled"}
+                                </Badge>
+                              </td>
+                              <td className="p-2 sm:p-4 text-center flex items-center gap-2">
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" size="icon" className="h-8 w-8">
+                                      <MoreHorizontal className="h-4 w-4" />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end">
+                                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem asChild>
+                                      <Link href={`/admin/users/${user.id}?from=dashboard`}>Manage</Link>
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                                {expanded ? (
+                                  <IoIosArrowDropup className="h-5 w-5" />
+                                ) : (
+                                  <IoIosArrowDropdown className="h-5 w-5" />
+                                )}
+                              </td>
+                            </tr>
+                            {expanded && (
+                              <tr>
+                                <td colSpan={7} className="p-0">
+                                  <div
+                                    className="overflow-hidden transition-all duration-300 ease-in-out"
+                                    style={{ maxHeight: expanded ? "500px" : "0px" }}
+                                  >
+                                    <div className="p-4 bg-gray-50">
+                                      <h3 className="text-sm font-semibold mb-2 text-primary-800">Recent Transactions</h3>
+                                      {recentTx.length > 0 ? (
+                                        <table className="w-full text-sm">
+                                          <thead>
+                                            <tr className="border-b bg-primary-50/50">
+                                              <th className="text-left p-2">Date</th>
+                                              <th className="text-left p-2">Description</th>
+                                              <th className="text-right p-2">Amount</th>
+                                              <th className="text-center p-2">Status</th>
+                                            </tr>
+                                          </thead>
+                                          <tbody className="divide-y divide-primary-100">
+                                            {recentTx.map((tx) => (
+                                              <tr key={tx.id}>
+                                                <td className="p-2">{formatDate(tx.date)}</td>
+                                                <td className="p-2">
+                                                  <div className="flex items-center gap-2 max-w-[670px]">
+                                                    {getTransactionIcon(tx.type, tx.category, tx.accountType)}
+                                                    {tx.description}
+                                                  </div>
+                                                </td>
+                                                <td className="p-2 text-right">
+                                                  {tx.account === "crypto" && tx.cryptoAmount ? (
+                                                    <span>{tx.cryptoAmount.toFixed(8)} BTC</span>
+                                                  ) : (
+                                                    <span>${formatPrice(Math.abs(tx.amount))}</span>
+                                                  )}
+                                                </td>
+                                                <td className="p-2 text-center">
+                                                  <Badge
+                                                    variant={
+                                                      tx.status === "completed"
+                                                        ? "default"
+                                                        : tx.status === "pending"
+                                                          ? "secondary"
+                                                          : "destructive"
+                                                    }
+                                                    className={
+                                                      tx.status === "completed"
+                                                        ? "bg-green-100 text-green-800 border-green-200"
+                                                        : tx.status === "pending"
+                                                          ? "bg-amber-100 text-amber-800 border-amber-200"
+                                                          : "bg-red-100 text-red-800 border-red-200"
+                                                    }
+                                                  >
+                                                    {tx.status.charAt(0).toUpperCase() + tx.status.slice(1)}
+                                                  </Badge>
+                                                </td>
+                                              </tr>
+                                            ))}
+                                          </tbody>
+                                        </table>
+                                      ) : (
+                                        <p className="text-sm text-primary-600">No recent transactions</p>
+                                      )}
+                                    </div>
+                                  </div>
+                                </td>
+                              </tr>
+                            )}
+                          </>
+                        )
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+                <div className="sm:hidden divide-y divide-primary-100">
+                  {users.map((user) => {
+                    const expanded = expandedUsers.has(user.id)
+                    const recentTx = userTransactions.get(user.id)?.slice(0, 5) || []
+                    return (
+                      <div key={user.id} className="p-4 hover:bg-primary-50/50 transition-colors">
+                        <div
+                          className="flex items-center justify-between mb-2 cursor-pointer"
+                          onClick={() => toggleExpand(user.id)}
+                        >
+                          <div className="flex items-center gap-3">
+                            <Avatar className="h-8 w-8 border-2 border-primary-100">
+                              <AvatarFallback className="bg-gradient-to-br from-primary-500 to-secondary-500 text-white">
+                                {user.name
+                                  .split(" ")
+                                  .map((n) => n[0])
+                                  .join("")}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <div className="font-medium text-sm text-primary-900">
+                                {user.name}
+                                {expanded ? (
+                                  <ArrowUp className="inline h-4 w-4 ml-2 text-primary-600" />
+                                ) : (
+                                  <ArrowDown className="inline h-4 w-4 ml-2 text-primary-600" />
+                                )}
                               </div>
+                              <div className="text-xs text-primary-600">{user.email}</div>
                             </div>
-                          </td>
-                          <td className="p-2 sm:p-4 font-mono text-xs hidden md:table-cell text-primary-700">
-                            {user.accountNumber}
-                          </td>
-                          <td className="p-2 sm:p-4 text-right font-medium text-sm text-primary-900">
-                            ${formatPrice(user.balance)}
-                          </td>
-                          <td className="p-2 sm:p-4 text-center hidden sm:table-cell">
+                          </div>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-8 w-8">
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem asChild>
+                                <Link href={`/admin/users/${user.id}?from=dashboard`}>Manage</Link>
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2 text-sm">
+                          <div>
+                            <span className="text-primary-500">Account #:</span>{" "}
+                            <span className="font-mono">{user.accountNumber}</span>
+                          </div>
+                          <div className="text-right">
+                            <span className="text-primary-500">Balance:</span>{" "}
+                            <span className="font-medium">${formatPrice(user.balance)}</span>
+                          </div>
+                          <div>
+                            <span className="text-primary-500">Status:</span>{" "}
                             <Badge
                               variant={
                                 user.status === "active"
@@ -899,19 +964,17 @@ export default function AdminDashboardPage() {
                               }
                               className={
                                 user.status === "active"
-                                  ? "bg-green-100 text-green-800 border-green-200 hover:bg-green-200"
+                                  ? "bg-green-100 text-green-800 border-green-200"
                                   : user.status === "pending"
-                                    ? "bg-amber-100 text-amber-800 border-amber-200 hover:bg-amber-200"
-                                    : "bg-red-100 text-red-800 border-red-200 hover:bg-red-200"
+                                    ? "bg-amber-100 text-amber-800 border-amber-200"
+                                    : "bg-red-100 text-red-800 border-red-200"
                               }
                             >
                               {user.status}
                             </Badge>
-                          </td>
-                          <td className="p-2 sm:p-4 text-xs hidden lg:table-cell text-primary-700">
-                            {formatDateTime(user.lastLogin)}
-                          </td>
-                          <td className="p-2 sm:p-4 text-center hidden md:table-cell">
+                          </div>
+                          <div>
+                            <span className="text-primary-500">2FA:</span>{" "}
                             <Badge
                               variant="outline"
                               className={
@@ -922,412 +985,71 @@ export default function AdminDashboardPage() {
                             >
                               {user.twoFactorEnabled ? "Enabled" : "Disabled"}
                             </Badge>
-                          </td>
-                          <td className="p-2 sm:p-4 text-center">
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon" className="h-8 w-8">
-                                  <MoreHorizontal className="h-4 w-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem asChild>
-                                  <Link href={`/admin/users/${user.id}?from=dashboard`}>Manage</Link>
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-                <div className="sm:hidden divide-y divide-primary-100">
-                  {users.map((user) => (
-                    <div key={user.id} className="p-4 hover:bg-primary-50/50 transition-colors">
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-3">
-                          <Avatar className="h-8 w-8 border-2 border-primary-100">
-                            <AvatarFallback className="bg-gradient-to-br from-primary-500 to-secondary-500 text-white">
-                              {user.name
-                                .split(" ")
-                                .map((n) => n[0])
-                                .join("")}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <div className="font-medium text-sm text-primary-900">{user.name}</div>
-                            <div className="text-xs text-primary-600">{user.email}</div>
                           </div>
                         </div>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-8 w-8">
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem asChild>
-                              <Link href={`/admin/users/${user.id}?from=dashboard`}>Manage</Link>
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
-                      <div className="grid grid-cols-2 gap-2 text-sm">
-                        <div>
-                          <span className="text-primary-500">Account #:</span>{" "}
-                          <span className="font-mono">{user.accountNumber}</span>
-                        </div>
-                        <div className="text-right">
-                          <span className="text-primary-500">Balance:</span>{" "}
-                          <span className="font-medium">${formatPrice(user.balance)}</span>
-                        </div>
-                        <div>
-                          <span className="text-primary-500">Status:</span>{" "}
-                          <Badge
-                            variant={
-                              user.status === "active"
-                                ? "default"
-                                : user.status === "pending"
-                                  ? "secondary"
-                                  : "destructive"
-                            }
-                            className={
-                              user.status === "active"
-                                ? "bg-green-100 text-green-800 border-green-200"
-                                : user.status === "pending"
-                                  ? "bg-amber-100 text-amber-800 border-amber-200"
-                                  : "bg-red-100 text-red-800 border-red-200"
-                            }
+                        {expanded && (
+                          <div
+                            className="overflow-hidden transition-all duration-300 ease-in-out mt-4"
+                            style={{ maxHeight: expanded ? "500px" : "0px" }}
                           >
-                            {user.status}
-                          </Badge>
-                        </div>
-                        <div>
-                          <span className="text-primary-500">2FA:</span>{" "}
-                          <Badge
-                            variant="outline"
-                            className={
-                              user.twoFactorEnabled
-                                ? "bg-green-50 text-green-600 border-green-200"
-                                : "bg-gray-50 text-gray-600 border-gray-200"
-                            }
-                          >
-                            {user.twoFactorEnabled ? "Enabled" : "Disabled"}
-                          </Badge>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            <h2 className="text-lg sm:text-xl font-bold mb-4 bg-gradient-to-r from-primary-700 to-secondary-700 bg-clip-text text-transparent">
-              Recent Transactions
-            </h2>
-            <Card className="backdrop-blur-sm bg-white">
-              <CardContent className="p-0">
-                <div className="hidden sm:block overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="border-b bg-primary-50/50">
-                        {/* <th className="text-left p-4 text-primary-800">ID</th> */}
-                        <th className="text-left p-4 text-primary-800">Users</th>
-                        <th className="text-left p-4 text-primary-800">Description</th>
-                        <th className="text-left p-4 text-primary-800">Date</th>
-                        <th className="text-left p-4 text-primary-800">Accounts</th>
-                        <th className="text-right p-4 text-primary-800">Amount</th>
-                        <th className="text-center p-4 text-primary-800">Status</th>
-                        <th className="text-center p-4 text-primary-800">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-primary-100">
-                      {groupedTransactions.map((group) => {
-
-                        const userNames = group.userIds.map(
-                          (id) => users.find((u) => u.id === id)?.name || "Unknown User"
-                        )
-                        const isGroup = group.transactionIds.length > 1
-                        const senderTxId = group.transactionIds.find((txId) => {
-                          const tx = transactions.find((t) => t.id === txId)
-                          return (tx?.amount ?? 0) < 0
-                        })
-                        const receiverTxId = group.transactionIds.find((txId) => {
-                          const tx = transactions.find((t) => t.id === txId)
-                          return (tx?.amount ?? 0) > 0
-                        })
-                        const detailLink = isGroup
-                          ? `/admin/transactions/${senderTxId}?receiverId=${receiverTxId}`
-                          : `/admin/transactions/${group.transactionIds[0]}`
-
-                        const transaction = transactions.find((tx) => group.transactionIds.includes(tx.id))
-
-                        let displayAmount: number | undefined
-                        let isCrypto = false
-                        if (group.accounts.includes("crypto")) {
-                          displayAmount = transaction?.cryptoAmount ? Math.abs(transaction.cryptoAmount) : group.amount
-                          isCrypto = true
-                        } else {
-                          displayAmount = group.amount
-                        }
-
-                        return (
-                          <tr key={group.id} className="hover:bg-primary-50/50 transition-colors">
-                            {/* <td className="p-4 font-mono text-xs">
-                              {isGroup ? `Group: ${group.id}` : group.id}
-                            </td> */}
-                            <td className="p-4">
-                              <div>
-                                <div className="font-medium text-primary-900">{userNames.join(" to ")}</div>
-                                <div className="text-sm text-primary-600">
-                                  {userNames.map((name, index) => (
-                                    <span key={group.userIds[index]}>
-                                      {users.find((u) => u.id === group.userIds[index])?.email || ""}
-                                      {index < userNames.length - 1 ? " to " : ""}
-                                    </span>
+                            <div className="bg-gray-50 p-4 rounded">
+                              <h3 className="text-sm font-semibold mb-2 text-primary-800">Recent Transactions</h3>
+                              {recentTx.length > 0 ? (
+                                <div className="space-y-4">
+                                  {recentTx.map((tx) => (
+                                    <div key={tx.id} className="flex flex-col gap-1 text-sm">
+                                      <div className="flex items-center gap-2">
+                                        {getTransactionIcon(tx.type, tx.category, tx.accountType)}
+                                        <span>{tx.description}</span>
+                                      </div>
+                                      <div className="flex justify-between">
+                                        <span>{formatDate(tx.date)}</span>
+                                        <span>
+                                          {tx.accountType === "crypto" && tx.cryptoAmount ? (
+                                            `${tx.cryptoAmount.toFixed(8)} BTC`
+                                          ) : (
+                                            `$${formatPrice(Math.abs(tx.amount))}`
+                                          )}
+                                        </span>
+                                      </div>
+                                      <div className="text-center">
+                                        <Badge
+                                          variant={
+                                            tx.status === "completed"
+                                              ? "default"
+                                              : tx.status === "pending"
+                                                ? "secondary"
+                                                : "destructive"
+                                          }
+                                          className={
+                                            tx.status === "completed"
+                                              ? "bg-green-100 text-green-800 border-green-200"
+                                              : tx.status === "pending"
+                                                ? "bg-amber-100 text-amber-800 border-amber-200"
+                                                : "bg-red-100 text-red-800 border-red-200"
+                                          }
+                                        >
+                                          {tx.status.charAt(0).toUpperCase() + tx.status.slice(1)}
+                                        </Badge>
+                                      </div>
+                                    </div>
                                   ))}
                                 </div>
-                              </div>
-                            </td>
-                            <td className="p-4">
-                              <div className="flex items-center gap-3">
-                                <div className="h-8 w-8 rounded-full flex items-center justify-center bg-muted">
-                                  {getTransactionIcon(group.type, transaction?.category, transaction?.account)}
-                                </div>
-                                <div>
-                                  <div className="font-medium">{(transaction?.category === "admin" && transaction?.type === "withdrawal") ? `Withdraw: ${transaction?.description}`
-                                    : (transaction?.category === "admin" && transaction?.type === "deposit") ? `Deposit: ${transaction?.description}`
-                                      : (transaction?.type === "bitcoin_transfer") ? `BTC Send: ${transaction?.memo || transaction?.description}`
-                                        : (transaction?.type === "transfer" && transaction?.category === "External Transfer") ? `External Transfer: ${transaction?.description}`
-                                          : (transaction?.type === "transfer" && transaction?.category === "Transfer") ? `Internal Transfer: ${transaction?.description}`
-                                            : transaction?.description}</div>
-                                  <div className="text-sm text-muted-foreground capitalize">
-                                    {transaction?.type !== "bitcoin_transfer" && group.type.replace("_", " ")}
-                                    {transaction?.type === "bitcoin_transfer" && `Wallet: ${transaction?.recipientWallet}`}
-                                  </div>
-                                </div>
-                              </div>
-                            </td>
-                            <td className="p-4 min-w-[120px]">{formatDate(group.date)}</td>
-                            <td className="p-4">{group.accounts.join(", ")}</td>
-                            <td className="p-4 text-right font-medium text-green-600">
-                              {isCrypto ? (
-                                <span className="text-green-600">{displayAmount?.toFixed(8)} BTC</span>
                               ) : (
-                                <span className="text-green-600">${formatPrice(displayAmount)}</span>
+                                <p className="text-sm text-primary-600">No recent transactions</p>
                               )}
-                            </td>
-                            <td className="p-4 text-center">
-                              <Badge
-                                variant={
-                                  group.status === "completed"
-                                    ? "default"
-                                    : group.status === "pending"
-                                      ? "secondary"
-                                      : "destructive"
-                                }
-                                className={
-                                  group.status === "completed"
-                                    ? "bg-green-100 text-green-800 border-green-200 hover:bg-green-200"
-                                    : group.status === "pending"
-                                      ? "bg-amber-100 text-amber-800 border-amber-200 hover:bg-amber-200"
-                                      : "bg-red-100 text-red-800 border-red-200 hover:bg-red-200"
-                                }
-                              >
-                                {group.status.charAt(0).toUpperCase() + group.status.slice(1)}
-                              </Badge>
-                            </td>
-                            <td className="p-4 text-center">
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button variant="ghost" size="icon" className="h-8 w-8">
-                                    <MoreHorizontal className="h-4 w-4" />
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                  <DropdownMenuLabel>Transaction Actions</DropdownMenuLabel>
-                                  <DropdownMenuSeparator />
-                                  {isGroup ? (
-                                    <DropdownMenuItem asChild>
-                                      <Link href={`${detailLink}&from=dashboard`}>View Transactions</Link>
-                                    </DropdownMenuItem>
-                                  ) : (
-                                    <DropdownMenuItem asChild>
-                                      <Link href={`${detailLink}?from=dashboard`}>
-                                        View Details (ID: {group.transactionIds[0]})
-                                      </Link>
-                                    </DropdownMenuItem>
-                                  )}
-                                  <DropdownMenuItem asChild>
-                                    <Link href={`/admin/users/${group.userIds[0]}?from=dashboard`}>View User</Link>
-                                  </DropdownMenuItem>
-                                  {group.userIds.length > 1 && (
-                                    <DropdownMenuItem asChild>
-                                      <Link href={`/admin/users/${group.userIds[1]}?from=dashboard`}>View Recipient</Link>
-                                    </DropdownMenuItem>
-                                  )}
-                                  <DropdownMenuSeparator />
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                            </td>
-                          </tr>
-                        )
-                      })}
-                      {groupedTransactions.length === 0 && (
-                        <tr>
-                          <td colSpan={8} className="p-4 text-center text-muted-foreground">
-                            No transactions found
-                          </td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-                <div className="sm:hidden divide-y divide-primary-100">
-                  {groupedTransactions.map((group) => {
-                    const userNames = group.userIds.map(
-                      (id) => users.find((u) => u.id === id)?.name || "Unknown User"
-                    )
-                    const isGroup = group.transactionIds.length > 1
-                    const senderTxId = group.transactionIds.find((txId) => {
-                      const tx = transactions.find((t) => t.id === txId)
-                      return (tx?.amount ?? 0) < 0
-                    })
-                    const receiverTxId = group.transactionIds.find((txId) => {
-                      const tx = transactions.find((t) => t.id === txId)
-                      return (tx?.amount ?? 0) > 0
-                    })
-                    const detailLink = isGroup
-                      ? `/admin/transactions/${senderTxId}?receiverId=${receiverTxId}`
-                      : `/admin/transactions/${group.transactionIds[0]}`
-
-                    const transaction = transactions.find((tx) => group.transactionIds.includes(tx.id))
-
-                    return (
-                      <div key={group.id} className="p-4 hover:bg-primary-50/50 transition-colors">
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center gap-3">
-                            <div className="h-8 w-8 rounded-full flex items-center justify-center bg-muted">
-                              {getTransactionIcon(group.type, transaction?.category, transaction?.account)}
-                            </div>
-                            <div>
-                              <div className="font-medium text-sm text-primary-900">{userNames.join(" to ")}</div>
-                              <div className="text-xs text-primary-600">
-                                {userNames.map((name, index) => (
-                                  <span key={group.userIds[index]}>
-                                    {users.find((u) => u.id === group.userIds[index])?.email || ""}
-                                    {index < userNames.length - 1 ? " to " : ""}
-                                  </span>
-                                ))}
-                              </div>
                             </div>
                           </div>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-8 w-8">
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuLabel>Transaction Actions</DropdownMenuLabel>
-                              <DropdownMenuSeparator />
-                              {isGroup ? (
-                                <DropdownMenuItem asChild>
-                                  <Link href={`${detailLink}&from=dashboard`}>View Transactions</Link>
-                                </DropdownMenuItem>
-                              ) : (
-                                <DropdownMenuItem asChild>
-                                  <Link href={`${detailLink}?from=dashboard`}>
-                                    View Details (ID: {group.transactionIds[0]})
-                                  </Link>
-                                </DropdownMenuItem>
-                              )}
-                              <DropdownMenuItem asChild>
-                                <Link href={`/admin/users/${group.userIds[0]}?from=dashboard`}>View User</Link>
-                              </DropdownMenuItem>
-                              {group.userIds.length > 1 && (
-                                <DropdownMenuItem asChild>
-                                  <Link href={`/admin/users/${group.userIds[1]}?from=dashboard`}>View Recipient</Link>
-                                </DropdownMenuItem>
-                              )}
-                              <DropdownMenuSeparator />
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
-                        <div className="space-y-2 text-sm">
-                          {/* <div>
-                            <span className="text-primary-500">ID:</span>{" "}
-                            <span className="font-mono">{isGroup ? `Group: ${group.id}` : group.id}</span>
-                          </div> */}
-                          <div>
-                            <span className="text-primary-500">Description:</span> {group.description}
-                          </div>
-                          <div>
-                            <span className="text-primary-500">Type:</span>{" "}
-                            <span className="capitalize">{group.type.replace("_", " ")}</span>
-                          </div>
-                          <div>
-                            <span className="text-primary-500">Date:</span>{" "}
-                            {formatDate(group.date)}
-                          </div>
-                          <div>
-                            <span className="text-primary-500">Accounts:</span> {group.accounts.join(", ")}
-                          </div>
-                          <div>
-                            <span className="text-primary-500">Amount:</span>{" "}
-                            <span className="font-medium text-green-600">${formatPrice(group.amount)}</span>
-                          </div>
-                          <div>
-                            <span className="text-primary-500">Status:</span>{" "}
-                            <Badge
-                              variant={
-                                group.status === "completed"
-                                  ? "default"
-                                  : group.status === "pending"
-                                    ? "secondary"
-                                    : "destructive"
-                              }
-                              className={
-                                group.status === "completed"
-                                  ? "bg-green-100 text-green-800 border-green-200"
-                                  : group.status === "pending"
-                                    ? "bg-amber-100 text-amber-800 border-amber-200"
-                                    : "bg-red-100 text-red-800 border-red-200"
-                              }
-                            >
-                              {group.status.charAt(0).toUpperCase() + group.status.slice(1)}
-                            </Badge>
-                          </div>
-                        </div>
+                        )}
                       </div>
                     )
                   })}
-                  {groupedTransactions.length === 0 && (
-                    <div className="p-4 text-center text-muted-foreground">
-                      No transactions found
-                    </div>
-                  )}
-                </div>
-                <div className="p-4 border-t">
-                  <Button
-                    variant="outline"
-                    className="w-full sm:w-auto bg-white/60 border-primary-200 text-primary-700 hover:bg-primary-50"
-                    asChild
-                  >
-                    <Link href="/admin/transactions">View All Transactions</Link>
-                  </Button>
                 </div>
               </CardContent>
             </Card>
           </main>
         </div>
 
-        {/* Add Transaction Dialog */}
         <Dialog open={isAddTransactionOpen} onOpenChange={setIsAddTransactionOpen}>
           <DialogContent className="max-w-[90vw] sm:max-w-md bg-white/95 backdrop-blur-sm border border-primary-100">
             <DialogHeader>
@@ -1444,7 +1166,6 @@ export default function AdminDashboardPage() {
           </DialogContent>
         </Dialog>
 
-        {/* Crypto Transaction Dialog */}
         <Dialog open={isCryptoDialogOpen} onOpenChange={setIsCryptoDialogOpen}>
           <DialogContent className="max-w-[90vw] sm:max-w-md bg-white/95 backdrop-blur-sm border border-primary-100">
             <DialogHeader>
@@ -1514,7 +1235,6 @@ export default function AdminDashboardPage() {
           </DialogContent>
         </Dialog>
 
-        {/* Pending Approvals Dialog */}
         <Dialog open={isPendingApprovalsOpen} onOpenChange={setIsPendingApprovalsOpen}>
           <DialogContent className="max-w-[90vw] sm:max-w-lg bg-white/95 backdrop-blur-sm border border-primary-100">
             <DialogHeader>
@@ -1614,7 +1334,6 @@ export default function AdminDashboardPage() {
           </DialogContent>
         </Dialog>
 
-        {/* User Selection Dialog */}
         <Dialog open={isUserSelectionOpen} onOpenChange={setIsUserSelectionOpen}>
           <DialogContent className="max-w-[90vw] sm:max-w-md bg-white/95 backdrop-blur-sm border border-primary-100">
             <DialogHeader>
@@ -1663,3 +1382,1699 @@ export default function AdminDashboardPage() {
     </div>
   )
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// "use client"
+
+// import { useState, useEffect } from "react"
+// import Link from "next/link"
+// import { useRouter } from "next/navigation"
+// import { CreditCard, Home, LogOut, Plus, Settings, Users, Loader, User, AlertCircle, MoreHorizontal, Globe, ArrowDown, ArrowUp, FileText, RefreshCcw, ArrowLeftRight } from "lucide-react"
+// import { Button } from "@/components/ui/button"
+// import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+// import { Input } from "@/components/ui/input"
+// import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+// import { useLogo } from "@/app/logoContext"
+// import { Badge } from "@/components/ui/badge"
+// import {
+//   Dialog,
+//   DialogContent,
+//   DialogDescription,
+//   DialogFooter,
+//   DialogHeader,
+//   DialogTitle,
+// } from "@/components/ui/dialog"
+// import { Label } from "@/components/ui/label"
+// import { Alert, AlertDescription } from "@/components/ui/alert"
+// import {
+//   DropdownMenu,
+//   DropdownMenuContent,
+//   DropdownMenuItem,
+//   DropdownMenuLabel,
+//   DropdownMenuSeparator,
+//   DropdownMenuTrigger,
+// } from "@/components/ui/dropdown-menu"
+// import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+// import { formatDateTime, formatPrice, formatDate, fetchColors } from "@/lib/utils"
+// import { FaBitcoinSign } from "react-icons/fa6"
+// import { useZelleLogo } from "@/app/zellLogoContext"
+// import { useTopBarHeight } from "@/app/TopBarContext"
+
+// interface User {
+//   id: string
+//   name: string
+//   username: string
+//   email: string
+//   accountNumber: string
+//   balance: number
+//   status: "pending" | "active" | "suspended"
+//   twoFactorEnabled: boolean
+//   lastLogin: string
+// }
+
+// // Interface for Transaction
+// interface Transaction {
+//   id: string
+//   userId: string
+//   userName: string
+//   userEmail: string
+//   type: string
+//   amount: number
+//   description: string
+//   date: string
+//   status: string
+//   account: string
+//   memo?: string
+//   transferId?: string
+//   category?: string
+//   accountType?: string
+//   cryptoAmount?: number
+//   cryptoPrice?: number
+// }
+
+// // Interface for TransactionGroup
+// interface TransactionGroup {
+//   id: string
+//   userIds: string[]
+//   description: string
+//   date: string
+//   amount: number
+//   status: string
+//   accounts: string[]
+//   transactionIds: string[]
+//   type: string
+// }
+
+// // Interface for PendingUser
+// interface PendingUser {
+//   _id: string
+//   fullName: string
+//   username: string
+//   email: string
+//   phone: string
+//   ssn: string
+//   streetAddress: string
+//   city: string
+//   state: string
+//   zipCode: string
+// }
+
+// // Interface for Colors
+// interface Colors {
+//   primaryColor: string
+//   secondaryColor: string
+// }
+
+// export default function AdminDashboardPage() {
+//   const router = useRouter()
+//   const { logoUrl } = useLogo()
+
+//   // State management
+//   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false)
+//   const [isLoadingAuth, setIsLoadingAuth] = useState<boolean>(true)
+//   const [users, setUsers] = useState<User[]>([])
+//   const [transactions, setTransactions] = useState<Transaction[]>([])
+//   const [groupedTransactions, setGroupedTransactions] = useState<TransactionGroup[]>([])
+//   const [pendingUsers, setPendingUsers] = useState<PendingUser[]>([])
+//   const [stats, setStats] = useState({
+//     totalUsers: 0,
+//     pendingApprovals: 0,
+//     totalBalance: 0,
+//     transactionsToday: 0,
+//   })
+//   const [isAddTransactionOpen, setIsAddTransactionOpen] = useState<boolean>(false)
+//   const [isCryptoDialogOpen, setIsCryptoDialogOpen] = useState(false)
+//   const [newTransaction, setNewTransaction] = useState<{
+//     userId: string
+//     type: Transaction["type"]
+//     amount: string
+//     description: string
+//   }>({
+//     userId: "",
+//     type: "deposit",
+//     amount: "",
+//     description: "",
+//   })
+//   const [cryptoForm, setCryptoForm] = useState({
+//     cryptoAmount: "",
+//     cryptoPrice: "",
+//   })
+//   const [isPendingApprovalsOpen, setIsPendingApprovalsOpen] = useState<boolean>(false)
+//   const [transactionError, setTransactionError] = useState<string | null>(null)
+//   const [approvalError, setApprovalError] = useState<string | null>(null)
+//   const [settings, setSettings] = useState<any>(null)
+//   const [loadingActions, setLoadingActions] = useState<{ [key: string]: boolean }>({})
+//   const { zelleLogoUrl } = useZelleLogo();
+//   const topBarHeight = useTopBarHeight();
+
+//   // New states for user selection dialog
+//   const [isUserSelectionOpen, setIsUserSelectionOpen] = useState(false)
+//   const [searchQuery, setSearchQuery] = useState("")
+
+//   // Filtered users based on search query
+//   const filteredUsers = users.filter((user) =>
+//     user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+//     user.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
+//     user.email.toLowerCase().includes(searchQuery.toLowerCase())
+//   )
+
+//   // Handle user selection
+//   const handleUserSelect = (userId: string) => {
+//     setIsUserSelectionOpen(false)
+//     router.push(`/admin/users/${userId}?from=dashboard`)
+//   }
+
+//   // Fetch colors and settings
+//   useEffect(() => {
+
+//     const fetchSettings = async () => {
+//       try {
+//         const response = await fetch("/api/home")
+//         if (response.ok) {
+//           const data = await response.json()
+//           setSettings(data)
+//         } else {
+//           setSettings(null)
+//         }
+//       } catch (error) {
+//         setSettings(null)
+//       }
+//     }
+
+//     fetchColors()
+//     fetchSettings()
+//   }, [])
+
+//   // Authentication check and data fetching
+//   useEffect(() => {
+//     const checkAuth = async () => {
+//       try {
+//         const response = await fetch("/api/admin/check-auth", {
+//           method: "GET",
+//           credentials: "include",
+//         })
+
+//         if (!response.ok) {
+//           router.push("/admin/login")
+//           return
+//         }
+
+//         setIsAuthenticated(true)
+
+//         const fetchData = async () => {
+//           try {
+//             // Fetch users
+//             const usersRes = await fetch("/api/admin/users", { credentials: "include" })
+//             if (!usersRes.ok) throw new Error("Failed to fetch users")
+//             const usersData = await usersRes.json()
+//             const usersArray: User[] = usersData.users || []
+
+//             // Fetch transactions
+//             const transactionsRes = await fetch("/api/admin/transactions", { credentials: "include" })
+//             if (!transactionsRes.ok) throw new Error("Failed to fetch transactions")
+//             const transactionsData = await transactionsRes.json()
+//             const transactionsArray: Transaction[] = transactionsData.transactions || []
+
+//             // Fetch pending users
+//             const pendingRes = await fetch("/api/admin/pending-users", { credentials: "include" })
+//             if (!pendingRes.ok) {
+//               const errorData = await pendingRes.json()
+//               throw new Error(errorData.error || "Failed to fetch pending users")
+//             }
+//             const pendingData = await pendingRes.json()
+//             const pendingUsersArray: PendingUser[] = (pendingData.pendingUsers || []).filter(
+//               (user: PendingUser) => user._id && typeof user._id === "string"
+//             )
+
+//             if (pendingUsersArray.length !== pendingData.pendingUsers.length) {
+//               console.warn(
+//                 "Some pending users were filtered out due to invalid _id:",
+//                 pendingData.pendingUsers
+//               )
+//             }
+
+//             // Update state
+//             setUsers(usersArray)
+//             setTransactions(transactionsArray)
+//             setPendingUsers(pendingUsersArray)
+//             setStats({
+//               totalUsers: usersArray.length,
+//               pendingApprovals: pendingUsersArray.length,
+//               totalBalance: usersArray.reduce((sum, user) => sum + user.balance, 0),
+//               transactionsToday: transactionsArray.filter(
+//                 (txn) => new Date(txn.date).toDateString() === new Date().toDateString()
+//               ).length,
+//             })
+//           } catch (error) {
+//             console.error("Error fetching dashboard data:", error)
+//           }
+//         }
+
+//         await fetchData()
+//       } catch (error) {
+//         console.error("Auth check error:", error)
+//         router.push("/admin/login")
+//       } finally {
+//         setIsLoadingAuth(false)
+//       }
+//     }
+
+//     checkAuth()
+//   }, [router])
+
+//   // Group transactions
+//   useEffect(() => {
+//     const userMap = new Map(users.map((user) => [user.id, user]))
+//     const transferGroups = new Map<string, Transaction[]>()
+//     const remainingTransactions: Transaction[] = []
+
+//     transactions.forEach((tx) => {
+//       if (tx.transferId) {
+//         const key = tx.transferId
+//         if (!transferGroups.has(key)) transferGroups.set(key, [])
+//         transferGroups.get(key)!.push(tx)
+//       } else {
+//         remainingTransactions.push(tx)
+//       }
+//     })
+
+//     const grouped: TransactionGroup[] = []
+//     transferGroups.forEach((txs, transferId) => {
+//       const userIds = [...new Set(txs.map((tx) => tx.userId))]
+//       const date = txs[0].date
+//       const status = txs.every((tx) => tx.status === "completed") ? "completed" : "pending"
+//       const accounts = [...new Set(txs.map((tx) => tx.account))]
+//       const transactionIds = txs.map((tx) => tx.id)
+
+//       if (txs.length === 2) {
+//         const senderTx = txs.find((tx) => tx.amount < 0)
+//         const receiverTx = txs.find((tx) => tx.amount > 0)
+//         if (senderTx && receiverTx) {
+//           const sender = userMap.get(senderTx.userId)
+//           const receiver = userMap.get(receiverTx.userId)
+//           grouped.push({
+//             id: transferId,
+//             userIds,
+//             description: `${sender?.name || "Unknown"} to ${receiver?.name || "Unknown"}`,
+//             date,
+//             amount: Math.abs(senderTx.amount),
+//             status,
+//             accounts,
+//             transactionIds,
+//             type: "transfer",
+//           })
+//         }
+//       } else {
+//         txs.forEach((tx) => {
+//           grouped.push({
+//             id: tx.id,
+//             userIds: [tx.userId],
+//             description: tx.description,
+//             date: tx.date,
+//             amount: Math.abs(tx.amount),
+//             status: tx.status,
+//             accounts: [tx.account],
+//             transactionIds: [tx.id],
+//             type: tx.type,
+//           })
+//         })
+//       }
+//     })
+
+//     const txByDate = new Map<string, Transaction[]>()
+//     remainingTransactions.forEach((tx) => {
+//       const key = tx.date
+//       if (!txByDate.has(key)) txByDate.set(key, [])
+//       txByDate.get(key)!.push(tx)
+//     })
+
+//     txByDate.forEach((txs, date) => {
+//       const unpaired: Transaction[] = [...txs]
+//       while (unpaired.length >= 2) {
+//         let paired = false
+//         for (let i = 0; i < unpaired.length - 1; i++) {
+//           for (let j = i + 1; j < unpaired.length; j++) {
+//             const tx1 = unpaired[i]
+//             const tx2 = unpaired[j]
+//             if (
+//               tx1.amount === -tx2.amount &&
+//               (tx1.type === "deposit" || tx1.type === "transfer") &&
+//               (tx2.type === "deposit" || tx2.type === "transfer")
+//             ) {
+//               const senderTx = tx1.amount < 0 ? tx1 : tx2
+//               const receiverTx = tx1.amount < 0 ? tx2 : tx1
+//               const sender = userMap.get(senderTx.userId)
+//               const receiver = userMap.get(receiverTx.userId)
+//               grouped.push({
+//                 id: `${senderTx.id}-${receiverTx.id}`,
+//                 userIds: [senderTx.userId, receiverTx.userId],
+//                 description: `Zelle transfer from ${sender?.name || "Unknown"} to ${receiver?.name || "Unknown"}`,
+//                 date,
+//                 amount: Math.abs(senderTx.amount),
+//                 status: senderTx.status === "completed" && receiverTx.status === "completed" ? "completed" : "pending",
+//                 accounts: [senderTx.account, receiverTx.account],
+//                 transactionIds: [senderTx.id, receiverTx.id],
+//                 type: "transfer",
+//               })
+//               unpaired.splice(j, 1)
+//               unpaired.splice(i, 1)
+//               paired = true
+//               break
+//             }
+//           }
+//           if (paired) break
+//         }
+//         if (!paired) break
+//       }
+//       unpaired.forEach((tx) => {
+//         grouped.push({
+//           id: tx.id,
+//           userIds: [tx.userId],
+//           description: tx.description,
+//           date: tx.date,
+//           amount: Math.abs(tx.amount),
+//           status: tx.status,
+//           accounts: [tx.account],
+//           transactionIds: [tx.id],
+//           type: tx.type,
+//         })
+//       })
+//     })
+//     grouped.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+
+//     setGroupedTransactions(grouped.slice(0, 5)) // Limit to 5 for dashboard
+//   }, [transactions, users])
+
+//   // Handle adding a new transaction
+//   const scams = async () => {
+//     setTransactionError(null)
+//     if (!newTransaction.userId || !newTransaction.amount || !newTransaction.description) {
+//       setTransactionError("Please fill in all fields")
+//       return
+//     }
+//     const amount = Number.parseFloat(newTransaction.amount)
+//     if (isNaN(amount) || amount === 0) {
+//       setTransactionError("Please enter a valid amount")
+//       return
+//     }
+//     // Check for sufficient balance for withdrawal
+//     if (newTransaction.type === "withdrawal") {
+//       const selectedUser = users.find((user) => user.id === newTransaction.userId)
+//       if (selectedUser) {
+//         const withdrawalAmount = Math.abs(amount)
+//         if (selectedUser.balance < withdrawalAmount) {
+//           setTransactionError(
+//             `User account doesn't have sufficient funds. Total balance: $${formatPrice(selectedUser.balance)}`
+//           )
+//           return
+//         }
+//       }
+//     }
+//     if (["crypto_buy", "crypto_sell"].includes(newTransaction.type)) {
+//       setIsCryptoDialogOpen(true)
+//       return
+//     }
+//     try {
+//       const response = await fetch(`/api/admin/users/${newTransaction.userId}/transactions`, {
+//         method: "POST",
+//         headers: { "Content-Type": "application/json" },
+//         credentials: "include",
+//         body: JSON.stringify({
+//           type: newTransaction.type,
+//           amount,
+//           description: newTransaction.description,
+//           category: "admin",
+//           accountType: "checking",
+//         }),
+//       })
+//       if (!response.ok) {
+//         const data = await response.json()
+//         throw new Error(data.error || "Failed to add transaction")
+//       }
+//       const newTxn = await response.json()
+//       const transaction: Transaction = {
+//         id: newTxn._id,
+//         userId: newTransaction.userId,
+//         userName: users.find((u) => u.id === newTransaction.userId)?.name || "Unknown",
+//         userEmail: users.find((u) => u.id === newTransaction.userId)?.email || "Unknown",
+//         type: newTxn.type,
+//         amount: newTxn.amount,
+//         description: newTxn.description,
+//         date: new Date(newTxn.date).toISOString(),
+//         status: newTxn.status,
+//         account: users.find((u) => u.id === newTransaction.userId)?.accountNumber || "Unknown",
+//         category: newTxn.category,
+//         accountType: newTxn.accountType,
+//       }
+//       const updatedBalance = users.find((u) => u.id === newTransaction.userId)!.balance + amount
+//       const updatedUsers = users.map((user) =>
+//         user.id === newTransaction.userId ? { ...user, balance: updatedBalance } : user
+//       )
+//       setUsers(updatedUsers)
+//       setTransactions((prev) => [transaction, ...prev])
+//       setStats((prev) => ({
+//         ...prev,
+//         totalBalance: updatedUsers.reduce((sum, user) => sum + user.balance, 0),
+//         transactionsToday:
+//           new Date(transaction.date).toDateString() === new Date().toDateString()
+//             ? prev.transactionsToday + 1
+//             : prev.transactionsToday,
+//       }))
+//       setNewTransaction({ userId: "", type: "deposit", amount: "", description: "" })
+//       setTransactionError(null)
+//       setIsAddTransactionOpen(false)
+//     } catch (err) {
+//       const errorMessage = err instanceof Error ? err.message : "Failed to add transaction"
+//       setTransactionError(errorMessage)
+//     }
+//   }
+
+//   // Handle crypto transaction
+//   const handleCryptoTransaction = async () => {
+//     setTransactionError(null)
+//     const amount = Number.parseFloat(newTransaction.amount)
+//     const cryptoAmount = Number.parseFloat(cryptoForm.cryptoAmount)
+//     const cryptoPrice = Number.parseFloat(cryptoForm.cryptoPrice)
+//     if (!newTransaction.amount || !newTransaction.description) {
+//       setTransactionError("Please fill in all transaction fields")
+//       return
+//     }
+//     if (isNaN(amount) || amount === 0) {
+//       setTransactionError("Please enter a valid amount")
+//       return
+//     }
+//     if (!cryptoForm.cryptoAmount || isNaN(cryptoAmount) || cryptoAmount <= 0) {
+//       setTransactionError("Please enter a valid crypto amount")
+//       return
+//     }
+//     if (!cryptoForm.cryptoPrice || isNaN(cryptoPrice) || cryptoPrice <= 0) {
+//       setTransactionError("Please enter a valid crypto price")
+//       return
+//     }
+//     try {
+//       const response = await fetch(`/api/admin/users/${newTransaction.userId}/transactions`, {
+//         method: "POST",
+//         headers: { "Content-Type": "application/json" },
+//         credentials: "include",
+//         body: JSON.stringify({
+//           type: newTransaction.type,
+//           amount,
+//           description: newTransaction.description,
+//           category: "admin",
+//           accountType: "crypto",
+//           cryptoAmount,
+//           cryptoPrice,
+//         }),
+//       })
+//       if (!response.ok) {
+//         const data = await response.json()
+//         throw new Error(data.error || "Failed to add transaction")
+//       }
+//       const newTxn = await response.json()
+//       const transaction: Transaction = {
+//         id: newTxn._id,
+//         userId: newTransaction.userId,
+//         userName: users.find((u) => u.id === newTransaction.userId)?.name || "Unknown",
+//         userEmail: users.find((u) => u.id === newTransaction.userId)?.email || "Unknown",
+//         type: newTxn.type,
+//         amount: newTxn.amount,
+//         description: newTxn.description,
+//         date: new Date(newTxn.date).toISOString(),
+//         status: newTxn.status,
+//         account: users.find((u) => u.id === newTransaction.userId)?.accountNumber || "Unknown",
+//         category: newTxn.category,
+//         accountType: newTxn.accountType,
+//         cryptoAmount: newTxn.cryptoAmount,
+//         cryptoPrice: newTxn.cryptoPrice,
+//       }
+//       setTransactions((prev) => [transaction, ...prev])
+//       setStats((prev) => ({
+//         ...prev,
+//         transactionsToday:
+//           new Date(transaction.date).toDateString() === new Date().toDateString()
+//             ? prev.transactionsToday + 1
+//             : prev.transactionsToday,
+//       }))
+//       setNewTransaction({ userId: "", type: "deposit", amount: "", description: "" })
+//       setCryptoForm({ cryptoAmount: "", cryptoPrice: "" })
+//       setTransactionError(null)
+//       setIsAddTransactionOpen(false)
+//       setIsCryptoDialogOpen(false)
+//     } catch (err) {
+//       const errorMessage = err instanceof Error ? err.message : "Failed to add transaction"
+//       setTransactionError(errorMessage)
+//     }
+//   }
+
+//   // Handle approving a pending user
+//   const handleApproveUser = async (pendingUserId: string) => {
+//     if (!pendingUserId || typeof pendingUserId !== "string") {
+//       console.error("Invalid pendingUserId:", pendingUserId)
+//       setApprovalError("Invalid user ID. Please try again.")
+//       return
+//     }
+
+//     console.debug("Approving user with ID:", pendingUserId)
+//     setLoadingActions((prev) => ({ ...prev, [pendingUserId]: true }))
+//     setApprovalError(null)
+
+//     try {
+//       const response = await fetch("/api/admin/approve-user", {
+//         method: "POST",
+//         headers: { "Content-Type": "application/json" },
+//         credentials: "include",
+//         body: JSON.stringify({ pendingUserId }),
+//       })
+
+//       if (!response.ok) {
+//         const data = await response.json()
+//         const errorMessage = data.error || "Failed to approve user"
+//         console.error("Approval API error:", errorMessage, { pendingUserId })
+//         throw new Error(errorMessage)
+//       }
+
+//       const approvedUserData = await response.json()
+//       const approvedUser = pendingUsers.find((u) => u._id === pendingUserId)
+//       if (approvedUser) {
+//         const newUser: User = {
+//           id: pendingUserId,
+//           name: approvedUser.fullName,
+//           username: approvedUser.username || "N/A",
+//           email: approvedUser.email,
+//           accountNumber: approvedUserData.accountNumber || "N/A",
+//           balance: 0,
+//           status: "active",
+//           twoFactorEnabled: true,
+//           lastLogin: "N/A",
+//         }
+//         setUsers((prev) => [...prev, newUser])
+//         setPendingUsers((prev) => prev.filter((user) => user._id !== pendingUserId))
+//         setStats((prev) => ({
+//           ...prev,
+//           pendingApprovals: prev.pendingApprovals - 1,
+//           totalUsers: prev.totalUsers + 1,
+//           totalBalance: prev.totalBalance + newUser.balance,
+//         }))
+//       } else {
+//         console.warn("Approved user not found in pendingUsers:", pendingUserId)
+//         // Refresh pending users to sync state
+//         const pendingRes = await fetch("/api/admin/pending-users", { credentials: "include" })
+//         if (pendingRes.ok) {
+//           const pendingData = await pendingRes.json()
+//           setPendingUsers(pendingData.pendingUsers || [])
+//           setStats((prev) => ({
+//             ...prev,
+//             pendingApprovals: (pendingData.pendingUsers || []).length,
+//           }))
+//         }
+//       }
+//     } catch (error) {
+//       console.error("Error approving user:", error)
+//       const errorMessage =
+//         error instanceof Error && error.message === "User not found"
+//           ? "User not found. They may have been already approved or removed."
+//           : error instanceof Error
+//             ? error.message
+//             : "Failed to approve user"
+//       setApprovalError(errorMessage)
+
+//       // Refresh pending users to ensure UI is in sync
+//       try {
+//         const pendingRes = await fetch("/api/admin/pending-users", { credentials: "include" })
+//         if (pendingRes.ok) {
+//           const pendingData = await pendingRes.json()
+//           setPendingUsers(pendingData.pendingUsers || [])
+//           setStats((prev) => ({
+//             ...prev,
+//             pendingApprovals: (pendingData.pendingUsers || []).length,
+//           }))
+//         }
+//       } catch (refreshError) {
+//         console.error("Error refreshing pending users:", refreshError)
+//       }
+//     } finally {
+//       setLoadingActions((prev) => ({ ...prev, [pendingUserId]: false }))
+//     }
+//   }
+
+//   // Handle rejecting a pending user
+//   const handleRejectUser = async (pendingUserId: string) => {
+//     setLoadingActions((prev) => ({ ...prev, [pendingUserId]: true }))
+//     setApprovalError(null)
+//     try {
+//       const response = await fetch("/api/admin/reject-user", {
+//         method: "POST",
+//         headers: { "Content-Type": "application/json" },
+//         credentials: "include",
+//         body: JSON.stringify({ pendingUserId }),
+//       })
+
+//       if (!response.ok) {
+//         const data = await response.json()
+//         throw new Error(data.error || "Failed to reject user")
+//       }
+
+//       setPendingUsers((prev) => prev.filter((user) => user._id !== pendingUserId))
+//       setStats((prev) => ({
+//         ...prev,
+//         pendingApprovals: prev.pendingApprovals - 1,
+//       }))
+//     } catch (error) {
+//       console.error("Error rejecting user:", error)
+//       setApprovalError(error instanceof Error ? error.message : "Failed to reject user")
+//     } finally {
+//       setLoadingActions((prev) => ({ ...prev, [pendingUserId]: false }))
+//     }
+//   }
+
+//   // Handle logout
+//   const handleLogout = async () => {
+//     try {
+//       await fetch("/api/admin/logout", {
+//         method: "POST",
+//         credentials: "include",
+//       })
+//       router.push("/admin/login")
+//     } catch (error) {
+//       console.error("Logout error:", error)
+//       router.push("/admin/login")
+//     }
+//   }
+
+//   // Transaction icon helper
+//   const getTransactionIcon = (type: string, category?: string, accountType?: string) => {
+
+//     if (category === "admin" && accountType === "crypto")
+//       return <FaBitcoinSign className="h-5 w-5 text-yellow-500" />
+//     switch (type) {
+//       case "deposit":
+//       case "interest":
+//       case "withdrawal":
+//       case "transfer":
+//       case "payment":
+//         return <img
+//           src="/arrow-top-bottom.png"
+//           alt="Double Arrow Icon"
+//           className="h-5 w-auto"
+//         />
+//       case "fee":
+//         return <FileText className="h-5 w-5 text Bauch-600" />
+//       case "refund":
+//         return <RefreshCcw className="h-5 w-5 text-yellow-600" />
+//       case "crypto_buy":
+//       case "crypto_sell":
+//       case "bitcoin_transfer":
+//         return <FaBitcoinSign className="h-5 w-5 text-yellow-500" />
+//       case "zelle":
+//         return <img
+//           src="/zellez.png"
+//           alt="Zelle Logo"
+//           className="h-5 w-auto"
+//         />
+//       default:
+//         return <CreditCard className="h-5 w-5 text-gray-600" />
+//     }
+//   }
+
+//   // Render loading state or redirect if not authenticated
+//   if (isLoadingAuth) {
+//     return (
+//       <div className="min-h-screen flex items-center justify-center bg-primary-50">
+//         <Loader className="h-8 w-8 animate-spin text-primary-600" />
+//       </div>
+//     )
+//   }
+
+//   if (!isAuthenticated) {
+//     return null // The router will redirect to login
+//   }
+
+//   return (
+//     <div className="bg-gradient-to-br from-primary-50 to-secondary-50">
+
+//       <div className="flex min-h-screen w-[1300px] m-auto relative">
+//         {/* Main Sidebar (Desktop) */}
+//         <div className="hidden md:flex text-white w-64 flex-col fixed inset-y-0 mt-6" style={{ top: `${topBarHeight}px` }}>
+//           <nav className="flex-1 overflow-auto py-4">
+//             <div className="px-3 py-2">
+//               <h2 className="mb-4 px-4 text-sm font-semibold tracking-tight text-black">Dashboard</h2>
+//               <div className="space-y-4">
+//                 <Button variant="ghost" className="w-[90%] justify-start text-black hover:bg-black/5 text-base" asChild>
+//                   <Link href="/admin/dashboard">
+//                     <Home className="mr-1 h-4 w-4" />
+//                     Overview
+//                   </Link>
+//                 </Button>
+//                 <Button variant="ghost" className="w-[90%] justify-start text-black hover:bg-black/5 text-base" asChild>
+//                   <Link href="/admin/users">
+//                     <Users className="mr-1 h-4 w-4" />
+//                     Users
+//                   </Link>
+//                 </Button>
+//                 <Button variant="ghost" className="w-[90%] justify-start text-black hover:bg-black/5 text-base" asChild>
+//                   <Link href="/admin/transactions">
+//                     <CreditCard className="mr-1 h-4 w-4" />
+//                     Transactions
+//                   </Link>
+//                 </Button>
+//               </div>
+//             </div>
+//             <div className="px-3 py-2 pt-4">
+//               <h2 className="mb-4 px-4 text-sm font-semibold tracking-tight text-black">Settings</h2>
+//               <div className="space-y-4">
+//                 <Button variant="ghost" className="w-[90%] justify-start text-black hover:bg-black/5 text-base" asChild>
+//                   <Link href="/admin/profile">
+//                     <User className="mr-1 h-4 w-4" />
+//                     Profile
+//                   </Link>
+//                 </Button>
+//                 <Button variant="ghost" className="w-[90%] justify-start text-black hover:bg-black/5 text-base" asChild>
+//                   <Link href="/admin/settings">
+//                     <Settings className="mr-1 h-4 w-4" />
+//                     Site Settings
+//                   </Link>
+//                 </Button>
+//                 <Button variant="ghost" className="w-[90%] justify-start text-black hover:bg-black/5 text-base" asChild>
+//                   <Link href="/admin/iplogs">
+//                     <Globe className="mr-1 h-4 w-4" />
+//                     IP Logs
+//                   </Link>
+//                 </Button>
+//                 <Button
+//                   variant="ghost"
+//                   className="w-[90%] justify-start text-black hover:bg-black/5 text-base"
+//                   onClick={handleLogout}
+//                 >
+//                   <LogOut className="mr-1 h-4 w-4" />
+//                   Logout
+//                 </Button>
+//               </div>
+//             </div>
+//           </nav>
+//         </div>
+
+//         {/* Main Content */}
+//         <div className="md:pl-64 flex flex-1 flex-col overflow-hidden">
+//           <main className="pb-10 sm:pt-10 flex-1">
+//             <h2 className="text-3xl sm:text-3xl font-bold mb-6 bg-gradient-to-r from-primary-700 to-secondary-700 bg-clip-text text-transparent">
+//               Admin Dashboard
+//             </h2>
+//             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
+//               <Card className="backdrop-blur-sm bg-white">
+//                 <CardHeader className="pb-2">
+//                   <CardTitle className="text-sm font-medium text-primary-800">Total Users</CardTitle>
+//                 </CardHeader>
+//                 <CardContent>
+//                   <div className="text-xl sm:text-2xl font-bold text-primary-900">{stats.totalUsers}</div>
+//                   <p className="text-xs text-primary-700">{stats.pendingApprovals} pending approval</p>
+//                 </CardContent>
+//               </Card>
+//               <Card className="backdrop-blur-sm bg-white">
+//                 <CardHeader className="pb-2">
+//                   <CardTitle className="text-sm font-medium text-primary-800">Total Balance</CardTitle>
+//                 </CardHeader>
+//                 <CardContent>
+//                   <div className="text-xl sm:text-2xl font-bold text-primary-900">${formatPrice(stats.totalBalance)}</div>
+//                   <p className="text-xs text-primary-700">Across all accounts</p>
+//                 </CardContent>
+//               </Card>
+//               <Card className="backdrop-blur-sm bg-white">
+//                 <CardHeader className="pb-2">
+//                   <CardTitle className="text-sm font-medium text-primary-800">Transactions Today</CardTitle>
+//                 </CardHeader>
+//                 <CardContent>
+//                   <div className="text-xl sm:text-2xl font-bold text-primary-900">{stats.transactionsToday}</div>
+//                   <p className="text-xs text-primary-700">{formatDate(new Date())}</p>
+//                 </CardContent>
+//               </Card>
+//               <Card className="backdrop-blur-sm bg-white">
+//                 <CardHeader className="pb-2">
+//                   <CardTitle className="text-sm font-medium text-primary-800">Quick Actions</CardTitle>
+//                 </CardHeader>
+//                 <CardContent className="flex flex-col gap-2">
+//                   <Button
+//                     variant="outline"
+//                     className="w-full bg-white/60 border-primary-200 text-primary-700 hover:bg-primary-50"
+//                     onClick={() => setIsUserSelectionOpen(true)}
+//                   >
+//                     <Plus className="h-3.5 w-3.5 mr-1" />
+//                     Add Transaction
+//                   </Button>
+//                   <Button
+//                     variant="outline"
+//                     className="w-full bg-white/60 border-primary-200 text-primary-700 hover:bg-primary-50"
+//                     onClick={() => setIsPendingApprovalsOpen(true)}
+//                   >
+//                     Approvals
+//                   </Button>
+//                 </CardContent>
+//               </Card>
+//             </div>
+
+//             <h2 className="text-lg sm:text-xl font-bold mb-4 bg-gradient-to-r from-primary-700 to-secondary-700 bg-clip-text text-transparent">
+//               Account Overview
+//             </h2>
+//             <Card className="mb-6 sm:mb-8 backdrop-blur-sm bg-white">
+//               <CardContent className="p-0">
+//                 <div className="hidden sm:block overflow-x-auto">
+//                   <table className="w-full text-sm">
+//                     <thead>
+//                       <tr className="border-b bg-primary-50/50">
+//                         <th className="text-left p-2 sm:p-4 text-primary-800">User</th>
+//                         <th className="text-left p-2 sm:p-4 text-primary-800 hidden md:table-cell">Account #</th>
+//                         <th className="text-right p-2 sm:p-4 text-primary-800">Balance</th>
+//                         <th className="text-center p-2 sm:p-4 text-primary-800 hidden sm:table-cell">Status</th>
+//                         <th className="text-left p-2 sm:p-4 text-primary-800 hidden lg:table-cell">Last Login</th>
+//                         <th className="text-center p-2 sm:p-4 text-primary-800 hidden md:table-cell">2FA</th>
+//                         <th className="text-center p-2 sm:p-4 text-primary-800">Actions</th>
+//                       </tr>
+//                     </thead>
+//                     <tbody className="divide-y divide-primary-100">
+//                       {users.map((user) => (
+//                         <tr key={user.id} className="hover:bg-primary-50/50 transition-colors">
+//                           <td className="p-2 sm:p-4">
+//                             <div className="flex items-center gap-2 sm:gap-3">
+//                               <Avatar className="h-6 w-6 sm:h-8 sm:w-8 border-2 border-primary-100">
+//                                 <AvatarFallback className="bg-gradient-to-br from-primary-500 to-secondary-500 text-white">
+//                                   {user.name
+//                                     .split(" ")
+//                                     .map((n) => n[0])
+//                                     .join("")}
+//                                 </AvatarFallback>
+//                               </Avatar>
+//                               <div>
+//                                 <div className="font-medium text-sm text-primary-900">{user.name}</div>
+//                                 <div className="text-xs text-primary-600 hidden sm:block">{user.email}</div>
+//                               </div>
+//                             </div>
+//                           </td>
+//                           <td className="p-2 sm:p-4 font-mono text-xs hidden md:table-cell text-primary-700">
+//                             {user.accountNumber}
+//                           </td>
+//                           <td className="p-2 sm:p-4 text-right font-medium text-sm text-primary-900">
+//                             ${formatPrice(user.balance)}
+//                           </td>
+//                           <td className="p-2 sm:p-4 text-center hidden sm:table-cell">
+//                             <Badge
+//                               variant={
+//                                 user.status === "active"
+//                                   ? "default"
+//                                   : user.status === "pending"
+//                                     ? "secondary"
+//                                     : "destructive"
+//                               }
+//                               className={
+//                                 user.status === "active"
+//                                   ? "bg-green-100 text-green-800 border-green-200 hover:bg-green-200"
+//                                   : user.status === "pending"
+//                                     ? "bg-amber-100 text-amber-800 border-amber-200 hover:bg-amber-200"
+//                                     : "bg-red-100 text-red-800 border-red-200 hover:bg-red-200"
+//                               }
+//                             >
+//                               {user.status}
+//                             </Badge>
+//                           </td>
+//                           <td className="p-2 sm:p-4 text-xs hidden lg:table-cell text-primary-700">
+//                             {formatDateTime(user.lastLogin)}
+//                           </td>
+//                           <td className="p-2 sm:p-4 text-center hidden md:table-cell">
+//                             <Badge
+//                               variant="outline"
+//                               className={
+//                                 user.twoFactorEnabled
+//                                   ? "bg-green-50 text-green-600 border-green-200"
+//                                   : "bg-gray-50 text-gray-600 border-gray-200"
+//                               }
+//                             >
+//                               {user.twoFactorEnabled ? "Enabled" : "Disabled"}
+//                             </Badge>
+//                           </td>
+//                           <td className="p-2 sm:p-4 text-center">
+//                             <DropdownMenu>
+//                               <DropdownMenuTrigger asChild>
+//                                 <Button variant="ghost" size="icon" className="h-8 w-8">
+//                                   <MoreHorizontal className="h-4 w-4" />
+//                                 </Button>
+//                               </DropdownMenuTrigger>
+//                               <DropdownMenuContent align="end">
+//                                 <DropdownMenuLabel>Actions</DropdownMenuLabel>
+//                                 <DropdownMenuSeparator />
+//                                 <DropdownMenuItem asChild>
+//                                   <Link href={`/admin/users/${user.id}?from=dashboard`}>Manage</Link>
+//                                 </DropdownMenuItem>
+//                                 {/* <DropdownMenuItem asChild>
+//                                   <Link href={`/admin/users/${user.id}/transactions`}>View Transactions</Link>
+//                                 </DropdownMenuItem> */}
+//                               </DropdownMenuContent>
+//                             </DropdownMenu>
+//                           </td>
+//                         </tr>
+//                       ))}
+//                     </tbody>
+//                   </table>
+//                 </div>
+//                 <div className="sm:hidden divide-y divide-primary-100">
+//                   {users.map((user) => (
+//                     <div key={user.id} className="p-4 hover:bg-primary-50/50 transition-colors">
+//                       <div className="flex items-center justify-between mb-2">
+//                         <div className="flex items-center gap-3">
+//                           <Avatar className="h-8 w-8 border-2 border-primary-100">
+//                             <AvatarFallback className="bg-gradient-to-br from-primary-500 to-secondary-500 text-white">
+//                               {user.name
+//                                 .split(" ")
+//                                 .map((n) => n[0])
+//                                 .join("")}
+//                             </AvatarFallback>
+//                           </Avatar>
+//                           <div>
+//                             <div className="font-medium text-sm text-primary-900">{user.name}</div>
+//                             <div className="text-xs text-primary-600">{user.email}</div>
+//                           </div>
+//                         </div>
+//                         <DropdownMenu>
+//                           <DropdownMenuTrigger asChild>
+//                             <Button variant="ghost" size="icon" className="h-8 w-8">
+//                               <MoreHorizontal className="h-4 w-4" />
+//                             </Button>
+//                           </DropdownMenuTrigger>
+//                           <DropdownMenuContent align="end">
+//                             <DropdownMenuLabel>Actions</DropdownMenuLabel>
+//                             <DropdownMenuSeparator />
+//                             <DropdownMenuItem asChild>
+//                               <Link href={`/admin/users/${user.id}?from=dashboard`}>Manage</Link>
+//                             </DropdownMenuItem>
+//                           </DropdownMenuContent>
+//                         </DropdownMenu>
+//                       </div>
+//                       <div className="grid grid-cols-2 gap-2 text-sm">
+//                         <div>
+//                           <span className="text-primary-500">Account #:</span>{" "}
+//                           <span className="font-mono">{user.accountNumber}</span>
+//                         </div>
+//                         <div className="text-right">
+//                           <span className="text-primary-500">Balance:</span>{" "}
+//                           <span className="font-medium">${formatPrice(user.balance)}</span>
+//                         </div>
+//                         <div>
+//                           <span className="text-primary-500">Status:</span>{" "}
+//                           <Badge
+//                             variant={
+//                               user.status === "active"
+//                                 ? "default"
+//                                 : user.status === "pending"
+//                                   ? "secondary"
+//                                   : "destructive"
+//                             }
+//                             className={
+//                               user.status === "active"
+//                                 ? "bg-green-100 text-green-800 border-green-200"
+//                                 : user.status === "pending"
+//                                   ? "bg-amber-100 text-amber-800 border-amber-200"
+//                                   : "bg-red-100 text-red-800 border-red-200"
+//                             }
+//                           >
+//                             {user.status}
+//                           </Badge>
+//                         </div>
+//                         <div>
+//                           <span className="text-primary-500">2FA:</span>{" "}
+//                           <Badge
+//                             variant="outline"
+//                             className={
+//                               user.twoFactorEnabled
+//                                 ? "bg-green-50 text-green-600 border-green-200"
+//                                 : "bg-gray-50 text-gray-600 border-gray-200"
+//                             }
+//                           >
+//                             {user.twoFactorEnabled ? "Enabled" : "Disabled"}
+//                           </Badge>
+//                         </div>
+//                       </div>
+//                     </div>
+//                   ))}
+//                 </div>
+//               </CardContent>
+//             </Card>
+
+//             <h2 className="text-lg sm:text-xl font-bold mb-4 bg-gradient-to-r from-primary-700 to-secondary-700 bg-clip-text text-transparent">
+//               Recent Transactions
+//             </h2>
+//             <Card className="backdrop-blur-sm bg-white">
+//               <CardContent className="p-0">
+//                 <div className="hidden sm:block overflow-x-auto">
+//                   <table className="w-full">
+//                     <thead>
+//                       <tr className="border-b bg-primary-50/50">
+//                         {/* <th className="text-left p-4 text-primary-800">ID</th> */}
+//                         <th className="text-left p-4 text-primary-800">Users</th>
+//                         <th className="text-left p-4 text-primary-800">Description</th>
+//                         <th className="text-left p-4 text-primary-800">Date</th>
+//                         <th className="text-left p-4 text-primary-800">Accounts</th>
+//                         <th className="text-right p-4 text-primary-800">Amount</th>
+//                         <th className="text-center p-4 text-primary-800">Status</th>
+//                         <th className="text-center p-4 text-primary-800">Actions</th>
+//                       </tr>
+//                     </thead>
+//                     <tbody className="divide-y divide-primary-100">
+//                       {groupedTransactions.map((group) => {
+
+//                         const userNames = group.userIds.map(
+//                           (id) => users.find((u) => u.id === id)?.name || "Unknown User"
+//                         )
+//                         const isGroup = group.transactionIds.length > 1
+//                         const senderTxId = group.transactionIds.find((txId) => {
+//                           const tx = transactions.find((t) => t.id === txId)
+//                           return (tx?.amount ?? 0) < 0
+//                         })
+//                         const receiverTxId = group.transactionIds.find((txId) => {
+//                           const tx = transactions.find((t) => t.id === txId)
+//                           return (tx?.amount ?? 0) > 0
+//                         })
+//                         const detailLink = isGroup
+//                           ? `/admin/transactions/${senderTxId}?receiverId=${receiverTxId}`
+//                           : `/admin/transactions/${group.transactionIds[0]}`
+
+//                         const transaction = transactions.find((tx) => group.transactionIds.includes(tx.id))
+
+//                         let displayAmount: number | undefined
+//                         let isCrypto = false
+//                         if (group.accounts.includes("crypto")) {
+//                           displayAmount = transaction?.cryptoAmount ? Math.abs(transaction.cryptoAmount) : group.amount
+//                           isCrypto = true
+//                         } else {
+//                           displayAmount = group.amount
+//                         }
+
+//                         return (
+//                           <tr key={group.id} className="hover:bg-primary-50/50 transition-colors">
+//                             {/* <td className="p-4 font-mono text-xs">
+//                               {isGroup ? `Group: ${group.id}` : group.id}
+//                             </td> */}
+//                             <td className="p-4">
+//                               <div>
+//                                 <div className="font-medium text-primary-900">{userNames.join(" to ")}</div>
+//                                 <div className="text-sm text-primary-600">
+//                                   {userNames.map((name, index) => (
+//                                     <span key={group.userIds[index]}>
+//                                       {users.find((u) => u.id === group.userIds[index])?.email || ""}
+//                                       {index < userNames.length - 1 ? " to " : ""}
+//                                     </span>
+//                                   ))}
+//                                 </div>
+//                               </div>
+//                             </td>
+//                             <td className="p-4">
+//                               <div className="flex items-center gap-3">
+//                                 <div className="h-8 w-8 rounded-full flex items-center justify-center bg-muted">
+//                                   {getTransactionIcon(group.type, transaction?.category, transaction?.account)}
+//                                 </div>
+//                                 <div>
+//                                   <div className="font-medium">{(transaction?.category === "admin" && transaction?.type === "withdrawal") ? `Withdraw: ${transaction?.description}`
+//                                     : (transaction?.category === "admin" && transaction?.type === "deposit") ? `Deposit: ${transaction?.description}`
+//                                       : (transaction?.type === "bitcoin_transfer") ? `BTC Send: ${transaction?.memo || transaction?.description}`
+//                                         : (transaction?.type === "transfer" && transaction?.category === "External Transfer") ? `External Transfer: ${transaction?.description}`
+//                                           : (transaction?.type === "transfer" && transaction?.category === "Transfer") ? `Internal Transfer: ${transaction?.description}`
+//                                             : transaction?.description}</div>
+//                                   <div className="text-sm text-muted-foreground capitalize">
+//                                     {transaction?.type !== "bitcoin_transfer" && group.type.replace("_", " ")}
+//                                     {transaction?.type === "bitcoin_transfer" && `Wallet: ${transaction?.recipientWallet}`}
+//                                   </div>
+//                                 </div>
+//                               </div>
+//                             </td>
+//                             <td className="p-4 min-w-[120px]">{formatDate(group.date)}</td>
+//                             <td className="p-4">{group.accounts.join(", ")}</td>
+//                             <td className="p-4 text-right font-medium text-green-600">
+//                               {isCrypto ? (
+//                                 <span className="text-green-600">{displayAmount?.toFixed(8)} BTC</span>
+//                               ) : (
+//                                 <span className="text-green-600">${formatPrice(displayAmount)}</span>
+//                               )}
+//                             </td>
+//                             <td className="p-4 text-center">
+//                               <Badge
+//                                 variant={
+//                                   group.status === "completed"
+//                                     ? "default"
+//                                     : group.status === "pending"
+//                                       ? "secondary"
+//                                       : "destructive"
+//                                 }
+//                                 className={
+//                                   group.status === "completed"
+//                                     ? "bg-green-100 text-green-800 border-green-200 hover:bg-green-200"
+//                                     : group.status === "pending"
+//                                       ? "bg-amber-100 text-amber-800 border-amber-200 hover:bg-amber-200"
+//                                       : "bg-red-100 text-red-800 border-red-200 hover:bg-red-200"
+//                                 }
+//                               >
+//                                 {group.status.charAt(0).toUpperCase() + group.status.slice(1)}
+//                               </Badge>
+//                             </td>
+//                             <td className="p-4 text-center">
+//                               <DropdownMenu>
+//                                 <DropdownMenuTrigger asChild>
+//                                   <Button variant="ghost" size="icon" className="h-8 w-8">
+//                                     <MoreHorizontal className="h-4 w-4" />
+//                                   </Button>
+//                                 </DropdownMenuTrigger>
+//                                 <DropdownMenuContent align="end">
+//                                   <DropdownMenuLabel>Transaction Actions</DropdownMenuLabel>
+//                                   <DropdownMenuSeparator />
+//                                   {isGroup ? (
+//                                     <DropdownMenuItem asChild>
+//                                       <Link href={`${detailLink}&from=dashboard`}>View Transactions</Link>
+//                                     </DropdownMenuItem>
+//                                   ) : (
+//                                     <DropdownMenuItem asChild>
+//                                       <Link href={`${detailLink}?from=dashboard`}>
+//                                         View Details (ID: {group.transactionIds[0]})
+//                                       </Link>
+//                                     </DropdownMenuItem>
+//                                   )}
+//                                   <DropdownMenuItem asChild>
+//                                     <Link href={`/admin/users/${group.userIds[0]}?from=dashboard`}>View User</Link>
+//                                   </DropdownMenuItem>
+//                                   {group.userIds.length > 1 && (
+//                                     <DropdownMenuItem asChild>
+//                                       <Link href={`/admin/users/${group.userIds[1]}?from=dashboard`}>View Recipient</Link>
+//                                     </DropdownMenuItem>
+//                                   )}
+//                                   <DropdownMenuSeparator />
+//                                 </DropdownMenuContent>
+//                               </DropdownMenu>
+//                             </td>
+//                           </tr>
+//                         )
+//                       })}
+//                       {groupedTransactions.length === 0 && (
+//                         <tr>
+//                           <td colSpan={8} className="p-4 text-center text-muted-foreground">
+//                             No transactions found
+//                           </td>
+//                         </tr>
+//                       )}
+//                     </tbody>
+//                   </table>
+//                 </div>
+//                 <div className="sm:hidden divide-y divide-primary-100">
+//                   {groupedTransactions.map((group) => {
+//                     const userNames = group.userIds.map(
+//                       (id) => users.find((u) => u.id === id)?.name || "Unknown User"
+//                     )
+//                     const isGroup = group.transactionIds.length > 1
+//                     const senderTxId = group.transactionIds.find((txId) => {
+//                       const tx = transactions.find((t) => t.id === txId)
+//                       return (tx?.amount ?? 0) < 0
+//                     })
+//                     const receiverTxId = group.transactionIds.find((txId) => {
+//                       const tx = transactions.find((t) => t.id === txId)
+//                       return (tx?.amount ?? 0) > 0
+//                     })
+//                     const detailLink = isGroup
+//                       ? `/admin/transactions/${senderTxId}?receiverId=${receiverTxId}`
+//                       : `/admin/transactions/${group.transactionIds[0]}`
+
+//                     const transaction = transactions.find((tx) => group.transactionIds.includes(tx.id))
+
+//                     return (
+//                       <div key={group.id} className="p-4 hover:bg-primary-50/50 transition-colors">
+//                         <div className="flex items-center justify-between mb-2">
+//                           <div className="flex items-center gap-3">
+//                             <div className="h-8 w-8 rounded-full flex items-center justify-center bg-muted">
+//                               {getTransactionIcon(group.type, transaction?.category, transaction?.account)}
+//                             </div>
+//                             <div>
+//                               <div className="font-medium text-sm text-primary-900">{userNames.join(" to ")}</div>
+//                               <div className="text-xs text-primary-600">
+//                                 {userNames.map((name, index) => (
+//                                   <span key={group.userIds[index]}>
+//                                     {users.find((u) => u.id === group.userIds[index])?.email || ""}
+//                                     {index < userNames.length - 1 ? " to " : ""}
+//                                   </span>
+//                                 ))}
+//                               </div>
+//                             </div>
+//                           </div>
+//                           <DropdownMenu>
+//                             <DropdownMenuTrigger asChild>
+//                               <Button variant="ghost" size="icon" className="h-8 w-8">
+//                                 <MoreHorizontal className="h-4 w-4" />
+//                               </Button>
+//                             </DropdownMenuTrigger>
+//                             <DropdownMenuContent align="end">
+//                               <DropdownMenuLabel>Transaction Actions</DropdownMenuLabel>
+//                               <DropdownMenuSeparator />
+//                               {isGroup ? (
+//                                 <DropdownMenuItem asChild>
+//                                   <Link href={`${detailLink}&from=dashboard`}>View Transactions</Link>
+//                                 </DropdownMenuItem>
+//                               ) : (
+//                                 <DropdownMenuItem asChild>
+//                                   <Link href={`${detailLink}?from=dashboard`}>
+//                                     View Details (ID: {group.transactionIds[0]})
+//                                   </Link>
+//                                 </DropdownMenuItem>
+//                               )}
+//                               <DropdownMenuItem asChild>
+//                                 <Link href={`/admin/users/${group.userIds[0]}?from=dashboard`}>View User</Link>
+//                               </DropdownMenuItem>
+//                               {group.userIds.length > 1 && (
+//                                 <DropdownMenuItem asChild>
+//                                   <Link href={`/admin/users/${group.userIds[1]}?from=dashboard`}>View Recipient</Link>
+//                                 </DropdownMenuItem>
+//                               )}
+//                               <DropdownMenuSeparator />
+//                             </DropdownMenuContent>
+//                           </DropdownMenu>
+//                         </div>
+//                         <div className="space-y-2 text-sm">
+//                           {/* <div>
+//                             <span className="text-primary-500">ID:</span>{" "}
+//                             <span className="font-mono">{isGroup ? `Group: ${group.id}` : group.id}</span>
+//                           </div> */}
+//                           <div>
+//                             <span className="text-primary-500">Description:</span> {group.description}
+//                           </div>
+//                           <div>
+//                             <span className="text-primary-500">Type:</span>{" "}
+//                             <span className="capitalize">{group.type.replace("_", " ")}</span>
+//                           </div>
+//                           <div>
+//                             <span className="text-primary-500">Date:</span>{" "}
+//                             {formatDate(group.date)}
+//                           </div>
+//                           <div>
+//                             <span className="text-primary-500">Accounts:</span> {group.accounts.join(", ")}
+//                           </div>
+//                           <div>
+//                             <span className="text-primary-500">Amount:</span>{" "}
+//                             <span className="font-medium text-green-600">${formatPrice(group.amount)}</span>
+//                           </div>
+//                           <div>
+//                             <span className="text-primary-500">Status:</span>{" "}
+//                             <Badge
+//                               variant={
+//                                 group.status === "completed"
+//                                   ? "default"
+//                                   : group.status === "pending"
+//                                     ? "secondary"
+//                                     : "destructive"
+//                               }
+//                               className={
+//                                 group.status === "completed"
+//                                   ? "bg-green-100 text-green-800 border-green-200"
+//                                   : group.status === "pending"
+//                                     ? "bg-amber-100 text-amber-800 border-amber-200"
+//                                     : "bg-red-100 text-red-800 border-red-200"
+//                               }
+//                             >
+//                               {group.status.charAt(0).toUpperCase() + group.status.slice(1)}
+//                             </Badge>
+//                           </div>
+//                         </div>
+//                       </div>
+//                     )
+//                   })}
+//                   {groupedTransactions.length === 0 && (
+//                     <div className="p-4 text-center text-muted-foreground">
+//                       No transactions found
+//                     </div>
+//                   )}
+//                 </div>
+//                 <div className="p-4 border-t">
+//                   <Button
+//                     variant="outline"
+//                     className="w-full sm:w-auto bg-white/60 border-primary-200 text-primary-700 hover:bg-primary-50"
+//                     asChild
+//                   >
+//                     <Link href="/admin/transactions">View All Transactions</Link>
+//                   </Button>
+//                 </div>
+//               </CardContent>
+//             </Card>
+//           </main>
+//         </div>
+
+//         {/* Add Transaction Dialog */}
+//         <Dialog open={isAddTransactionOpen} onOpenChange={setIsAddTransactionOpen}>
+//           <DialogContent className="max-w-[90vw] sm:max-w-md bg-white/95 backdrop-blur-sm border border-primary-100">
+//             <DialogHeader>
+//               <DialogTitle className="text-primary-900">Add New Transaction</DialogTitle>
+//               <DialogDescription className="text-primary-600">
+//                 Create a new transaction for a user's account.
+//               </DialogDescription>
+//             </DialogHeader>
+//             <div className="space-y-4 py-4 px-2 sm:px-0">
+//               {transactionError && (
+//                 <Alert variant="destructive" className="bg-red-50 border border-red-200">
+//                   <AlertCircle className="h-4 w-4 text-red-600" />
+//                   <AlertDescription className="text-red-700">{transactionError}</AlertDescription>
+//                 </Alert>
+//               )}
+//               <div className="space-y-2">
+//                 <Label htmlFor="user" className="text-primary-800">
+//                   Select User
+//                 </Label>
+//                 <Select
+//                   value={newTransaction.userId}
+//                   onValueChange={(value) => setNewTransaction({ ...newTransaction, userId: value })}
+//                 >
+//                   <SelectTrigger
+//                     id="user"
+//                     className="border-primary-200 bg-white/80 focus:border-primary-300 focus:ring focus:ring-primary-200 focus:ring-opacity-50"
+//                   >
+//                     <SelectValue placeholder="Select a user" />
+//                   </SelectTrigger>
+//                   <SelectContent>
+//                     {users.map((user) => (
+//                       <SelectItem key={user.id} value={user.id}>
+//                         {user.name} ({user.accountNumber})
+//                       </SelectItem>
+//                     ))}
+//                   </SelectContent>
+//                 </Select>
+//               </div>
+//               <div className="space-y-2">
+//                 <Label htmlFor="transactionType" className="text-primary-800">
+//                   Transaction Type
+//                 </Label>
+//                 <Select
+//                   value={newTransaction.type}
+//                   onValueChange={(value) => setNewTransaction({ ...newTransaction, type: value })}
+//                 >
+//                   <SelectTrigger
+//                     id="transactionType"
+//                     className="border-primary-200 bg-white/80 focus:border-primary-300 focus:ring focus:ring-primary-200 focus:ring-opacity-50"
+//                   >
+//                     <SelectValue placeholder="Select transaction type" />
+//                   </SelectTrigger>
+//                   <SelectContent>
+//                     <SelectItem value="deposit">Deposit</SelectItem>
+//                     <SelectItem value="withdrawal">Withdrawal</SelectItem>
+//                     <SelectItem value="transfer">Transfer</SelectItem>
+//                     <SelectItem value="payment">Payment</SelectItem>
+//                     <SelectItem value="crypto_buy">Add Crypto</SelectItem>
+//                   </SelectContent>
+//                 </Select>
+//               </div>
+//               <div className="space-y-2">
+//                 <Label htmlFor="amount" className="text-primary-800">
+//                   Amount
+//                 </Label>
+//                 <div className="relative">
+//                   <div className="absolute left-3 top-1/2 -translate-y-1/2 text-primary-600">$</div>
+//                   <Input
+//                     id="amount"
+//                     type="number"
+//                     step="0.01"
+//                     className="pl-7 border-primary-200 bg-white/80 focus:border-primary-300 focus:ring focus:ring-primary-200 focus:ring-opacity-50"
+//                     placeholder="0.00"
+//                     value={newTransaction.amount}
+//                     onChange={(e) => setNewTransaction({ ...newTransaction, amount: e.target.value })}
+//                   />
+//                 </div>
+//                 <p className="text-sm text-primary-600">
+//                   Use negative values for withdrawals only that reduce balance.
+//                 </p>
+//               </div>
+//               <div className="space-y-2">
+//                 <Label htmlFor="description" className="text-primary-800">
+//                   Description
+//                 </Label>
+//                 <Input
+//                   id="description"
+//                   placeholder="Enter transaction description"
+//                   className="border-primary-200 bg-white/80 focus:border-primary-300 focus:ring focus:ring-primary-200 focus:ring-opacity-50"
+//                   value={newTransaction.description}
+//                   onChange={(e) => setNewTransaction({ ...newTransaction, description: e.target.value })}
+//                 />
+//               </div>
+//             </div>
+//             <DialogFooter>
+//               <Button
+//                 variant="outline"
+//                 className="border-primary-200 text-primary-700 hover:bg-primary-50"
+//                 onClick={() => {
+//                   setIsAddTransactionOpen(false)
+//                   setTransactionError(null)
+//                   setNewTransaction({ userId: "", type: "deposit", amount: "", description: "" })
+//                 }}
+//               >
+//                 Cancel
+//               </Button>
+//               <Button
+//                 className="bg-gradient-to-r from-primary-600 to-secondary-600 hover:from-primary-700 hover:to-secondary-700 text-white"
+//                 onClick={scams}
+//               >
+//                 Add Transaction
+//               </Button>
+//             </DialogFooter>
+//           </DialogContent>
+//         </Dialog>
+
+//         {/* Crypto Transaction Dialog */}
+//         <Dialog open={isCryptoDialogOpen} onOpenChange={setIsCryptoDialogOpen}>
+//           <DialogContent className="max-w-[90vw] sm:max-w-md bg-white/95 backdrop-blur-sm border border-primary-100">
+//             <DialogHeader>
+//               <DialogTitle className="text-primary-900">Crypto Transaction Details</DialogTitle>
+//               <DialogDescription className="text-primary-600">
+//                 Provide additional details for the {newTransaction.type} transaction.
+//               </DialogDescription>
+//             </DialogHeader>
+//             <div className="space-y-4 py-4">
+//               {transactionError && (
+//                 <Alert variant="destructive" className="bg-red-50 border border-red-200">
+//                   <AlertCircle className="h-4 w-4 text-red-600" />
+//                   <AlertDescription className="text-red-700">{transactionError}</AlertDescription>
+//                 </Alert>
+//               )}
+//               <div className="space-y-2">
+//                 <Label htmlFor="cryptoAmount" className="text-primary-800">
+//                   Crypto Amount (BTC)
+//                 </Label>
+//                 <Input
+//                   id="cryptoAmount"
+//                   type="number"
+//                   step="0.00000001"
+//                   className="border-primary-200 bg-white/80 focus:border-primary-300 focus:ring focus:ring-primary-200 focus:ring-opacity-50"
+//                   placeholder="0.00000000"
+//                   value={cryptoForm.cryptoAmount}
+//                   onChange={(e) => setCryptoForm({ ...cryptoForm, cryptoAmount: e.target.value })}
+//                 />
+//               </div>
+//               <div className="space-y-2">
+//                 <Label htmlFor="cryptoPrice" className="text-primary-800">
+//                   Crypto Price (USD per BTC)
+//                 </Label>
+//                 <div className="relative">
+//                   <div className="absolute left-3 top-1/2 -translate-y-1/2 text-primary-600">$</div>
+//                   <Input
+//                     id="cryptoPrice"
+//                     type="number"
+//                     step="0.01"
+//                     className="pl-7 border-primary-200 bg-white/80 focus:border-primary-300 focus:ring focus:ring-primary-200 focus:ring-opacity-50"
+//                     placeholder="0.00"
+//                     value={cryptoForm.cryptoPrice}
+//                     onChange={(e) => setCryptoForm({ ...cryptoForm, cryptoPrice: e.target.value })}
+//                   />
+//                 </div>
+//               </div>
+//             </div>
+//             <DialogFooter>
+//               <Button
+//                 variant="outline"
+//                 onClick={() => {
+//                   setIsCryptoDialogOpen(false)
+//                   setCryptoForm({ cryptoAmount: "", cryptoPrice: "" })
+//                   setTransactionError(null)
+//                 }}
+//                 className="bg-white/60 border-primary-200 text-primary-700 hover:bg-primary-50 hover:text-primary-800 hover:border-primary-300"
+//               >
+//                 Cancel
+//               </Button>
+//               <Button
+//                 onClick={handleCryptoTransaction}
+//                 className="bg-gradient-to-r from-primary-600 to-secondary-600 hover:from-primary-700 hover:to-secondary-700 text-white"
+//               >
+//                 Submit Transaction
+//               </Button>
+//             </DialogFooter>
+//           </DialogContent>
+//         </Dialog>
+
+//         {/* Pending Approvals Dialog */}
+//         <Dialog open={isPendingApprovalsOpen} onOpenChange={setIsPendingApprovalsOpen}>
+//           <DialogContent className="max-w-[90vw] sm:max-w-lg bg-white/95 backdrop-blur-sm border border-primary-100">
+//             <DialogHeader>
+//               <DialogTitle className="text-primary-900">Pending Approvals</DialogTitle>
+//               <DialogDescription className="text-primary-600">
+//                 Review and approve or reject new user registrations.
+//               </DialogDescription>
+//             </DialogHeader>
+//             <div className="py-4">
+//               {approvalError && (
+//                 <Alert variant="destructive" className="mb-4">
+//                   <AlertCircle className="h-4 w-4" />
+//                   <AlertDescription>{approvalError}</AlertDescription>
+//                 </Alert>
+//               )}
+//               {pendingUsers.length > 0 ? (
+//                 <div className="space-y-4">
+//                   {pendingUsers.map((user) => (
+//                     <div key={user._id} className="border rounded-lg p-4 space-y-4 bg-white/80">
+//                       <div className="flex items-center justify-between">
+//                         <div className="flex items-center gap-3">
+//                           <Avatar className="h-10 w-10 border-2 border-primary-100">
+//                             <AvatarFallback className="bg-gradient-to-br from-primary-500 to-secondary-500 text-white">
+//                               {user.fullName
+//                                 .split(" ")
+//                                 .map((n) => n[0])
+//                                 .join("")}
+//                             </AvatarFallback>
+//                           </Avatar>
+//                           <div>
+//                             <div className="font-medium text-primary-900">{user.fullName}</div>
+//                             <div className="text-sm text-primary-600">{user.email}</div>
+//                           </div>
+//                         </div>
+//                         <Badge variant="secondary">Pending</Badge>
+//                       </div>
+//                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
+//                         <div className="text-primary-700">
+//                           <span className="text-primary-500">Username:</span> {user.username || "Not set"}
+//                         </div>
+//                         <div className="text-primary-700">
+//                           <span className="text-primary-500">Phone:</span> {user.phone}
+//                         </div>
+//                         <div className="text-primary-700">
+//                           <span className="text-primary-500">SSN:</span> {user.ssn}
+//                         </div>
+//                         <div className="text-primary-700">
+//                           <span className="text-primary-500">Address:</span>{" "}
+//                           {`${user.streetAddress}, ${user.city}, ${user.state} ${user.zipCode}`}
+//                         </div>
+//                       </div>
+//                       <div className="flex justify-end gap-2">
+//                         <Button
+//                           variant="outline"
+//                           className="border-red-200 text-red-700 hover:bg-red-50"
+//                           size="sm"
+//                           onClick={() => handleRejectUser(user._id)}
+//                           disabled={loadingActions[user._id]}
+//                         >
+//                           {loadingActions[user._id] ? (
+//                             <Loader className="h-4 w-4 animate-spin mr-2" />
+//                           ) : null}
+//                           Reject
+//                         </Button>
+//                         <Button
+//                           size="sm"
+//                           className="bg-gradient-to-r from-primary-600 to-secondary-600 hover:from-primary-700 hover:to-secondary-700 text-white"
+//                           onClick={() => handleApproveUser(user._id)}
+//                           disabled={loadingActions[user._id]}
+//                         >
+//                           {loadingActions[user._id] ? (
+//                             <Loader className="h-4 w-4 animate-spin mr-2" />
+//                           ) : null}
+//                           Approve
+//                         </Button>
+//                       </div>
+//                     </div>
+//                   ))}
+//                 </div>
+//               ) : (
+//                 <div className="text-center py-8">
+//                   <p className="text-primary-600">No pending approvals</p>
+//                 </div>
+//               )}
+//             </div>
+//             <DialogFooter>
+//               <Button
+//                 className="bg-gradient-to-r from-primary-600 to-secondary-600 hover:from-primary-700 hover:to-secondary-700 text-white"
+//                 onClick={() => {
+//                   setIsPendingApprovalsOpen(false)
+//                   setApprovalError(null)
+//                 }}
+//               >
+//                 Close
+//               </Button>
+//             </DialogFooter>
+//           </DialogContent>
+//         </Dialog>
+
+//         {/* User Selection Dialog */}
+//         <Dialog open={isUserSelectionOpen} onOpenChange={setIsUserSelectionOpen}>
+//           <DialogContent className="max-w-[90vw] sm:max-w-md bg-white/95 backdrop-blur-sm border border-primary-100">
+//             <DialogHeader>
+//               <DialogTitle className="text-primary-900">Select User</DialogTitle>
+//               <DialogDescription className="text-primary-600">
+//                 Search and select a user to manage their account.
+//               </DialogDescription>
+//             </DialogHeader>
+//             <div className="space-y-4">
+//               <Input
+//                 placeholder="Search users..."
+//                 value={searchQuery}
+//                 onChange={(e) => setSearchQuery(e.target.value)}
+//                 className="border-primary-200 bg-white/80 focus:border-primary-300 focus:ring focus:ring-primary-200 focus:ring-opacity-50"
+//               />
+//               <div className="max-h-[300px] overflow-y-auto">
+//                 {filteredUsers.length > 0 ? (
+//                   filteredUsers.map((user) => (
+//                     <div key={user.id} className="flex items-center justify-between p-2 hover:bg-primary-50">
+//                       <div>
+//                         <div className="font-medium text-primary-900">{user.name}</div>
+//                         <div className="text-sm text-primary-600">{user.username} - {user.email}</div>
+//                       </div>
+//                       <Button variant="ghost" size="sm" onClick={() => handleUserSelect(user.id)}>
+//                         Select
+//                       </Button>
+//                     </div>
+//                   ))
+//                 ) : (
+//                   <div className="text-center py-4 text-primary-600">No users found</div>
+//                 )}
+//               </div>
+//             </div>
+//             <DialogFooter>
+//               <Button
+//                 variant="outline"
+//                 onClick={() => setIsUserSelectionOpen(false)}
+//                 className="bg-white/60 border-primary-200 text-primary-700 hover:bg-primary-50"
+//               >
+//                 Close
+//               </Button>
+//             </DialogFooter>
+//           </DialogContent>
+//         </Dialog>
+//       </div>
+//     </div>
+//   )
+// }
