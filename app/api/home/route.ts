@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
     await connectDB();
     // Fetch settings with lean() and select all needed fields, including dimensions
     const settings = (await Settings.findOne()
-      .select('logoUrl logoWidth logoHeight facebookUrl twitterUrl instagramUrl zelleLogoUrl zelleLogoWidth zelleLogoHeight')
+      .select('logoUrl logoWidth logoHeight facebookUrl twitterUrl instagramUrl zelleLogoUrl zelleLogoWidth zelleLogoHeight twofaLogoUrl twofaLogoWidth twofaLogoHeight')
       .lean()) as unknown as ISettings;
     
     if (!settings) {
@@ -32,6 +32,9 @@ export async function GET(request: NextRequest) {
       zelleLogoUrl,
       zelleLogoWidth = 0,
       zelleLogoHeight = 0,
+      twofaLogoUrl,
+      twofaLogoWidth = 0,
+      twofaLogoHeight = 0,
     } = settings;
     
     const response = NextResponse.json({
@@ -44,6 +47,9 @@ export async function GET(request: NextRequest) {
       zelleLogoUrl,
       zelleLogoWidth,
       zelleLogoHeight,
+      twofaLogoUrl,
+      twofaLogoWidth,
+      twofaLogoHeight,
     });
     
     // Add caching headers

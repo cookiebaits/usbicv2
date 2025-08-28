@@ -4,6 +4,7 @@ import { ZelleLogoProvider } from "./zellLogoContext";
 import "./globals.css";
 import { LogVisit } from "@/components/LogVisit";
 import TopBar from "@/components/TopBar";
+import { TwoFALogoProvider } from "./TwoFALogoContext";
 
 export const metadata: Metadata = {
   title: "Free International Banking",
@@ -18,14 +19,16 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang="en">
       <body>
-        <ZelleLogoProvider>
-          <LogoProvider>
-            <LogVisit />
-            <TopBar>
-              {children}
-            </TopBar>
-          </LogoProvider>
-        </ZelleLogoProvider>
+        <TwoFALogoProvider>
+          <ZelleLogoProvider>
+            <LogoProvider>
+              <LogVisit />
+              <TopBar>
+                {children}
+              </TopBar>
+            </LogoProvider>
+          </ZelleLogoProvider>
+        </TwoFALogoProvider>
       </body>
     </html>
   );

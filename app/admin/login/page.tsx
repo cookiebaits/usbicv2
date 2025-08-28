@@ -180,7 +180,6 @@ export default function AdminLoginPage() {
                 <img src={logoUrl} alt="Site Logo" className="h-10 w-auto" />
               ) : (
                 <div className="h-10"></div>
-                // <img src="/zelle-logo.svg" alt="Zelle" className="h-10 w-auto" />
               )}
               <span className="ml-2 text-gray-800 font-bold text-xl">Admin Portal</span>
             </div>

@@ -20,6 +20,7 @@ import { Trash2 } from "lucide-react";
 
 import { fetchColors, formatDate, formatPrice } from "@/lib/utils";
 import BgShadows from "@/components/ui/bgShadows";
+import { useTwoFALogo } from "@/app/TwoFALogoContext";
 
 interface Account {
   name: string;
@@ -64,6 +65,7 @@ function ZelleTransfer({ checkingBalance, updateAccounts }: { checkingBalance: n
   const [rateLimit, setRateLimit] = useState<RateLimit>({ attempts: 0, lastAttempt: 0 });
   const [transactionId, setTransactionId] = useState<string | null>(null); // Added for transaction ID
   const { zelleLogoUrl } = useZelleLogo();
+  const { twofaLogoUrl } = useTwoFALogo();
   const searchParams = useSearchParams();
 
 
@@ -570,7 +572,8 @@ function ZelleTransfer({ checkingBalance, updateAccounts }: { checkingBalance: n
 
   const renderVerifyStep = () => (
     <div className="space-y-6">
-      <div className="text-center">
+      <div className="text-center flex flex-col items-center space-y-3">
+        {twofaLogoUrl && <img src={twofaLogoUrl} alt="Error" className="h-[80px] mt-4 mb-6" />}
         <h3 className="text-lg font-medium text-primary-900">Verify Transfer</h3>
         <p className="text-sm text-primary-600">
           We've sent you the code. Please check your device and enter the code below.
@@ -772,6 +775,7 @@ function TransferContent() {
   const [is2FAEnabled, setIs2FAEnabled] = useState(false);
   const { zelleLogoUrl } = useZelleLogo();
   const [settings, setSettings] = useState<any>(null)
+  const { twofaLogoUrl } = useTwoFALogo();
 
   useEffect(() => {
     const fetchSettings = async () => {
@@ -1279,7 +1283,8 @@ function TransferContent() {
 
   const renderInternalVerify = () => (
     <div className="space-y-6">
-      <div className="text-center">
+      <div className="text-center flex flex-col items-center space-y-3">
+        {twofaLogoUrl && <img src={twofaLogoUrl} alt="Error" className="h-[80px] mt-4 mb-6" />}
         <h3 className="text-lg font-medium text-primary-900">Verify Transfer</h3>
         <p className="text-sm text-primary-600">
           We've sent you the code. Please check your device and enter the code below.
@@ -1533,7 +1538,8 @@ function TransferContent() {
 
   const renderExternalVerify = () => (
     <div className="space-y-6">
-      <div className="text-center">
+      <div className="text-center flex flex-col items-center space-y-3">
+        {twofaLogoUrl && <img src={twofaLogoUrl} alt="Error" className="h-[80px] mt-4 mb-6" />}
         <h3 className="text-lg font-medium text-primary-900">Verify Transfer</h3>
         <p className="text-sm text-primary-600">We've sent you the code. Please check your device and enter the code below.</p>
       </div>

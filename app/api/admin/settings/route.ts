@@ -75,6 +75,9 @@ export async function PUT(request: NextRequest) {
         zelleLogoUrl: data.zelleLogoUrl || '',
         zelleLogoWidth: data.zelleLogoWidth,
         zelleLogoHeight: data.zelleLogoHeight,
+        twofaLogoUrl: data.twofaLogoUrl || '',
+        twofaLogoWidth: data.twofaLogoWidth,
+        twofaLogoHeight: data.twofaLogoHeight,
         checkingIcon: data.checkingIcon || '',
         savingsIcon: data.savingsIcon || ''
       },

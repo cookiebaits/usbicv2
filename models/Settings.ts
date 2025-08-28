@@ -14,6 +14,9 @@ export interface ISettings extends Document {
   logoUrl?: string;
   logoWidth?: number;
   logoHeight?: number;
+  twofaLogoUrl?: string;
+  twofaLogoWidth?: number;
+  twofaLogoHeight?: number;
   zelleLogoUrl?: string;
   zelleLogoWidth?: number;
   zelleLogoHeight?: number;
@@ -37,6 +40,9 @@ const SettingsSchema: Schema = new Schema({
   logoUrl: { type: String, required: false },
   logoWidth: { type: Number, required: false },
   logoHeight: { type: Number, required: false },
+  twofaLogoUrl: { type: String, required: false },
+  twofaLogoWidth: { type: Number, required: false },
+  twofaLogoHeight: { type: Number, required: false },
   zelleLogoUrl: { type: String, required: false },
   zelleLogoWidth: { type: Number, required: false },
   zelleLogoHeight: { type: Number, required: false },

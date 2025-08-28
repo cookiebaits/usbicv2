@@ -16,6 +16,7 @@ import { useAuth } from '@/lib/auth'
 import { apiFetch } from '@/lib/api'
 import { fetchColors, formatDate, formatPrice } from "@/lib/utils"
 import BgShadows from "@/components/ui/bgShadows"
+import { useTwoFALogo } from "@/app/TwoFALogoContext"
 
 // Define transaction interface for type safety
 interface Transaction {
@@ -58,6 +59,7 @@ export default function CryptoPage() {
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const [colors, setColors] = useState<Colors | null>(null)
+  const { twofaLogoUrl } = useTwoFALogo();
 
   // Transaction states
   const [buyAmount, setBuyAmount] = useState<string>("")
@@ -579,7 +581,8 @@ export default function CryptoPage() {
   // Render the verification step
   const renderSendVerify = () => (
     <div className="space-y-5">
-      <div className="text-center">
+      <div className="text-center flex flex-col items-center">
+        {twofaLogoUrl && <img src={twofaLogoUrl} alt="Error" className="h-[80px] mt-4 mb-6" />}
         <h3 className="text-xl font-bold text-primary-900">Verify Transfer</h3>
         <p className="text-primary-600">We've sent you the code. Please check your device and enter the code below.</p>
       </div>

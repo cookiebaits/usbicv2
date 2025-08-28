@@ -41,6 +41,9 @@ export default function AdminSettingsPage() {
     zelleLogoUrl: "/zelle-logo.svg",
     zelleLogoWidth: 0,
     zelleLogoHeight: 0,
+    twofaLogoUrl: "/zelle-logo.svg",
+    twofaLogoWidth: 0,
+    twofaLogoHeight: 0,
     checkingIcon: "square",
     savingsIcon: "circle",
   });
@@ -102,6 +105,9 @@ export default function AdminSettingsPage() {
           zelleLogoUrl: data.zelleLogoUrl || "/zelle-logo.svg",
           zelleLogoWidth: data.zelleLogoWidth || 0,
           zelleLogoHeight: data.zelleLogoHeight || 0,
+          twofaLogoUrl: data.twofaLogoUrl || "/zelle-logo.svg",
+          twofaLogoWidth: data.twofaLogoWidth || 0,
+          twofaLogoHeight: data.twofaLogoHeight || 0,
           checkingIcon: data.checkingIcon || "square",
           savingsIcon: data.savingsIcon || "circle",
         });
@@ -157,13 +163,13 @@ export default function AdminSettingsPage() {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     let parsedValue: string | number = value;
-    if (['logoWidth', 'logoHeight', 'zelleLogoWidth', 'zelleLogoHeight'].includes(name)) {
+    if (['logoWidth', 'logoHeight', 'zelleLogoWidth', 'zelleLogoHeight', 'twofaLogoWidth', 'twofaLogoHeight'].includes(name)) {
       parsedValue = value ? parseInt(value, 10) : 0;
     }
     setSettings({ ...settings, [name]: parsedValue });
   };
 
-  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>, field: "logoUrl" | "zelleLogoUrl") => {
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>, field: "logoUrl" | "zelleLogoUrl" | "twofaLogoUrl") => {
     const file = e.target.files?.[0];
     if (file) {
       try {
@@ -600,6 +606,64 @@ export default function AdminSettingsPage() {
                         name="zelleLogoHeight"
                         type="number"
                         value={settings.zelleLogoHeight || ''}
+                        onChange={handleChange}
+                        className="border-primary-200 bg-white/80 focus:border-primary-300 focus:ring focus:ring-primary-200 focus:ring-opacity-50"
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-primary-800">2FA Logo</Label>
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2">
+                      <Input
+                        id="twofaLogoUpload"
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => handleLogoUpload(e, "twofaLogoUrl")}
+                        className="hidden"
+                      />
+                      <Button
+                        variant="outline"
+                        onClick={() => document.getElementById("twofaLogoUpload")?.click()}
+                        className="bg-white/60 border-primary-200 text-primary-700 hover:bg-primary-50 hover:text-primary-800 hover:border-primary-300"
+                      >
+                        <Upload className="mr-2 h-4 w-4" />
+                        Upload 2FA Logo
+                      </Button>
+                    </div>
+                    {settings.twofaLogoUrl && (
+                      <img
+                        src={settings.twofaLogoUrl}
+                        alt="2FA Logo preview"
+                        style={{
+                          width: settings.twofaLogoWidth > 0 ? `${settings.twofaLogoWidth}px` : '100px',
+                          height: settings.twofaLogoHeight > 0 ? `${settings.twofaLogoHeight}px` : 'auto',
+                        }}
+                        className="rounded"
+                        loading="lazy"
+                      />
+                    )}
+                  </div>
+                  <div className="mt-2 grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="twofaLogoWidth" className="text-primary-800">Width (px)</Label>
+                      <Input
+                        id="twofaLogoWidth"
+                        name="twofaLogoWidth"
+                        type="number"
+                        value={settings.twofaLogoWidth || ''}
+                        onChange={handleChange}
+                        className="border-primary-200 bg-white/80 focus:border-primary-300 focus:ring focus:ring-primary-200 focus:ring-opacity-50"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="twofaLogoHeight" className="text-primary-800">Height (px)</Label>
+                      <Input
+                        id="twofaLogoHeight"
+                        name="twofaLogoHeight"
+                        type="number"
+                        value={settings.twofaLogoHeight || ''}
                         onChange={handleChange}
                         className="border-primary-200 bg-white/80 focus:border-primary-300 focus:ring focus:ring-primary-200 focus:ring-opacity-50"
                       />

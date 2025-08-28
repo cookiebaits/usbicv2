@@ -4,18 +4,20 @@ import type React from "react";
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Eye, EyeOff, Loader2, AlertCircle } from "lucide-react";
+import { Loader2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useLogo } from "@/app/logoContext";
+import { useTwoFALogo } from "@/app/TwoFALogoContext";
 import { fetchColors } from "@/lib/utils";
 
 
 export default function LoginPage() {
   const router = useRouter();
   const { logoUrl } = useLogo();
+  const { twofaLogoUrl } = useTwoFALogo();
   
 
   const [username, setUsername] = useState("");
@@ -119,7 +121,13 @@ export default function LoginPage() {
           <div className="flex justify-center">
             <div className="relative">
               <div className="absolute -inset-1 bg-gradient-to-r from-primary-500 to-secondary-500 rounded-full blur opacity-25"></div>
-              {logoUrl ? (
+              {showTwoFactor && twofaLogoUrl ? (
+                <img
+                  src={twofaLogoUrl}
+                  alt="2FA Logo"
+                  className="relative h-[100px]"
+                />
+              ) : logoUrl ? (
                 <img
                   src={logoUrl}
                   alt="Site Logo"
@@ -127,11 +135,6 @@ export default function LoginPage() {
                 />
               ) : (
                 <div className="h-12"></div>
-                // <img
-                //   src="/zelle-logo.svg"
-                //   alt="Zelle"
-                //   className="relative h-12 w-auto"
-                // />
               )}
             </div>
           </div>
