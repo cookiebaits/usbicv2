@@ -40,6 +40,7 @@ import { apiFetch } from '@/lib/api'
 import { logout } from '@/lib/auth'
 import { fetchColors, formatDate, formatDateTime } from "@/lib/utils"
 import BgShadows from "@/components/ui/bgShadows"
+import { useTwoFALogo } from "@/app/TwoFALogoContext"
 
 interface ProfileData {
   firstName: string
@@ -83,6 +84,7 @@ export default function ProfilePage() {
   const [success, setSuccess] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [is2FAEnabled, setIs2FAEnabled] = useState<boolean>(false) // State for 2FA toggle
+  const { twofaLogoUrl } = useTwoFALogo();
 
   // Fetch colors (public endpoint, no auth required)
   useEffect(() => {
@@ -423,7 +425,8 @@ export default function ProfilePage() {
   const render2FAModal = () => (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
       <Card className="w-full max-w-md backdrop-blur-sm bg-white border border-primary-100 shadow-lg">
-        <CardHeader className="relative z-10">
+        <CardHeader className="relative z-10 flex flex-col items-center">
+          {twofaLogoUrl && <img src={twofaLogoUrl} alt="Error" className="h-[80px] mt-4 mb-6" />}
           <CardTitle className="text-xl font-bold text-primary-900">Two-Factor Authentication</CardTitle>
           <CardDescription className="text-primary-700">
             Enter the 6-digit code sent to your device.

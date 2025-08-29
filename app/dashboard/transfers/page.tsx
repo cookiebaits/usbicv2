@@ -721,13 +721,13 @@ function ZelleTransfer({ checkingBalance, updateAccounts }: { checkingBalance: n
             </CardDescription>
           </div>
           {/* Second column: Logo, centered */}
-          <div className="flex justify-center">
+          {step !== "verify" && <div className="flex justify-center">
             <img
               src={zelleLogoUrl || "/default-logo.png"}
               alt="Zelle Logo"
               className="h-10 w-auto"
             />
-          </div>
+          </div>}
           {/* Third column: Empty spacer */}
           <div></div>
         </div>
