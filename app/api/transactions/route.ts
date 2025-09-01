@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import dbConnect from "@/lib/mongodb";
-import Transaction from "@/models/Transaction"; // You'll need to create this model
+import Transaction from "@/models/Transaction";
 import jwt from "jsonwebtoken";
 
 const JWT_SECRET = process.env.JWT_SECRET || "";
@@ -14,8 +14,7 @@ export async function GET(req: NextRequest) {
 
   try {
     const decoded = jwt.verify(token, JWT_SECRET) as { userId: string };
-    const transactions = await Transaction.find({ userId: decoded.userId });
-    transactions.reverse();
+    const transactions = await Transaction.find({ userId: decoded.userId }).sort({ date: -1 });
     return NextResponse.json({ transactions });
   } catch (error) {
     console.error("Error fetching transactions:", error);

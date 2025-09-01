@@ -54,7 +54,7 @@ interface ProfileData {
 }
 
 export default function ProfilePage() {
-  useAuth() // Proactively check token validity and handle expiration
+  useAuth()
 
   const [profileForm, setProfileForm] = useState<ProfileData>({
     firstName: "",
@@ -66,7 +66,7 @@ export default function ProfilePage() {
     state: "",
     zipCode: "",
   })
-  const [userId, setUserId] = useState<string | null>(null) // Add userId state
+  const [userId, setUserId] = useState<string | null>(null)
   const [lastLogin, setLastLogin] = useState<string | null>(null)
   const [createdAt, setCreatedAt] = useState<string | null>(null)
   const [currentPassword, setCurrentPassword] = useState("")
@@ -83,16 +83,14 @@ export default function ProfilePage() {
   const [isLoading, setIsLoading] = useState(false)
   const [success, setSuccess] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [is2FAEnabled, setIs2FAEnabled] = useState<boolean>(false) // State for 2FA toggle
+  const [is2FAEnabled, setIs2FAEnabled] = useState<boolean>(false)
   const { twofaLogoUrl } = useTwoFALogo();
 
-  // Fetch colors (public endpoint, no auth required)
   useEffect(() => {
 
     fetchColors()
   }, [])
 
-  // Fetch profile data
   useEffect(() => {
     const fetchProfile = async () => {
       try {
@@ -234,7 +232,7 @@ export default function ProfilePage() {
       }
 
       const data = await response.json()
-      localStorage.setItem("token", data.token) // Update token
+      localStorage.setItem("token", data.token)
 
       setSuccess("Password changed successfully")
       setCurrentPassword("")

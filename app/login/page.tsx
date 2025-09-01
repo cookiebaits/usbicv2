@@ -241,14 +241,7 @@ export default function LoginPage() {
                 </Button>
                 <div className="text-center">
                   <p className="text-sm text-primary-600">
-                    By signing in, you agree to our{" "}
-                    <Link href="/terms-of-services?from=login" className="font-medium text-secondary-600 hover:text-secondary-500 transition-colors">
-                      Terms of Service
-                    </Link>{" "}
-                    and{" "}
-                    <Link href="/privacy-policy?from=login" className="font-medium text-secondary-600 hover:text-secondary-500 transition-colors">
-                      Privacy Policy
-                    </Link>
+                    By signing in, you agree to our Terms of Service and Privacy Policy.
                   </p>
                 </div>
               </form>
