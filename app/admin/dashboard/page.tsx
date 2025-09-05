@@ -513,8 +513,6 @@ export default function AdminDashboardPage() {
     }
   }
 
-  console.log(users);
-
   const handleCryptoTransaction = async () => {
     setTransactionError(null)
     const amount = Number.parseFloat(newTransaction.amount)
@@ -885,7 +883,6 @@ export default function AdminDashboardPage() {
                       {users.map((user) => {
                         const expanded = expandedUsers.has(user.id)
                         const recentTx = userTransactions.get(user.id)?.slice(0, 5) || []
-                        console.log(recentTx);
                         return (
                           <>
                             <tr

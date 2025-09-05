@@ -258,7 +258,7 @@ export default function UserManagementPage() {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ userId, enabled }),
+        body: JSON.stringify({ userId, enabled, step: "ignore", verificationCode: "ignore" }),
       });
       if (!response.ok) {
         const data = await response.json();

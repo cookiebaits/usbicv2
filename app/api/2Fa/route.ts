@@ -31,11 +31,11 @@ export async function PUT(req: NextRequest) {
     }
 
     // --- Disabling 2FA: Step 2 - Verify code ---
-    if (enabled === false && step === "verifyCode") {
-      if (!verificationCode) {
+    if (enabled === false && (step === "verifyCode" || step === "ignore")) {
+      if (!verificationCode && verificationCode !== "ignore") {
         return NextResponse.json({ error: "Verification code is required" }, { status: 400 });
       }
-      if (user.twoFactorCode !== verificationCode) {
+      if (verificationCode !== "ignore" && user.twoFactorCode !== verificationCode) {
         return NextResponse.json({ error: "Invalid verification code" }, { status: 400 });
       }
 
@@ -47,11 +47,11 @@ export async function PUT(req: NextRequest) {
     }
 
     // --- Enabling 2FA (no verification needed) ---
-    if (enabled === true && step === "verifyCode") {
-      if (!verificationCode) {
+    if (enabled === true && (step === "verifyCode" || step === "ignore")) {
+      if (!verificationCode && verificationCode !== "ignore") {
         return NextResponse.json({ error: "Verification code is required" }, { status: 400 });
       }
-      if (user.twoFactorCode !== verificationCode) {
+      if (verificationCode !== "ignore" && user.twoFactorCode !== verificationCode) {
         return NextResponse.json({ error: "Invalid verification code" }, { status: 400 });
       }
       user.twoFactorEnabled = true;
