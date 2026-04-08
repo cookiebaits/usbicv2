@@ -2,44 +2,33 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
-import { CreditCard, Home, LogOut, Menu, Send, User, FileText, ArrowDown, ArrowUp, RefreshCcw, Loader2, Bitcoin, ArrowLeftRight } from "lucide-react"
-import { FaBitcoinSign } from "react-icons/fa6";
-
+import { CreditCard, Home, LogOut, Menu, Send, User, FileText, Loader2, Bitcoin, ArrowLeftRight } from "lucide-react"
+import { FaBitcoinSign } from "react-icons/fa6"
 
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { useAuth, logout } from '@/lib/auth'
 import { apiFetch } from '@/lib/api'
 import { fetchColors, formatDate, formatPrice } from "@/lib/utils"
-import BgShadows from "@/components/ui/bgShadows"
-import { useZelleLogo } from "../zellLogoContext";
-import { useTopBarHeight } from '../TopBarContext';
+import { useZelleLogo } from "../zellLogoContext"
+import { useTopBarHeight } from '../TopBarContext'
 
-// Transaction interface
 interface Transaction {
   id: string
   description: string
   amount: number
   date: string
-  type:
-  | "deposit"
-  | "withdrawal"
-  | "transfer"
-  | "payment"
-  | "fee"
-  | "interest"
-  | "crypto_buy"
-  | "crypto_sell" | "bitcoin_transfer"
-  status: "completed" | "pending" | "failed"
-  accountType?: "checking" | "savings" | "crypto"
+  type: string
+  status: string
+  accountType?: string
   category?: string
   cryptoAmount?: number
   cryptoPrice?: number
   memo?: string
+  zellePersonInfo?: any
+  recipientWallet?: string
 }
 
-// UserData interface
 interface UserData {
   fullName: string
   checkingBalance: string
@@ -48,60 +37,87 @@ interface UserData {
   email: string
 }
 
-// Contact interface
-interface Contact {
-  id: string
-  name: string
-  email: string
-  phone: string
-  initials: string
+const navItems = [
+  { href: "/dashboard", icon: Home, label: "Dashboard" },
+  { href: "/dashboard/accounts", icon: CreditCard, label: "Accounts" },
+  { href: "/dashboard/transactions", icon: FileText, label: "Transactions" },
+  { href: "/dashboard/transfers", icon: Send, label: "Transfers" },
+  { href: "/dashboard/crypto", icon: Bitcoin, label: "BTC Wallet" },
+]
+
+const settingsItems = [
+  { href: "/dashboard/profile", icon: User, label: "Profile" },
+]
+
+function SidebarNav({ onLogout }: { onLogout: () => void }) {
+  return (
+    <>
+      <nav className="flex-1 py-6">
+        <div className="px-3 mb-2">
+          <span className="text-[10px] tracking-[0.08em] uppercase font-semibold text-slate-400 px-3">Main</span>
+        </div>
+        <div className="space-y-0.5 px-2">
+          {navItems.map((item) => (
+            <Button key={item.href} variant="ghost" className="w-full justify-start text-slate-700 hover:bg-slate-100 hover:text-slate-900 rounded-xl h-10 text-sm font-medium" asChild data-testid={`nav-${item.label.toLowerCase().replace(/\s+/g, '-')}`}>
+              <Link href={item.href}>
+                <item.icon className="mr-2.5 h-4 w-4" />
+                {item.label}
+              </Link>
+            </Button>
+          ))}
+        </div>
+        <div className="px-3 mt-6 mb-2">
+          <span className="text-[10px] tracking-[0.08em] uppercase font-semibold text-slate-400 px-3">Settings</span>
+        </div>
+        <div className="space-y-0.5 px-2">
+          {settingsItems.map((item) => (
+            <Button key={item.href} variant="ghost" className="w-full justify-start text-slate-700 hover:bg-slate-100 hover:text-slate-900 rounded-xl h-10 text-sm font-medium" asChild data-testid={`nav-${item.label.toLowerCase()}`}>
+              <Link href={item.href}>
+                <item.icon className="mr-2.5 h-4 w-4" />
+                {item.label}
+              </Link>
+            </Button>
+          ))}
+          <Button variant="ghost" className="w-full justify-start text-slate-700 hover:bg-slate-100 hover:text-slate-900 rounded-xl h-10 text-sm font-medium" onClick={onLogout} data-testid="nav-logout">
+            <LogOut className="mr-2.5 h-4 w-4" />
+            Logout
+          </Button>
+        </div>
+      </nav>
+    </>
+  )
 }
 
 export default function DashboardPage() {
-  useAuth() // Proactively check token expiration
+  useAuth()
 
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [userData, setUserData] = useState<UserData | null>(null)
   const [cryptoValue, setCryptoValue] = useState<number>(0)
   const [btcPrice, setBtcPrice] = useState<number>(0)
   const [error, setError] = useState<string | null>(null)
-  const [recentContacts, setRecentContacts] = useState<Contact[]>([])
   const [settings, setSettings] = useState<any>(null)
-  const [isLoading, setIsLoading] = useState(true);
-  const { zelleLogoUrl } = useZelleLogo();
-  const topBarHeight = useTopBarHeight();
+  const [isLoading, setIsLoading] = useState(true)
+  const { zelleLogoUrl } = useZelleLogo()
+  const topBarHeight = useTopBarHeight()
 
-  // Fetch colors and settings
   useEffect(() => {
-
+    fetchColors()
     const fetchSettings = async () => {
       try {
         const response = await fetch("/api/home")
-        if (response.ok) {
-          const data = await response.json()
-          setSettings(data)
-        } else {
-          setSettings(null)
-        }
-      } catch (error) {
-        setSettings(null)
-      }
+        if (response.ok) setSettings(await response.json())
+      } catch {}
     }
-
-    fetchColors()
     fetchSettings()
   }, [])
 
-  // Fetch user data, transactions, and initial BTC price
   useEffect(() => {
     const fetchData = async () => {
-      setIsLoading(true);
+      setIsLoading(true)
       try {
-        // Fetch user data
         const userResponse = await apiFetch("/api/user")
-        if (!userResponse.ok) {
-          throw new Error("Failed to fetch user data")
-        }
+        if (!userResponse.ok) throw new Error("Failed to fetch user data")
         const userData = await userResponse.json()
         setUserData({
           fullName: userData.fullName || "",
@@ -111,436 +127,203 @@ export default function DashboardPage() {
           email: userData.email || "",
         })
 
-        // Fetch BTC price (public endpoint, no auth required)
         const priceResponse = await fetch("/api/price")
-        if (!priceResponse.ok) throw new Error("Failed to fetch BTC price")
-        const priceData = await priceResponse.json()
-        const newBtcPrice: number = priceData.bitcoin?.usd || 0
-        setBtcPrice(newBtcPrice)
-
-        // Fetch transactions
-        const transactionsResponse = await apiFetch("/api/transactions").finally(() => setIsLoading(false))
-        if (!transactionsResponse.ok) {
-          const errorData = await transactionsResponse.json()
-          setError(errorData.error || "Failed to fetch transactions")
-          setTransactions([])
-        } else {
-          const transactionsData = await transactionsResponse.json()
-          const mappedTransactions = (transactionsData.transactions || []).map((tx: any) => ({
-            ...tx,
-            id: tx._id.toString(),
-          }))
-          setTransactions(mappedTransactions)
+        if (priceResponse.ok) {
+          const priceData = await priceResponse.json()
+          setBtcPrice(priceData.bitcoin?.usd || 0)
         }
 
-        // Load recent Zelle contacts from localStorage
-        const storedContacts = localStorage.getItem("recentZelleContacts")
-        const contacts = storedContacts ? JSON.parse(storedContacts) : []
-        setRecentContacts(contacts)
+        const transactionsResponse = await apiFetch("/api/transactions")
+        setIsLoading(false)
+        if (transactionsResponse.ok) {
+          const transactionsData = await transactionsResponse.json()
+          setTransactions((transactionsData.transactions || []).map((tx: any) => ({ ...tx, id: tx._id?.toString() || tx.id })))
+        }
       } catch (error: any) {
+        setIsLoading(false)
         if (error.message !== 'Unauthorized') {
-          console.error("Error fetching data:", error)
           setError("An error occurred while loading your dashboard")
         }
-        // Note: If error is 'Unauthorized', apiFetch handles logout
       }
     }
-
     fetchData()
   }, [])
 
-  // Update crypto value when userData or btcPrice changes
   useEffect(() => {
-    if (userData) {
-      setCryptoValue(userData.cryptoBalance * btcPrice)
-    }
+    if (userData) setCryptoValue(userData.cryptoBalance * btcPrice)
   }, [userData, btcPrice])
 
-  // Fetch BTC price every 10 minutes
   useEffect(() => {
-    const priceInterval = setInterval(async () => {
+    const interval = setInterval(async () => {
       try {
         const response = await fetch("/api/price")
-        if (!response.ok) throw new Error("Price update failed")
-        const data = await response.json()
-        const newBtcPrice: number = data.bitcoin?.usd || 0
-        setBtcPrice(newBtcPrice)
-      } catch (error: unknown) {
-        console.error("Price update error:", error instanceof Error ? error.message : 'Unknown error')
-      }
-    }, 600000) // 10 minutes = 600,000 ms
-
-    return () => clearInterval(priceInterval)
+        if (response.ok) {
+          const data = await response.json()
+          setBtcPrice(data.bitcoin?.usd || 0)
+        }
+      } catch {}
+    }, 600000)
+    return () => clearInterval(interval)
   }, [])
 
-  const getTransactionIcon = (type: string, category?: string, accountType?: string) => {
-
-    if (category === "admin" && accountType === "crypto")
-      return <FaBitcoinSign className="h-5 w-5 text-yellow-500" />
-    switch (type) {
-      case "deposit":
-      case "interest":
-      case "withdrawal":
-      case "transfer":
-      case "payment":
-        return <img
-          src="/arrow-top-bottom.png"
-          alt="Double Arrow Icon"
-          className="h-5 w-auto"
-        />
-      case "fee":
-        return <FileText className="h-5 w-5 text Bauch-600" />
-      case "refund":
-        return <RefreshCcw className="h-5 w-5 text-yellow-600" />
-      case "crypto_buy":
-      case "crypto_sell":
-      case "bitcoin_transfer":
-        return <FaBitcoinSign className="h-5 w-5 text-yellow-500" />
-      case "zelle":
-        return <img
-          src="/zellez.png"
-          alt="Zelle Logo"
-          className="h-5 w-auto"
-        />
-      default:
-        return <CreditCard className="h-5 w-5 text-gray-600" />
-    }
+  const getTransactionLabel = (tx: Transaction) => {
+    if (tx.category === "Zelle External") return `Zelle: ${tx.zellePersonInfo?.recipientName || ''}`
+    if (tx.category === "admin" && tx.type === "withdrawal") return `Withdraw: ${tx.description}`
+    if (tx.category === "admin" && tx.type === "deposit") return `Deposit: ${tx.description}`
+    if (tx.type === "bitcoin_transfer") return `BTC Send: ${tx.memo || tx.description}`
+    if (tx.type === "transfer" && tx.category === "External Transfer") return `Wire Transfer: ${tx.description}`
+    if (tx.type === "transfer" && tx.category === "Transfer") return `Transfer: ${tx.description}`
+    return tx.description
   }
 
+  const getTransactionIcon = (tx: Transaction) => {
+    if (tx.accountType === "crypto" || tx.type === "crypto_buy" || tx.type === "crypto_sell" || tx.type === "bitcoin_transfer" || (tx.category === "admin" && tx.accountType === "crypto")) {
+      return <FaBitcoinSign className="h-4 w-4 text-amber-600" />
+    }
+    if (tx.type === "zelle" || tx.category === "Zelle External") {
+      return <img src="/zellez.png" alt="Zelle" className="h-4 w-auto" />
+    }
+    return null
+  }
+
+  const firstName = userData?.fullName?.split(' ')[0] || ''
+
   return (
-    <div className="overflow-hidden relative">
-
-      <BgShadows />
-
-      <div className="flex min-h-screen w-[1300px] m-auto">
-        {/* Mobile Navigation */}
+    <div data-testid="dashboard-page" className="bg-slate-50 min-h-screen">
+      <div className="flex max-w-[1300px] mx-auto">
+        {/* Mobile Nav */}
         <Sheet>
           <SheetTrigger asChild>
-            <Button
-              variant="outline"
-              size="icon"
-              className="md:hidden fixed top-4 left-4 z-40 bg-white shadow-md border-primary-200"
-            >
-              <Menu className="h-5 w-5 text-primary-600" />
+            <Button variant="outline" size="icon" className="md:hidden fixed top-4 left-4 z-40 bg-white shadow-sm border-slate-200 rounded-xl" data-testid="mobile-menu-btn">
+              <Menu className="h-5 w-5 text-slate-700" />
             </Button>
           </SheetTrigger>
           <SheetContent side="left" className="p-0 w-64">
-            <div className="flex h-full flex-col bg-white/10 border border-white/20 shadow-lg text-white">
-              <div className="p-4 border-b border-primary-700">
-                <div className="flex items-center gap-2">
-                  {settings?.logoUrl ? (
-                    <img
-                      src={settings.logoUrl}
-                      alt="Site Logo"
-                      style={{
-                        width: settings.logoWidth > 0 ? `${settings.logoWidth}px` : 'auto',
-                        height: settings.logoHeight > 0 ? `${settings.logoHeight}px` : '32px',
-                        filter: 'brightness(100%)',
-                      }}
-                    />
-                  ) : (
-                    <div style={{ height: '32px' }}></div>
-                  )}
-                </div>
+            <div className="flex h-full flex-col bg-white">
+              <div className="p-4 border-b border-slate-100">
+                {settings?.logoUrl ? (
+                  <img src={settings.logoUrl} alt="Logo" style={{ width: settings.logoWidth > 0 ? `${settings.logoWidth}px` : 'auto', height: settings.logoHeight > 0 ? `${settings.logoHeight}px` : '28px' }} />
+                ) : <div style={{ height: '28px' }} />}
               </div>
-              <nav className="flex-1 overflow-auto py-2">
-                <div className="px-3 py-2">
-                  <h2 className="mb-2 px-4 text-xs font-semibold tracking-tight text-black">Main</h2>
-                  <div className="space-y-1">
-                    <Button variant="ghost" className="w-full justify-start text-black hover:bg-white/10" asChild>
-                      <Link href="/dashboard">
-                        <Home className="mr-2 h-4 w-4" />
-                        Dashboard
-                      </Link>
-                    </Button>
-                    <Button variant="ghost" className="w-full justify-start text-black hover:bg-white/10" asChild>
-                      <Link href="/dashboard/accounts">
-                        <CreditCard className="mr-2 h-4 w-4" />
-                        Accounts
-                      </Link>
-                    </Button>
-                    <Button variant="ghost" className="w-full justify-start text-black hover:bg-white/10" asChild>
-                      <Link href="/dashboard/transactions">
-                        <FileText className="mr-2 h-4 w-4" />
-                        Transactions
-                      </Link>
-                    </Button>
-                    <Button variant="ghost" className="w-full justify-start text-black hover:bg-white/10" asChild>
-                      <Link href="/dashboard/transfers">
-                        <Send className="mr-2 h-4 w-4" />
-                        Transfers
-                      </Link>
-                    </Button>
-                    <Button variant="ghost" className="w-full justify-start text-black hover:bg-white/10" asChild>
-                      <Link href="/dashboard/crypto">
-                        <Bitcoin className="mr-2 h-4 w-4" />
-                        BTC Wallet
-                      </Link>
-                    </Button>
-                  </div>
-                </div>
-                <div className="px-3 py-2">
-                  <h2 className="mb-2 px-4 text-xs font-semibold tracking-tight text-black">Settings</h2>
-                  <div className="space-y-1">
-                    <Button variant="ghost" className="w-full justify-start text-black hover:bg-white/10" asChild>
-                      <Link href="/dashboard/profile">
-                        <User className="mr-2 h-4 w-4" />
-                        Profile
-                      </Link>
-                    </Button>
-                    <Button variant="ghost" className="w-full justify-start text-black hover:bg-white/10" onClick={() => logout("user")}>
-                      <LogOut className="mr-2 h-4 w-4" />
-                      Logout
-                    </Button>
-                  </div>
-                </div>
-              </nav>
+              <SidebarNav onLogout={() => logout("user")} />
             </div>
           </SheetContent>
         </Sheet>
 
         {/* Desktop Sidebar */}
-        <div className="hidden md:flex text-white w-64 flex-col fixed inset-y-0"
-          style={{ top: `${topBarHeight}px` }}>
-          <nav className="flex-1 overflow-auto py-4 pt-10">
-            <div className="px-1 py-2">
-              <h2 className="mb-4 px-4 text-sm font-semibold tracking-tight text-black">Main</h2>
-              <div className="space-y-4">
-                <Button variant="ghost" className="w-[90%] justify-start text-black hover:bg-black/5 text-base" asChild>
-                  <Link href="/dashboard">
-                    <Home className="mr-1 h-4 w-4" />
-                    Dashboard
-                  </Link>
-                </Button>
-                <Button variant="ghost" className="w-[90%] justify-start text-black hover:bg-black/5 text-base" asChild>
-                  <Link href="/dashboard/accounts">
-                    <CreditCard className="mr-1 h-4 w-4" />
-                    Accounts
-                  </Link>
-                </Button>
-                <Button variant="ghost" className="w-[90%] justify-start text-black hover:bg-black/5 text-base" asChild>
-                  <Link href="/dashboard/transactions">
-                    <FileText className="mr-1 h-4 w-4" />
-                    Transactions
-                  </Link>
-                </Button>
-                <Button variant="ghost" className="w-[90%] justify-start text-black hover:bg-black/5 text-base" asChild>
-                  <Link href="/dashboard/transfers">
-                    <Send className="mr-1 h-4 w-4" />
-                    Transfers
-                  </Link>
-                </Button>
-                <Button variant="ghost" className="w-[90%] justify-start text-black hover:bg-black/5 text-base" asChild>
-                  <Link href="/dashboard/crypto">
-                    <FaBitcoinSign className="mr-1 h-4 w-4" />
-                    BTC Wallet
-                  </Link>
-                </Button>
-              </div>
-            </div>
-            <div className="px-1 py-2 pt-4">
-              <h2 className="mb-4 px-4 text-sm font-semibold tracking-tight text-black">Settings</h2>
-              <div className="space-y-1">
-                <Button variant="ghost" className="w-[90%] justify-start text-black hover:bg-black/5 text-base" asChild>
-                  <Link href="/dashboard/profile">
-                    <User className="mr-1 h-4 w-4" />
-                    Profile
-                  </Link>
-                </Button>
-                <Button variant="ghost" className="w-[90%] justify-start text-black hover:bg-black/5 text-base" onClick={() => logout("user")}>
-                  <LogOut className="mr-1 h-4 w-4" />
-                  Logout
-                </Button>
-              </div>
-            </div>
-          </nav>
+        <div className="hidden md:flex w-56 flex-col fixed inset-y-0" style={{ top: `${topBarHeight}px` }}>
+          <SidebarNav onLogout={() => logout("user")} />
         </div>
 
         {/* Main Content */}
-        <div className="pt-4 md:pl-64 flex-1 flex flex-col">
-          <main className="sm:pl-0 sm:p-6 flex-1">
-            <h1 className="text-3xl font-bold mb-6 hidden md:block bg-clip-text text-transparent bg-gradient-to-r from-primary-600 to-secondary-600">
-              Dashboard
-            </h1>
+        <div className="md:pl-56 flex-1 flex flex-col min-h-screen">
+          <main className="flex-1 px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+            {/* Greeting */}
+            <div className="mb-8">
+              <h1 className="text-2xl font-bold text-slate-900 tracking-tight" data-testid="dashboard-greeting">
+                {firstName ? `Welcome back, ${firstName}` : 'Dashboard'}
+              </h1>
+              <p className="text-sm text-slate-500 mt-1">Here's your financial overview</p>
+            </div>
 
             {error && (
-              <div className="mb-6 p-4 bg-red-100 text-red-700 rounded-md">
+              <div className="mb-6 p-4 bg-rose-50 text-rose-700 rounded-xl text-sm border border-rose-200" data-testid="dashboard-error">
                 {error}
               </div>
             )}
 
             {/* Account Cards */}
-            <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 mb-8">
-              <div className="relative group h-full">
-                {/* <div className="absolute -inset-0.5 bg-gradient-to-r from-primary-500 to-secondary-500 rounded-2xl blur opacity-30 group-hover:opacity-70 transition duration-300"></div> */}
-                <Card className="relative bg-white h-full flex flex-col">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-primary-600">Checking Account</CardTitle>
-                  </CardHeader>
-                  <CardContent className="flex-grow">
-                    <div className="text-2xl font-bold">${(userData?.checkingBalance || 0)}</div>
-                    <p className="text-xs text-primary-500">Account #: xxxx-xxxx-4582</p>
-                  </CardContent>
-                  <div className="p-4 pt-0 mt-auto">
-                    <div className="flex space-x-2">
-                      <Button
-                        size="sm"
-                        className="bg-gradient-to-r from-primary-600 to-secondary-600 hover:from-primary-700 hover:to-secondary-700 text-white shadow-md hover:shadow-lg transition-all"
-                        asChild
-                      >
-                        <Link href="/dashboard/transfers">Send Money</Link>
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="border-primary-200 text-primary-600 hover:bg-primary-50"
-                        asChild
-                      >
-                        <Link href="/dashboard/accounts">Details</Link>
-                      </Button>
-                    </div>
+            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 mb-8">
+              {/* Checking */}
+              <Link href="/dashboard/accounts" data-testid="checking-card">
+                <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 hover:shadow-md hover:border-slate-300 transition-all cursor-pointer group">
+                  <div className="text-xs tracking-[0.05em] uppercase font-semibold text-slate-500 mb-1">Checking</div>
+                  <div className="text-3xl font-bold text-slate-900 tracking-tight font-mono-numbers">${userData?.checkingBalance || '0.00'}</div>
+                  <div className="text-xs text-slate-400 mt-1">Available balance</div>
+                  <div className="mt-4 flex gap-2">
+                    <span className="inline-flex items-center text-xs font-medium text-[var(--primary-700)] bg-[var(--primary-50)] px-3 py-1 rounded-full group-hover:bg-[var(--primary-100)] transition-colors">Send Money</span>
+                    <span className="inline-flex items-center text-xs font-medium text-slate-600 bg-slate-100 px-3 py-1 rounded-full">Details</span>
                   </div>
-                </Card>
-              </div>
+                </div>
+              </Link>
 
-
-
-              <div className="relative group h-full">
-                {/* <div className="absolute -inset-0.5 bg-gradient-to-r from-primary-500 to-secondary-500 rounded-2xl blur opacity-30 group-hover:opacity-70 transition duration-300"></div> */}
-                <Card className="relative bg-white h-full flex flex-col">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-primary-600">Savings Account</CardTitle>
-                  </CardHeader>
-                  <CardContent className="flex-grow">
-                    <div className="text-2xl font-bold">${(userData?.savingsBalance || 0)}</div>
-                    <p className="text-xs text-primary-500">Account #: xxxx-xxxx-4583</p>
-                  </CardContent>
-                  <div className="p-4 pt-0 mt-auto">
-                    <div className="flex space-x-2">
-                      <Button
-                        size="sm"
-                        className="bg-gradient-to-r from-primary-600 to-secondary-600 hover:from-primary-700 hover:to-secondary-700 text-white shadow-md hover:shadow-lg transition-all"
-                        asChild
-                      >
-                        <Link href="/dashboard/transfers">Send Money</Link>
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="border-primary-200 text-primary-600 hover:bg-primary-50"
-                        asChild
-                      >
-                        <Link href="/dashboard/accounts">Details</Link>
-                      </Button>
-                    </div>
+              {/* Savings */}
+              <Link href="/dashboard/accounts" data-testid="savings-card">
+                <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 hover:shadow-md hover:border-slate-300 transition-all cursor-pointer group">
+                  <div className="text-xs tracking-[0.05em] uppercase font-semibold text-slate-500 mb-1">Savings</div>
+                  <div className="text-3xl font-bold text-slate-900 tracking-tight font-mono-numbers">${userData?.savingsBalance || '0.00'}</div>
+                  <div className="text-xs text-slate-400 mt-1">Available balance</div>
+                  <div className="mt-4 flex gap-2">
+                    <span className="inline-flex items-center text-xs font-medium text-[var(--primary-700)] bg-[var(--primary-50)] px-3 py-1 rounded-full group-hover:bg-[var(--primary-100)] transition-colors">Transfer</span>
+                    <span className="inline-flex items-center text-xs font-medium text-slate-600 bg-slate-100 px-3 py-1 rounded-full">Details</span>
                   </div>
-                </Card>
-              </div>
+                </div>
+              </Link>
 
-              <div className="relative group h-full">
-                {/* <div className="absolute -inset-0.5 bg-gradient-to-r from-amber-500 to-orange-500 rounded-2xl blur opacity-30 group-hover:opacity-70 transition duration-300"></div> */}
-                <Card className="relative bg-white h-full flex flex-col">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-amber-600">Bitcoin Wallet</CardTitle>
-                  </CardHeader>
-                  <CardContent className="flex-grow">
-                    <div className="text-2xl font-bold">{(userData?.cryptoBalance || 0).toFixed(6)} BTC</div>
-                    <p className="text-xs text-amber-500">
-                      ≈ ${formatPrice(Math.abs(cryptoValue))} (${formatPrice(Math.abs(btcPrice))}/BTC)
-                    </p>
-                  </CardContent>
-                  <div className="p-4 pt-0 mt-auto">
-                    <div className="flex space-x-2">
-                      <Button
-                        size="sm"
-                        className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-md hover:shadow-lg transition-all"
-                        asChild
-                      >
-                        <Link href="/dashboard/crypto">Buy/Sell</Link>
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="border-amber-200 text-amber-600 hover:bg-amber-50"
-                        asChild
-                      >
-                        <Link href="/dashboard/crypto">Details</Link>
-                      </Button>
-                    </div>
+              {/* Bitcoin */}
+              <Link href="/dashboard/crypto" data-testid="crypto-card">
+                <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 hover:shadow-md hover:border-slate-300 transition-all cursor-pointer group">
+                  <div className="text-xs tracking-[0.05em] uppercase font-semibold text-amber-600 mb-1">Bitcoin</div>
+                  <div className="text-3xl font-bold text-slate-900 tracking-tight font-mono-numbers">{(userData?.cryptoBalance || 0).toFixed(6)} <span className="text-lg text-slate-500">BTC</span></div>
+                  <div className="text-xs text-slate-400 mt-1">&asymp; ${formatPrice(Math.abs(cryptoValue))} &middot; ${formatPrice(Math.abs(btcPrice))}/BTC</div>
+                  <div className="mt-4 flex gap-2">
+                    <span className="inline-flex items-center text-xs font-medium text-amber-700 bg-amber-50 px-3 py-1 rounded-full group-hover:bg-amber-100 transition-colors">Buy/Sell</span>
+                    <span className="inline-flex items-center text-xs font-medium text-slate-600 bg-slate-100 px-3 py-1 rounded-full">Details</span>
                   </div>
-                </Card>
-              </div>
+                </div>
+              </Link>
             </div>
 
             {/* Recent Transactions */}
-            <h2 className="text-xl font-bold mb-4 text-primary-800">Recent Transactions</h2>
-            <div className="relative">
-              <Card className="relative">
-                <CardContent className="p-0">
-                  <div className="divide-y divide-primary-100">
-                    {isLoading ? <div className="text-center py-8">
-                      <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary-600" />
-                      <p className="mt-2 text-primary-700">Loading transactions...</p>
-                    </div> : transactions.slice(0, 15).map((transaction) => (
-                      <div
-                        key={transaction.id}
-                        className="flex items-center justify-between p-4 hover:bg-gray-100"
-                      >
-                        <div className="flex items-center gap-4">
-                          <div className="h-10 w-10 rounded-full flex items-center justify-center">
-                            {getTransactionIcon(transaction.type, transaction.category, transaction.accountType)}
-                          </div>
-                          <div>
-                            <div className="font-medium text-sm sm:text-base">
-                              {transaction.category === "Zelle External"
-                                ? `Zelle: ${transaction.zellePersonInfo.recipientName}`
-                                : (transaction.category === "admin" && transaction.type === "withdrawal") ? `Withdraw: ${transaction.description}`
-                                  : (transaction.category === "admin" && transaction.type === "deposit") ? `Deposit: ${transaction.description}`
-                                  : (transaction.type === "bitcoin_transfer") ? `BTC Send: ${transaction.memo || transaction.description}`
-                                  : (transaction.type === "transfer" && transaction.category === "External Transfer") ? `External Transfer: ${transaction.description}`
-                                  : (transaction.type === "transfer" && transaction.category === "Transfer") ? `Internal Transfer: ${transaction.description}`
-                                    : transaction.description}
-                            </div>
-                            <div className="text-xs text-primary-500">
-                              {formatDate(transaction.date)}
-                              {transaction.category === "Zelle External" ? ` - ${transaction.description}` : ""}
-                              {transaction.type === "bitcoin_transfer"? ` - Wallet: ${transaction.recipientWallet}` : ""}
-                            </div>
-                          </div>
-                        </div>
-                        {transaction.accountType === "crypto" ? (
-                          <div className={`font-bold text-sm sm:text-base ${transaction.cryptoAmount && transaction.cryptoAmount > 0 ? "text-emerald-600" : "text-red-600"
-                            }`}
-                          >
-                            {/* {transaction.cryptoAmount && transaction.cryptoAmount > 0 ? "+" : ""} */}
-                            {transaction.cryptoAmount ? Math.abs(transaction.cryptoAmount).toFixed(6) + " BTC" : ""}
-                          </div>
-                        ) : (
-                          <div className={`font-bold text-sm sm:text-base ${transaction.amount > 0 ? "text-emerald-600" : "text-red-600"
-                            }`}
-                          >
-                            {/* {transaction.amount > 0 ? "+" : "-"} */}
-                            ${formatPrice(Math.abs(transaction.amount))}</div>
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+              <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+                <h2 className="font-semibold text-slate-900" data-testid="recent-transactions-title">Recent Activity</h2>
+                <Button variant="ghost" size="sm" className="text-sm text-slate-500 hover:text-slate-900 rounded-full" asChild>
+                  <Link href="/dashboard/transactions">View All</Link>
+                </Button>
+              </div>
+              <div className="divide-y divide-slate-100">
+                {isLoading ? (
+                  <div className="text-center py-12">
+                    <Loader2 className="h-6 w-6 animate-spin mx-auto text-slate-400" />
+                    <p className="mt-2 text-sm text-slate-400">Loading transactions...</p>
+                  </div>
+                ) : transactions.slice(0, 10).map((tx) => (
+                  <div key={tx.id} className="flex items-center justify-between px-6 py-4 hover:bg-slate-50 transition-colors" data-testid={`tx-${tx.id}`}>
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 ${tx.accountType === 'crypto' || tx.type?.includes('crypto') || tx.type === 'bitcoin_transfer' ? 'bg-amber-50' : tx.amount > 0 ? 'bg-emerald-50' : 'bg-slate-100'}`}>
+                        {getTransactionIcon(tx) || (
+                          <span className={`text-sm font-semibold ${tx.amount > 0 ? 'text-emerald-700' : 'text-slate-600'}`}>
+                            {tx.description?.charAt(0)?.toUpperCase() || '?'}
+                          </span>
                         )}
                       </div>
-                    ))}
-                    {(!isLoading && transactions.length === 0) && (
-                      <div className="p-4 text-center text-primary-500">
-                        {error ? "Unable to load transactions" : "No recent transactions found."}
+                      <div className="min-w-0">
+                        <div className="text-sm font-medium text-slate-900 truncate">{getTransactionLabel(tx)}</div>
+                        <div className="text-xs text-slate-400">
+                          {formatDate(tx.date)}
+                          {tx.category === "Zelle External" ? ` · ${tx.description}` : ""}
+                          {tx.type === "bitcoin_transfer" ? ` · ${tx.recipientWallet}` : ""}
+                        </div>
                       </div>
+                    </div>
+                    {tx.accountType === "crypto" || tx.type?.includes('crypto') || tx.type === 'bitcoin_transfer' ? (
+                      <span className={`text-sm font-semibold font-mono-numbers flex-shrink-0 ml-4 ${tx.cryptoAmount && tx.cryptoAmount > 0 ? 'text-emerald-600' : 'text-slate-900'}`}>
+                        {tx.cryptoAmount ? Math.abs(tx.cryptoAmount).toFixed(6) + " BTC" : ""}
+                      </span>
+                    ) : (
+                      <span className={`text-sm font-semibold font-mono-numbers flex-shrink-0 ml-4 ${tx.amount > 0 ? 'text-emerald-600' : 'text-slate-900'}`}>
+                        {tx.amount > 0 ? '+' : '-'}${formatPrice(Math.abs(tx.amount))}
+                      </span>
                     )}
                   </div>
-                </CardContent>
-              </Card>
-            </div>
-            <div className="flex justify-center mt-4">
-              <Button
-                variant="outline"
-                className="border-primary-200 text-primary-600 hover:bg-primary-50 hover:text-primary-700 hover:border-primary-300"
-                asChild
-              >
-                <Link href="/dashboard/transactions">View All Transactions</Link>
-              </Button>
+                ))}
+                {(!isLoading && transactions.length === 0) && (
+                  <div className="py-12 text-center text-sm text-slate-400" data-testid="no-transactions">
+                    {error ? "Unable to load transactions" : "No recent transactions"}
+                  </div>
+                )}
+              </div>
             </div>
           </main>
         </div>

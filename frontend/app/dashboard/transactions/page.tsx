@@ -253,7 +253,7 @@ export default function TransactionsPage() {
               Back to Dashboard
             </Link>
           </Button>
-          <h1 className="text-3xl font-extrabold bg-gradient-to-r from-primary-700 to-secondary-700 bg-clip-text text-transparent">
+          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
             Transaction History
           </h1>
         </div>

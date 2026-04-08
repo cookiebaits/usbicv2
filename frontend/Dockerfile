@@ -15,6 +15,7 @@ RUN npm run build
 
 # Step 3: Run the app in production
 FROM node:18-alpine AS runner
+RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
 ENV NODE_ENV=production

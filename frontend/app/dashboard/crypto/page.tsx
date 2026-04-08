@@ -697,7 +697,7 @@ export default function CryptoPage() {
           <Button variant="outline" size="sm" asChild className="mb-4 bg-white/60 border-primary-200 text-primary-700 hover:bg-primary-50 hover:text-primary-800 hover:border-primary-300">
             <Link href="/dashboard"><ArrowLeft className="h-4 w-4 mr-2" />Back to Dashboard</Link>
           </Button>
-          <h1 className="text-3xl font-extrabold bg-gradient-to-r from-primary-700 to-secondary-700 bg-clip-text text-transparent">
+          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
             Bitcoin Wallet
           </h1>
         </div>
@@ -1099,7 +1099,7 @@ export default function CryptoPage() {
 
         {/* Transaction History */}
         <div>
-          <h2 className="text-2xl font-bold mb-4 bg-gradient-to-r from-primary-700 to-secondary-700 bg-clip-text text-transparent">
+          <h2 className="text-xl font-bold mb-4 text-slate-900 tracking-tight">
             Transaction History
           </h2>
           <Card className="backdrop-blur-sm bg-white/60 border border-primary-100 shadow-lg">

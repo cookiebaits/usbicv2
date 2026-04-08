@@ -806,7 +806,7 @@ export default function AdminDashboardPage() {
 
         <div className="md:pl-64 flex flex-1 flex-col overflow-hidden">
           <main className="pb-10 sm:pt-10 flex-1">
-            <h2 className="text-3xl sm:text-3xl font-bold mb-6 bg-gradient-to-r from-primary-700 to-secondary-700 bg-clip-text text-transparent">
+            <h2 className="text-3xl sm:text-3xl font-bold mb-6 text-slate-900 tracking-tight">
               Admin Dashboard
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
@@ -861,7 +861,7 @@ export default function AdminDashboardPage() {
               </Card>
             </div>
 
-            <h2 className="text-lg sm:text-xl font-bold mb-4 bg-gradient-to-r from-primary-700 to-secondary-700 bg-clip-text text-transparent">
+            <h2 className="text-lg sm:text-xl font-bold mb-4 text-slate-900 tracking-tight">
               Account Overview
             </h2>
             <Card className="mb-6 sm:mb-8 backdrop-blur-sm bg-white">

@@ -726,7 +726,7 @@ export default function TransactionDetailPage() {
           </Button>
           <div className="flex flex-col sm:flex-row justify-between sm:items-end gap-4">
             <div>
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-primary-700 to-secondary-700 bg-clip-text text-transparent">
+              <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
                 {transferTitle}
               </h1>
               <p className="text-primary-600">

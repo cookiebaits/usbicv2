@@ -27,15 +27,8 @@ export default function TopBar({ children }: TopBarProps) {
         const fetchSettings = async () => {
             try {
                 const response = await fetch("/api/home");
-                if (response.ok) {
-                    const data = await response.json();
-                    setSettings(data);
-                } else {
-                    console.error("Failed to fetch settings");
-                }
-            } catch (error) {
-                console.error("Error fetching settings:", error);
-            }
+                if (response.ok) setSettings(await response.json());
+            } catch {}
         };
         fetchSettings();
     }, []);
@@ -43,16 +36,11 @@ export default function TopBar({ children }: TopBarProps) {
     useEffect(() => {
         const topBarElement = document.getElementById("top-bar");
         if (topBarElement) {
-            const height = topBarElement.getBoundingClientRect().height;
-            setTopBarHeight(height);
+            setTopBarHeight(topBarElement.getBoundingClientRect().height);
         }
     }, [settings]);
 
-    if (
-        pathname === "/" ||
-        pathname === "/admin/login" ||
-        pathname === "/admin/forgot-password"
-    ) {
+    if (pathname === "/" || pathname === "/admin/login" || pathname === "/admin/forgot-password") {
         return <>{children}</>;
     }
 
@@ -64,29 +52,33 @@ export default function TopBar({ children }: TopBarProps) {
         <TopBarContext.Provider value={{ topBarHeight }}>
             <div
                 id="top-bar"
-                className="fixed top-0 left-0 w-full shadow-md bg-barColor backdrop-blur-lg p-4 z-50"
+                className="fixed top-0 left-0 w-full bg-white/80 backdrop-blur-xl border-b border-slate-100 px-4 py-3 z-50"
+                data-testid="top-bar"
             >
-                <div className="w-[1260px] m-auto flex items-center justify-between">
-                    <div className="flex items-center gap-2" onClick={() => pathname.includes("admin")? window.location.href = '/admin/dashboard' : window.location.href = '/dashboard'}>
+                <div className="max-w-[1300px] mx-auto flex items-center justify-between">
+                    <div
+                        className="flex items-center gap-2 cursor-pointer"
+                        onClick={() => pathname.includes("admin") ? window.location.href = '/admin/dashboard' : window.location.href = '/dashboard'}
+                        data-testid="topbar-logo"
+                    >
                         {settings?.logoUrl ? (
                             <img
                                 src={settings.logoUrl}
                                 alt="Site Logo"
                                 style={{
                                     width: settings.logoWidth > 0 ? `${settings.logoWidth}px` : "auto",
-                                    height: settings.logoHeight > 0 ? `${settings.logoHeight}px` : "32px",
-                                    filter: "brightness(100%)",
-                                    cursor: "pointer"
+                                    height: settings.logoHeight > 0 ? `${settings.logoHeight}px` : "28px",
                                 }}
                             />
                         ) : (
-                            <div style={{ height: "32px" }}></div>
+                            <div style={{ height: "28px" }}></div>
                         )}
                     </div>
                     <Button
                         variant="ghost"
-                        className="text-black hover:bg-primary-100 text-sm"
+                        className="text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-full text-sm font-medium"
                         onClick={handleLogout}
+                        data-testid="topbar-logout-btn"
                     >
                         <LogOut className="mr-2 h-4 w-4" />
                         Logout

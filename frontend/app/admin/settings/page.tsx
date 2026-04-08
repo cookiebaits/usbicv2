@@ -260,7 +260,7 @@ export default function AdminSettingsPage() {
         <Button variant="outline" size="sm" asChild className="mb-4 bg-white/60 border-primary-200 text-primary-700 hover:bg-primary-50 hover:text-primary-800 hover:border-primary-300">
           <Link href="/admin/dashboard"><ArrowLeft className="h-4 w-4 mr-2" />Back to Dashboard</Link>
         </Button>
-        <h1 className="text-2xl font-bold bg-gradient-to-r from-primary-700 to-secondary-700 bg-clip-text text-transparent">
+        <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
           Admin Settings
         </h1>
 

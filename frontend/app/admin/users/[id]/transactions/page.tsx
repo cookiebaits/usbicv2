@@ -517,7 +517,7 @@ export default function UserTransactionsPage() {
         </Button>
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div>
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-primary-700 to-secondary-700 bg-clip-text text-transparent">
+            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
               Transaction History for {user.fullName}
             </h1>
             <p className="text-primary-600">

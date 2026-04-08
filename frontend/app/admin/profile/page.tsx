@@ -207,7 +207,7 @@ export default function AdminProfilePage() {
 
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-6">
           <div>
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-primary-700 to-secondary-700 bg-clip-text text-transparent">
+            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
               My Profile
             </h1>
             <p className="text-primary-600">Manage your account settings and preferences</p>
