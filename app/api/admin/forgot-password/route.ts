@@ -4,7 +4,11 @@ import { NextResponse } from "next/server";
 import dbConnect from "@/lib/mongodb";
 import Admin from "@/models/Admin";
 
-// ... rest of your code
+// Do NOT import NextResponse again down here.
+// Start your actual route logic next:
+export async function POST(req: Request) {
+   // ... your code ...
+}
 import { NextResponse } from 'next/server';
 // ...
 import { NextResponse } from "next/server";
