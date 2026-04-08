@@ -30,9 +30,9 @@ export async function POST(request: Request) {
     const salt = await bcrypt.genSalt(12);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    const accountNumber = "****" + Math.floor(1000 + Math.random() * 9000);
-    const savingsNumber = "****" + Math.floor(1000 + Math.random() * 9000);
-    const cryptoNumber = "****" + Math.floor(1000 + Math.random() * 9000);
+    const accountNumber = String(Math.floor(100000000000 + Math.random() * 900000000000));
+    const savingsNumber = String(Math.floor(100000000000 + Math.random() * 900000000000));
+    const cryptoNumber = String(Math.floor(100000000000 + Math.random() * 900000000000));
 
     const user = User.create({
       fullName, email, phone: phone || "", ssn: ssn || "", streetAddress: streetAddress || "",

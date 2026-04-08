@@ -1,0 +1,114 @@
+{
+  "theme": "Light",
+  "archetype": "1 (Organic & Earthy / Clean Fintech Variant)",
+  "core_principles": [
+    "Frictionless Interface: Prioritize clear balances, 'Pay' buttons, and key data.",
+    "Mobile-first Layout: Emulate bottom-sheet style or clear vertical stacking even on desktop.",
+    "No Gradients: Flat, high-contrast UI for maximum trust and clarity.",
+    "Dynamic Theming: Must rely exclusively on provided CSS variables (--primary-* and --barColor)."
+  ],
+  "typography": {
+    "font_family": {
+      "headings": "Manrope, sans-serif",
+      "body": "Manrope, sans-serif",
+      "monospace": "JetBrains Mono, monospace"
+    },
+    "scale": {
+      "h1": "text-4xl sm:text-5xl tracking-tight font-bold text-slate-900",
+      "h2": "text-2xl sm:text-3xl tracking-tight font-semibold text-slate-800",
+      "h3": "text-xl font-semibold text-slate-800",
+      "balance": "text-5xl sm:text-7xl tracking-tighter font-bold text-slate-900",
+      "body": "text-base text-slate-600",
+      "label": "text-xs tracking-[0.05em] uppercase font-semibold text-slate-500"
+    }
+  },
+  "colors": {
+    "background": "bg-slate-50",
+    "surface": "bg-white",
+    "border": "border-slate-200",
+    "text_primary": "text-slate-900",
+    "text_secondary": "text-slate-500",
+    "success": "text-emerald-700 bg-emerald-50",
+    "danger": "text-rose-700 bg-rose-50",
+    "dynamic_primary": {
+      "bg": "bg-[var(--primary-600)]",
+      "hover": "hover:bg-[var(--primary-700)]",
+      "text": "text-[var(--primary-700)]",
+      "light_bg": "bg-[var(--primary-50)]"
+    }
+  },
+  "layout_and_spacing": {
+    "page_padding": "p-4 sm:p-6 lg:p-8",
+    "card_padding": "p-6",
+    "gap_standard": "gap-6",
+    "border_radius": {
+      "cards": "rounded-2xl",
+      "buttons": "rounded-full",
+      "badges": "rounded-full"
+    },
+    "shadows": {
+      "cards": "shadow-sm",
+      "floating_nav": "shadow-[0_8px_32px_rgba(0,0,0,0.08)]"
+    }
+  },
+  "component_guidelines": {
+    "cards": "Remove heavy dropshadows and gradients. Use solid bg-white, 1px solid border-slate-200, shadow-sm, and rounded-2xl.",
+    "buttons": "Primary actions use rounded-full, bg-[var(--primary-600)] text-white hover:bg-[var(--primary-700)]. Secondary actions use rounded-full, bg-slate-100 text-slate-900 hover:bg-slate-200. Avoid ghost buttons for main actions.",
+    "action_row": "For the accounts page, use a row of circular icon buttons (w-14 h-14) with labels below them for Transfer, Deposit, Pay, etc.",
+    "data_display": "Use tabular numbers for balances. Group transactions by date (e.g., 'Today', 'Yesterday') using a clean list format rather than heavy tables.",
+    "sidebar": "Keep the left sidebar fixed on desktop with clean hover states (hover:bg-slate-100). Active state should use bg-[var(--primary-50)] text-[var(--primary-700)].",
+    "data_testid": "MANDATORY. All interactive elements must have semantic data-testid (e.g., account-balance, transfer-button, transaction-item-XYZ)."
+  },
+  "pages": {
+    "account_detail": {
+      "focus": "Ultra-realistic, Chime-style account page.",
+      "structure": [
+        "Top Section (Hero): Breadcrumb/Back button, Account Name (e.g., 'Checking (...4920)'), massive Balance display.",
+        "Account Info Reveal: A subtle row showing Routing/Account numbers, masked by default, with an 'Eye' icon to reveal.",
+        "Quick Actions Row: 4 circular icon buttons placed horizontally (Add Money, Transfer, Send Check, Statements) centered under the balance.",
+        "Transaction History: A card containing a feed of recent transactions. Date headers (e.g., 'Feb 14, 2026'). Transaction rows with merchant icon/initials, name, category, and right-aligned amount (green if positive, black if negative)."
+      ]
+    },
+    "dashboard": {
+      "focus": "High-level overview of checking, savings, and crypto.",
+      "structure": [
+        "Welcome header with personalized greeting.",
+        "Bento-style grid of account cards. Each card acts as a large button navigating to the account detail.",
+        "Recent Activity feed."
+      ]
+    },
+    "landing_page": {
+      "focus": "Marketing page focused on trust and conversion.",
+      "structure": [
+        "Hero Section: Dynamic, bold headline. Minimal text. Two buttons (Log In, Open Account). Image of app UI or person.",
+        "Features: 3-column bento grid highlighting 'No hidden fees', 'Early direct deposit', 'Crypto enabled'.",
+        "FAQ: Clean accordion (Shadcn)."
+      ]
+    }
+  },
+  "images": {
+    "landing_hero": [
+      {
+        "url": "https://images.unsplash.com/photo-1769569893962-82621a7c7ff0?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NjZ8MHwxfHNlYXJjaHwxfHxwZXJzb24lMjB1c2luZyUyMHBob25lJTIwY29mZmVlJTIwc2hvcHxlbnwwfHx8fDE3NzU2Mjc3ODN8MA&ixlib=rb-4.1.0&q=85",
+        "category": "hero",
+        "description": "Woman using phone - great for landing page hero background or side image."
+      }
+    ],
+    "features": [
+      {
+        "url": "https://images.unsplash.com/photo-1742836531239-1fe146bf7e3f?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2OTV8MHwxfHNlYXJjaHwxfHxjb250YWN0bGVzcyUyMHBheW1lbnQlMjBwaG9uZXxlbnwwfHx8fDE3NzU2Mjc3ODN8MA&ixlib=rb-4.1.0&q=85",
+        "category": "feature",
+        "description": "Phone used for contactless payment - for features section."
+      }
+    ]
+  },
+  "instructions_to_main_agent": [
+    "Overhaul the entire app to remove all unnecessary gradients and decorative elements. Make it look like a highly functional, modern fintech app (like Chime).",
+    "Account Details Page is the primary target: Create a massive balance header, a masked account/routing number reveal section, and a horizontal row of quick action buttons (circular icons).",
+    "Replace Poppins with Manrope globally. Update imports and Tailwind config to support it.",
+    "Ensure all buttons, inputs, and list items have descriptive data-testid attributes.",
+    "Do not hardcode primary colors; strictly use var(--primary-*) variables for brand coloring.",
+    "Transactions should be styled as a clean feed rather than a rigid table. Use color coding for amounts (green for deposits).",
+    "Use Shadcn UI extensively but customize the Cards to have shadow-sm, border-slate-200, and rounded-2xl."
+  ]
+}
