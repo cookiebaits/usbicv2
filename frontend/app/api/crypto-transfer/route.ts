@@ -5,7 +5,6 @@ import dbConnect from "@/lib/database";
 import User from "@/models/User";
 import Transaction from "@/models/Transaction";
 import crypto from "crypto";
-import { sendVerificationEmail } from "@/lib/email";
 
 export async function POST(request: Request) {
   try {
@@ -59,7 +58,7 @@ export async function POST(request: Request) {
         const verificationCode = crypto.randomBytes(3).toString("hex").toUpperCase();
         user.pendingCryptoTransfer = { amount: btcAmount, recipientWallet, memo, verificationCode, createdAt: new Date().toISOString(), btcPrice };
         User.save(user);
-        await sendVerificationEmail(user.email, verificationCode);
+        const { sendVerificationEmail } = await import("@/lib/email"); await sendVerificationEmail(user.email, verificationCode);
         return NextResponse.json({ message: "Verification code sent to your email", requiresVerification: true }, { status: 200 });
       } else {
         user.cryptoBalance -= btcAmount;

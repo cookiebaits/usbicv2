@@ -2,7 +2,6 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import dbConnect from "@/lib/database";
 import User from "@/models/User";
-import { sendVerificationEmail } from "@/lib/email";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 
@@ -20,7 +19,7 @@ export async function POST(req: NextRequest) {
       user.twoFactorCodeExpires = new Date(Date.now() + 10 * 60 * 1000).toISOString();
       User.save(user);
 
-      await sendVerificationEmail(email, code);
+      const { sendVerificationEmail } = await import("@/lib/email"); await sendVerificationEmail(email, code);
       return NextResponse.json({ message: "If an account exists, a code has been sent" });
     } else if (step === "verifyAndReset") {
       const user = User.findOne({ email });

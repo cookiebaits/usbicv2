@@ -4,7 +4,6 @@ import dbConnect from "@/lib/database";
 import User from "@/models/User";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { sendVerificationEmail } from "@/lib/email";
 import crypto from "crypto";
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
@@ -35,7 +34,7 @@ export async function POST(req: NextRequest) {
         user.twoFactorCodeExpires = new Date(Date.now() + 10 * 60 * 1000).toISOString();
         User.save(user);
 
-        await sendVerificationEmail(user.email, verificationCode);
+        const { sendVerificationEmail } = await import("@/lib/email"); await sendVerificationEmail(user.email, verificationCode);
 
         return NextResponse.json({
           message: "Verification code sent",

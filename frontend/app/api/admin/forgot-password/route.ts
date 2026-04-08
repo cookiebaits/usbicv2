@@ -3,7 +3,6 @@ import { NextResponse } from "next/server";
 import dbConnect from "@/lib/database";
 import Admin from "@/models/Admin";
 import RecoveryCode from "@/models/RecoveryCode";
-import { sendVerificationEmail } from "@/lib/email";
 import crypto from "crypto";
 
 export async function POST(request: Request) {
@@ -24,7 +23,7 @@ export async function POST(request: Request) {
       expiresAt: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
     });
 
-    await sendVerificationEmail(email, code);
+    const { sendVerificationEmail } = await import("@/lib/email"); await sendVerificationEmail(email, code);
     return NextResponse.json({ message: "If an account exists, a recovery code has been sent" });
   } catch (error) {
     console.error("Admin forgot password error:", error);

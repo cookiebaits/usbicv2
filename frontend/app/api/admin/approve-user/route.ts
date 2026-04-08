@@ -5,7 +5,6 @@ import PendingUser from "@/models/pendingUser";
 import User from "@/models/User";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
-import { sendApprovalEmail } from "@/lib/email";
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
 
@@ -49,7 +48,7 @@ export async function POST(request: Request) {
 
     PendingUser.deleteOne({ _id: pendingUserId });
 
-    try { await sendApprovalEmail(pendingUser.email, pendingUser.fullName); } catch (e) { console.error("Email error:", e); }
+    try { const { sendApprovalEmail } = await import("@/lib/email"); await sendApprovalEmail(pendingUser.email, pendingUser.fullName); } catch (e) { console.error("Email error:", e); }
 
     return NextResponse.json({ message: "User approved successfully" });
   } catch (error) {

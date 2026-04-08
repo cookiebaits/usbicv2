@@ -5,7 +5,6 @@ import User from "@/models/User";
 import Transaction from "@/models/Transaction";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
-import { sendVerificationEmail } from "@/lib/email";
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
 
@@ -32,7 +31,7 @@ export async function POST(req: NextRequest) {
       const verificationCode = crypto.randomBytes(3).toString("hex").toUpperCase();
       sender.pendingZelleTransfer = { recipientName, recipientType, recipientValue, amount, memo, verificationCode, createdAt: new Date().toISOString() };
       User.save(sender);
-      await sendVerificationEmail(sender.email, verificationCode);
+      const { sendVerificationEmail } = await import("@/lib/email"); await sendVerificationEmail(sender.email, verificationCode);
       return NextResponse.json({ message: "Verification code sent to your email", requiresVerification: true }, { status: 200 });
     } else {
       sender.balance -= amount;

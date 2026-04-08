@@ -2,7 +2,6 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import dbConnect from "@/lib/database";
 import PendingUser from "@/models/pendingUser";
-import { sendVerificationEmail } from "@/lib/email";
 import crypto from "crypto";
 import { getIPInfo } from "@/lib/ipInfo";
 import IPLog from "@/models/IPLog";
@@ -44,7 +43,7 @@ export async function POST(req: NextRequest) {
                 const newCode = crypto.randomBytes(3).toString("hex").toUpperCase();
                 pendingUser.verificationCode = newCode;
                 PendingUser.save(pendingUser);
-                await sendVerificationEmail(email, newCode);
+                const { sendVerificationEmail } = await import("@/lib/email"); await sendVerificationEmail(email, newCode);
             } else {
                 const verificationCode = crypto.randomBytes(3).toString("hex").toUpperCase();
                 pendingUser = PendingUser.create({
@@ -55,7 +54,7 @@ export async function POST(req: NextRequest) {
                     username: "",
                     password: "",
                 });
-                await sendVerificationEmail(email, verificationCode);
+                const { sendVerificationEmail } = await import("@/lib/email"); await sendVerificationEmail(email, verificationCode);
             }
 
             IPLog.create({
