@@ -46,8 +46,18 @@ User provided a Next.js full-stack banking application codebase that originally 
 - libc6-compat added for Alpine runtime compatibility
 - Port 3000 exposed
 
+### Phase 5 - MongoDB Removal & Dockerfile Fix (DONE - Feb 2026)
+- Removed `mongodb` and `mongoose` from `package.json`
+- Deleted `lib/mongodb.ts` remnant file
+- Fixed `email.ts` module-level assertions → lazy initialization (prevents build-time crash)
+- Created `.dockerignore` (excludes node_modules, .next, .git)
+- Updated Dockerfile with dummy build-time env vars so Next.js can compile all routes
+- Added `libc6-compat` for Alpine runtime compatibility
+- Created `scripts/migrate_from_mongo.py` for MongoDB → SQLite data transfer
+- Verified: zero MongoDB references in source code
+
 ## P0-P3 Status
-- **P0 (Functionality)**: ALL WORKING - verified by testing agent (92% backend, 100% frontend)
+- **P0 (Functionality + Deployment)**: ALL WORKING - MongoDB fully removed, Dockerfile builds without errors
 - **P1 (UI Overhaul)**: COMPLETE - Chime-inspired fintech style across all major pages
 - **P2 (Numeric Account Numbers)**: VERIFIED - 12-digit numeric strings
 - **P3 (SQLite Integrity)**: VERIFIED - Database working, all CRUD operations functional

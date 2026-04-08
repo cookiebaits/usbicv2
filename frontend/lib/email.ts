@@ -1,33 +1,36 @@
 import nodemailer from "nodemailer";
 
-function ensureString(value: string | undefined, name: string): asserts value is string {
-  if (!value) {
-    throw new Error(`Please define the ${name} environment variable in .env.local`);
+let transporter: nodemailer.Transporter | null = null;
+
+function getTransporter(): nodemailer.Transporter {
+  if (transporter) return transporter;
+
+  const EMAIL_USER = process.env.EMAIL_USER;
+  const EMAIL_PASS = process.env.EMAIL_PASS;
+
+  if (!EMAIL_USER || !EMAIL_PASS) {
+    throw new Error("EMAIL_USER and EMAIL_PASS environment variables must be set");
   }
+
+  transporter = nodemailer.createTransport({
+    host: "smtp.hostinger.com",
+    port: 465,
+    secure: true,
+    auth: {
+      user: EMAIL_USER,
+      pass: EMAIL_PASS,
+    },
+  });
+
+  return transporter;
 }
 
-const EMAIL_USER = process.env.EMAIL_USER;
-const EMAIL_PASS = process.env.EMAIL_PASS;
-
-ensureString(EMAIL_USER, "EMAIL_USER");
-ensureString(EMAIL_PASS, "EMAIL_PASS");
-
-const transporter = nodemailer.createTransport({
-  host: "smtp.hostinger.com",
-  port: 465, // or 465, depending on what works
-  secure: true,
-  auth: {
-    user: EMAIL_USER,
-    pass: EMAIL_PASS,
-  },  
-});
-
 export async function sendVerificationEmail(to: string, message: string) {
-
   if (!to) {
     throw new Error("No recipient email provided");
   }
 
+  const EMAIL_USER = process.env.EMAIL_USER;
   const mailOptions = {
     from: EMAIL_USER,
     to,
@@ -48,14 +51,14 @@ export async function sendVerificationEmail(to: string, message: string) {
           <p>If you did not request this, please ignore this email.</p>
         </div>
         <div style="text-align: center; padding: 10px; font-size: 12px; color: #666;">
-          <p>&copy; 2025 International Free Union, All rights reserved.</p>
+          <p>&copy; 2025 All rights reserved.</p>
         </div>
       </div>
     `,
   };
 
   try {
-    const info = await transporter.sendMail(mailOptions);
+    const info = await getTransporter().sendMail(mailOptions);
     console.log("Email sent successfully:", info.response, "to:", to);
     return info;
   } catch (error) {
@@ -65,16 +68,19 @@ export async function sendVerificationEmail(to: string, message: string) {
 }
 
 export async function sendApprovalEmail(to: string) {
+  const EMAIL_USER = process.env.EMAIL_USER;
+  const hostName = process.env.hostName || "https://usbanking.icu";
+
   const mailOptions = {
     from: EMAIL_USER,
     to,
     subject: "Account Approved",
     text: "Your account has been approved by the admin. You can now log in.",
-    html: "<p>Your account has been approved by the admin. You can now <a href='http://localhost:3000/login'>log in</a>.</p>",
+    html: `<p>Your account has been approved by the admin. You can now <a href='${hostName}/login'>log in</a>.</p>`,
   };
 
   try {
-    const info = await transporter.sendMail(mailOptions);
+    const info = await getTransporter().sendMail(mailOptions);
     console.log("Approval email sent:", info.response, "to:", to);
     return info;
   } catch (error) {
