@@ -50,11 +50,12 @@ User provided a Next.js full-stack banking application codebase that originally 
 - Removed `mongodb` and `mongoose` from `package.json`
 - Deleted `lib/mongodb.ts` remnant file
 - Fixed `email.ts` module-level assertions → lazy initialization (prevents build-time crash)
+- Added `export const dynamic = "force-dynamic"` to ALL 54 API routes — Next.js will NEVER evaluate route modules during build
 - Created `.dockerignore` (excludes node_modules, .next, .git)
-- Updated Dockerfile with dummy build-time env vars so Next.js can compile all routes
+- Updated Dockerfile: creates fallback `.env` with placeholders if none exists during build
 - Added `libc6-compat` for Alpine runtime compatibility
 - Created `scripts/migrate_from_mongo.py` for MongoDB → SQLite data transfer
-- Verified: zero MongoDB references in source code
+- Verified: zero MongoDB references in source code, all routes marked as dynamic (ƒ)
 
 ## P0-P3 Status
 - **P0 (Functionality + Deployment)**: ALL WORKING - MongoDB fully removed, Dockerfile builds without errors

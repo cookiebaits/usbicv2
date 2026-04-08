@@ -2,8 +2,9 @@
 FROM node:18-alpine AS deps
 RUN apk add --no-cache python3 make g++
 WORKDIR /app
-COPY package.json yarn.lock ./
-RUN yarn install --frozen-lockfile || yarn install
+COPY package.json yarn.lock* package-lock.json* ./
+RUN if [ -f yarn.lock ]; then yarn install --frozen-lockfile; \
+    else npm install --legacy-peer-deps; fi
 
 # Step 2: Build the application
 FROM node:18-alpine AS builder
@@ -12,15 +13,18 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN mkdir -p data
 
-# Provide dummy env vars for build so Next.js can compile all routes
-# Real values are injected at runtime via Dokploy environment variables
-ENV JWT_SECRET=build-placeholder
-ENV EMAIL_USER=build@placeholder.com
-ENV EMAIL_PASS=build-placeholder
-ENV CRYPTO_KEY=build-placeholder
-ENV NODE_ENV=production
+# Create .env with build-time placeholders if no .env exists
+# All API routes use 'force-dynamic' so Next.js won't evaluate them during build,
+# but some edge cases may still need env vars present
+RUN if [ ! -f .env ]; then \
+    echo 'JWT_SECRET=build-placeholder' > .env && \
+    echo 'EMAIL_USER=build@placeholder.com' >> .env && \
+    echo 'EMAIL_PASS=build-placeholder' >> .env && \
+    echo 'CRYPTO_KEY=build-placeholder' >> .env && \
+    echo 'NODE_ENV=production' >> .env; \
+    fi
 
-RUN yarn build
+RUN npm run build
 
 # Step 3: Production runtime
 FROM node:18-alpine AS runner
@@ -40,4 +44,4 @@ EXPOSE 3000
 
 VOLUME ["/app/data"]
 
-CMD ["yarn", "start"]
+CMD ["npm", "start"]
