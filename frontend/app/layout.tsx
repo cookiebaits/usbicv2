@@ -1,0 +1,35 @@
+import type { Metadata } from "next";
+import { LogoProvider } from "@/app/logoContext";
+import { ZelleLogoProvider } from "./zellLogoContext";
+import "./globals.css";
+import { LogVisit } from "@/components/LogVisit";
+import TopBar from "@/components/TopBar";
+import { TwoFALogoProvider } from "./TwoFALogoContext";
+
+export const metadata: Metadata = {
+  title: "Free International Banking",
+  description: "Developed by Venhash Solutions",
+  icons: {
+    icon: '/favicon.ico',
+  },
+};
+
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+
+  return (
+    <html lang="en">
+      <body>
+        <TwoFALogoProvider>
+          <ZelleLogoProvider>
+            <LogoProvider>
+              <LogVisit />
+              <TopBar>
+                {children}
+              </TopBar>
+            </LogoProvider>
+          </ZelleLogoProvider>
+        </TwoFALogoProvider>
+      </body>
+    </html>
+  );
+}
