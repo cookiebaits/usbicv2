@@ -9,13 +9,6 @@ FROM node:18-alpine AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-
-# Add dummy variables right BEFORE the build command
-# (Replace these with whatever variables your API routes are looking for)
-ENV DATABASE_URL="dummy_url_to_pass_build"
-ENV NEXTAUTH_SECRET="dummy_secret"
-ENV JWT_SECRET="dummy_secret"
-
 RUN npm run build
 
 # Step 3: Run the app in production
