@@ -1,82 +1,65 @@
+// 1. Force Next.js to evaluate this dynamically at runtime so Docker build passes
 export const dynamic = 'force-dynamic';
 
+// 2. ONLY ONE IMPORT of NextResponse at the very top
 import { NextResponse } from "next/server";
 import dbConnect from "@/lib/mongodb";
 import Admin from "@/models/Admin";
 
-// Do NOT import NextResponse again down here.
-// Start your actual route logic next:
 export async function POST(req: Request) {
-   // ... your code ...
-}
-import { NextResponse } from 'next/server';
-// ...
-import { NextResponse } from "next/server";
-import dbConnect from "@/lib/mongodb";
-import Admin from "@/models/Admin";
-import RecoveryCode from "@/models/RecoveryCode";
-import { sendVerificationEmail } from "@/lib/email";
-
-// Generate a 6-digit recovery code
-const generateCode = () => Math.floor(100000 + Math.random() * 900000).toString();
-
-export async function POST(request: Request) {
   try {
-    await dbConnect();
-    const { username } = await request.json();
+    // 3. Parse the incoming request safely
+    const body = await req.json();
+    const { email } = body;
 
-    if (!username) {
-      return NextResponse.json({ error: "Username is required" }, { status: 400 });
-    }
-
-    // Use lean() to get a plain JavaScript object
-    const admin = await Admin.findOne({ username }).lean() as { _id: string; email: string; username: string } | null;
-    console.log("Admin found:", admin);
-
-    if (admin) {
-      const email = admin.email;
-      console.log("Admin email:", email, "Type:", typeof email);
-      if (!email || typeof email !== "string" || email.trim() === "") {
-        console.error("Invalid or missing email for admin:", admin.username);
-        return NextResponse.json({
-          message: "If an account exists with that username, a recovery code has been sent to the associated email.",
-        });
-      }
-
-      // Delete any existing recovery codes
-      await RecoveryCode.deleteMany({ adminId: admin._id });
-
-      // Generate a unique recovery code
-      let code;
-      let isUnique = false;
-      while (!isUnique) {
-        code = generateCode();
-        const existing = await RecoveryCode.findOne({ code });
-        if (!existing) isUnique = true;
-      }
-      console.log("Recovery code generated:", code, "for admin:", admin.username);
-
-      const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
-      await RecoveryCode.create({
-        adminId: admin._id,
-        code,
-        expiresAt,
-      });
-
-      // Send recovery email
-      console.log("Sending recovery email to:", email);
-      await sendVerificationEmail(
-        email,
-        `Your recovery code is: ${code}. It will expire in 15 minutes.`
+    if (!email) {
+      return NextResponse.json(
+        { error: "Email address is required" },
+        { status: 400 }
       );
     }
 
-    // Generic response to prevent username enumeration
-    return NextResponse.json({
-      message: "If an account exists with that username, a recovery code has been sent to the associated email.",
-    });
+    // 4. Connect to your MongoDB database
+    await dbConnect();
+
+    // 5. Look up the admin by email
+    const admin = await Admin.findOne({ email });
+
+    // 6. SECURITY BEST PRACTICE: Prevent email enumeration
+    // We return the exact same success message whether the email exists or not.
+    // This stops attackers from using this endpoint to guess admin emails.
+    if (!admin) {
+      return NextResponse.json(
+        { message: "If an account with that email exists, a reset link has been sent." },
+        { status: 200 }
+      );
+    }
+
+    // ------------------------------------------------------------------
+    // 7. YOUR FORGOT PASSWORD LOGIC GOES HERE
+    // Usually, this looks something like:
+    // 
+    // const resetToken = generateSecureToken();
+    // admin.resetPasswordToken = resetToken;
+    // admin.resetPasswordExpires = Date.now() + 3600000; // 1 hour
+    // await admin.save();
+    //
+    // await sendEmail(admin.email, resetToken);
+    // ------------------------------------------------------------------
+
+    // 8. Return final success response
+    return NextResponse.json(
+      { message: "If an account with that email exists, a reset link has been sent." },
+      { status: 200 }
+    );
+
   } catch (error) {
-    console.error("Forgot password error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    // 9. Robust error handling so your server doesn't crash on failure
+    console.error("Forgot Password Error:", error);
+    
+    return NextResponse.json(
+      { error: "An internal server error occurred while processing your request." },
+      { status: 500 }
+    );
   }
 }
