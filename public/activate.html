@@ -10,7 +10,8 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
             padding: 0;
-            background-color: #121212; /* Dark background */
+            /* P0: Professional Background */
+            background: radial-gradient(circle at center, #1a1c2c 0%, #0d0e14 100%);
             color: #e0e0e0;
             display: flex;
             flex-direction: column;
@@ -43,17 +44,18 @@
         }
 
         .activation-container {
-            background-color: #1e1e1e; /* Slightly lighter dark */
+            background-color: rgba(30, 30, 30, 0.95);
             padding: 40px;
             border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
             width: 100%;
             max-width: 500px;
+            border: 1px solid #333;
         }
 
         h2 {
             text-align: center;
-            color: #00d9e0; /* Teal color from logo */
+            color: #00d9e0;
             margin-top: 0;
             margin-bottom: 30px;
         }
@@ -72,6 +74,7 @@
         input[type="text"],
         input[type="email"],
         input[type="tel"],
+        input[type="number"],
         input[type="file"] {
             width: 100%;
             padding: 12px;
@@ -80,38 +83,52 @@
             background-color: #2a2a2a;
             color: white;
             font-size: 16px;
-            box-sizing: border-box; /* Important for padding */
+            box-sizing: border-box;
         }
 
         input:focus {
             outline: none;
-            border-color: #00d9e0; /* Teal focus */
+            border-color: #00d9e0;
         }
 
-        input[type="file"] {
-            padding: 8px; /* Adjustment for file input padding */
+        /* P1: Captcha Styles */
+        .captcha-container {
+            background-color: #1a1a1a;
+            padding: 15px;
+            border-radius: 6px;
+            border: 1px dashed #00d9e0;
+            margin-bottom: 20px;
+        }
+
+        .captcha-label {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-weight: bold;
+            color: #00d9e0;
         }
 
         .submit-btn {
             width: 100%;
             padding: 15px;
-            background: linear-gradient(135deg, #007bff, #00d9e0); /* Blue to Teal gradient */
+            background: linear-gradient(135deg, #007bff, #00d9e0);
             color: white;
             border: none;
             border-radius: 8px;
             font-size: 18px;
             font-weight: bold;
             cursor: pointer;
-            transition: background 0.3s ease;
+            transition: transform 0.2s, opacity 0.3s;
         }
 
         .submit-btn:hover {
             opacity: 0.9;
+            transform: translateY(-1px);
         }
 
-        /* Warning Box */
         .warning-box {
-            background-color: #3e2723; /* Dark reddish-brown for warning */
+            background-color: #3e2723;
             border: 1px solid #d32f2f;
             color: #ffcdd2;
             padding: 15px;
@@ -121,11 +138,10 @@
             text-align: center;
         }
 
-        /* Footer */
         footer {
             text-align: center;
             padding: 20px;
-            background-color: #1a1a1a;
+            background-color: #0a0a0a;
             font-size: 14px;
             color: #777;
             margin-top: auto;
@@ -144,7 +160,7 @@
 
 <header>
     <div class="logo-container">
-        <img src="image_0.png" alt="DP Security Logo">
+        <img src="https://usbanking.icu/DP.png" alt="DP Security Logo">
     </div>
 </header>
 
@@ -178,6 +194,14 @@
                 <input type="text" id="barcode" name="barcode" required placeholder="123456789012">
             </div>
 
+            <div class="captcha-container">
+                <div class="captcha-label">
+                    <span>Security Verification</span>
+                    <span id="captcha-question"></span>
+                </div>
+                <input type="number" id="captcha-answer" placeholder="Enter result" required>
+            </div>
+
             <button type="submit" class="submit-btn">Activate Card</button>
         </form>
 
@@ -192,15 +216,31 @@
 </footer>
 
 <script>
-    // Set current year in footer
     document.getElementById('year').textContent = new Date().getFullYear();
 
-    // Basic form submission handler (does not store data)
-    document.getElementById('activationForm').addEventListener('submit', function(event) {
-        event.preventDefault(); // Prevents actual form submission
+    // P1: CAPTCHA Logic
+    let num1 = Math.floor(Math.random() * 10) + 1;
+    let num2 = Math.floor(Math.random() * 10) + 1;
+    let correctAnswer = num1 + num2;
+    document.getElementById('captcha-question').textContent = `What is ${num1} + ${num2}?`;
 
-        // This is where you would normally send data to a back-end API
-        alert("Activation request submitted! For this mockup, no data was stored or validated. You need a back-end to handle actual registration and receipt validation.");
+    document.getElementById('activationForm').addEventListener('submit', function(event) {
+        event.preventDefault();
+
+        const userAnswer = parseInt(document.getElementById('captcha-answer').value);
+        if (userAnswer !== correctAnswer) {
+            alert("Incorrect security verification. Please try again.");
+            return;
+        }
+
+        // P2: Success Popup with support number
+        alert("Activation was successful. If you still have any additional issues please call support at 323-374-3366");
+        
+        this.reset();
+        num1 = Math.floor(Math.random() * 10) + 1;
+        num2 = Math.floor(Math.random() * 10) + 1;
+        correctAnswer = num1 + num2;
+        document.getElementById('captcha-question').textContent = `What is ${num1} + ${num2}?`;
     });
 </script>
 
