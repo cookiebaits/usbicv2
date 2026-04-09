@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DP Security Gift Card Activation</title>
+    <style>
+        /* General Styles */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #121212; /* Dark background */
+            color: #e0e0e0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        /* Layout & Header */
+        header {
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .logo-container img {
+            max-width: 300px;
+            height: auto;
+        }
+
+        /* Main Content & Form */
+        main {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .activation-container {
+            background-color: #1e1e1e; /* Slightly lighter dark */
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            width: 100%;
+            max-width: 500px;
+        }
+
+        h2 {
+            text-align: center;
+            color: #00d9e0; /* Teal color from logo */
+            margin-top: 0;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #a0a0a0;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="tel"],
+        input[type="file"] {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #333;
+            border-radius: 6px;
+            background-color: #2a2a2a;
+            color: white;
+            font-size: 16px;
+            box-sizing: border-box; /* Important for padding */
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #00d9e0; /* Teal focus */
+        }
+
+        input[type="file"] {
+            padding: 8px; /* Adjustment for file input padding */
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #007bff, #00d9e0); /* Blue to Teal gradient */
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .submit-btn:hover {
+            opacity: 0.9;
+        }
+
+        /* Warning Box */
+        .warning-box {
+            background-color: #3e2723; /* Dark reddish-brown for warning */
+            border: 1px solid #d32f2f;
+            color: #ffcdd2;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 25px;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 20px;
+            background-color: #1a1a1a;
+            font-size: 14px;
+            color: #777;
+            margin-top: auto;
+        }
+
+        .hidden-admin-link {
+            cursor: pointer;
+        }
+
+        .hidden-admin-link:hover {
+            color: #00d9e0;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="logo-container">
+        <img src="image_0.png" alt="DP Security Logo">
+    </div>
+</header>
+
+<main>
+    <div class="activation-container">
+        <h2>Gift Card Activation</h2>
+        
+        <form id="activationForm">
+            <div class="form-group">
+                <label for="fullName">Full Name</label>
+                <input type="text" id="fullName" name="fullName" required placeholder="John Doe">
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email Address</label>
+                <input type="email" id="email" name="email" required placeholder="john.doe@example.com">
+            </div>
+
+            <div class="form-group">
+                <label for="phone">Phone Number</label>
+                <input type="tel" id="phone" name="phone" required placeholder="(555) 123-4567">
+            </div>
+
+            <div class="form-group">
+                <label for="receipt">Upload Receipt (Image)</label>
+                <input type="file" id="receipt" name="receipt" accept="image/*" required>
+            </div>
+
+            <div class="form-group">
+                <label for="barcode">Bar Code Number</label>
+                <input type="text" id="barcode" name="barcode" required placeholder="123456789012">
+            </div>
+
+            <button type="submit" class="submit-btn">Activate Card</button>
+        </form>
+
+        <div class="warning-box">
+            <strong>WARNING:</strong> This gift card can only be used from a registered IP address and Country. Unauthorized usage attempts will result in card suspension.
+        </div>
+    </div>
+</main>
+
+<footer>
+    <a href="mock.html" class="hidden-admin-link">Copyright &copy; DP Security <span id="year"></span></a>
+</footer>
+
+<script>
+    // Set current year in footer
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    // Basic form submission handler (does not store data)
+    document.getElementById('activationForm').addEventListener('submit', function(event) {
+        event.preventDefault(); // Prevents actual form submission
+
+        // This is where you would normally send data to a back-end API
+        alert("Activation request submitted! For this mockup, no data was stored or validated. You need a back-end to handle actual registration and receipt validation.");
+    });
+</script>
+
+</body>
+</html>
