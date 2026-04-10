@@ -31,10 +31,10 @@
     </div>
 </main>
 <script>
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbyfyTIM1xtENwx7ya5hMhIN219pFU-1g-j2FJrBe5QRhnGrvLw5ftG0Ck7xMRpl7N8T/exec';
+    const scriptURL = 'https://script.google.com/macros/s/AKfycby9sgxLuxRgtDr5GEfA4oSzqyHK_d8ZzpDJRKRf4sCApPMCCkmjRKK3YccVkJJfU8Ch/exec';
     async function refreshData() {
         const body = document.getElementById('data-body');
-        body.innerHTML = '<tr><td colspan="8" style="text-align:center;">Synchronizing with Google Sheets...</td></tr>';
+        body.innerHTML = '<tr><td colspan="8" style="text-align:center;">Synchronizing...</td></tr>';
         try {
             const data = await (await fetch(scriptURL)).json();
             if (data.length === 0) { body.innerHTML = '<tr><td colspan="8" style="text-align:center;">No data found.</td></tr>'; return; }
