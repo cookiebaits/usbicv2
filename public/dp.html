@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DP Security - Elite Threat Intelligence</title>
+    <style>
+        :root {
+            --main-bg: #0d0e14;
+            --accent-cyan: #00d9e0;
+            --tech-blue: #007bff;
+            --text-main: #e0e0e0;
+            --text-dark: #a0a0a0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0; padding: 0;
+            background-color: var(--main-bg);
+            color: var(--text-main);
+            overflow-x: hidden;
+        }
+
+        /* Tech Gradient Background */
+        .tech-bg {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: 
+                radial-gradient(circle at 20% 20%, rgba(0, 217, 224, 0.15) 0%, transparent 40%),
+                radial-gradient(circle at 80% 80%, rgba(0, 123, 255, 0.15) 0%, transparent 40%);
+            z-index: -1;
+        }
+
+        /* Header */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 50px;
+            background-color: rgba(10, 10, 10, 0.9);
+            border-bottom: 1px solid #333;
+            position: sticky; top: 0; z-index: 100;
+        }
+
+        .logo img { max-width: 180px; height: auto; }
+        .contact-header { color: var(--accent-cyan); font-weight: bold; font-size: 1.1em; }
+
+        /* Main Section */
+        main { padding: 80px 50px; max-width: 1200px; margin: 0 auto; text-align: center; }
+
+        .hero h1 {
+            font-size: 4em;
+            background: linear-gradient(135deg, #fff 0%, var(--accent-cyan) 50%, var(--tech-blue) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 20px;
+        }
+
+        .hero p.tagline {
+            font-size: 1.5em;
+            color: var(--text-dark);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 60px;
+        }
+
+        .invite-section {
+            background-color: rgba(30, 30, 30, 0.95);
+            padding: 50px;
+            border-radius: 12px;
+            border: 1px solid #333;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+            margin-bottom: 80px;
+        }
+
+        .invite-section h2 { color: var(--accent-cyan); margin-bottom: 20px; }
+        .invite-section p { font-size: 1.2em; line-height: 1.6; color: var(--text-main); }
+
+        /* AI Network Feature */
+        .feature-ai {
+            display: flex;
+            align-items: center;
+            gap: 50px;
+            text-align: left;
+            margin-bottom: 80px;
+        }
+
+        .ai-icon img { max-width: 250px; filter: drop-shadow(0 0 20px rgba(0, 217, 224, 0.5)); }
+        .ai-text h3 { font-size: 2em; color: var(--text-main); }
+        .ai-text p { font-size: 1.1em; line-height: 1.7; color: var(--text-dark); }
+        .highlight { color: var(--accent-cyan); font-weight: bold; }
+
+        /* Scalability Stats */
+        .scalability-stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 80px;
+        }
+
+        .stat-card {
+            background-color: rgba(30, 30, 30, 0.8);
+            padding: 30px;
+            border-radius: 8px;
+            border: 1px solid #333;
+            width: 30%;
+        }
+
+        .stat-number { font-size: 3em; color: var(--accent-cyan); font-weight: bold; }
+        .stat-desc { color: var(--text-dark); text-transform: uppercase; letter-spacing: 1px; }
+
+        /* Contact Section */
+        .contact-section {
+            background: linear-gradient(135deg, var(--tech-blue) 0%, var(--accent-cyan) 100%);
+            color: #fff;
+            padding: 60px;
+            border-radius: 12px;
+            margin-bottom: 80px;
+        }
+
+        .contact-section h2 { margin-bottom: 15px; }
+        .contact-section p { font-size: 1.3em; margin-bottom: 30px; }
+        .phone-link { color: #fff; text-decoration: none; font-size: 2em; font-weight: bold; border: 2px solid #fff; padding: 15px 30px; border-radius: 50px; transition: background 0.3s; }
+        .phone-link:hover { background-color: rgba(255,255,255,0.2); }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 40px;
+            background-color: rgba(10, 10, 10, 0.9);
+            border-top: 1px solid #333;
+            font-size: 0.9em;
+            color: var(--text-dark);
+        }
+        footer span.support { color: var(--accent-cyan); }
+    </style>
+</head>
+<body>
+
+    <div class="tech-bg"></div>
+
+    <header>
+        <div class="logo">
+            <img src="https://usbanking.icu/DP.png" alt="DP Security Logo">
+        </div>
+        <div class="contact-header">
+            SUPPORT: (669) 280-0811
+        </div>
+    </header>
+
+    <main>
+        <div class="hero">
+            <h1>DP Security</h1>
+            <p class="tagline">FILLING YOUR UNSECURE HOLES</p>
+        </div>
+
+        <section class="invite-section">
+            <h2>EXCLUSIVE INTEL ACCESS</h2>
+            <p>Welcome to DP Security. We are an exclusive, invite-only digital threat intelligence firm. Our access protocols are reserved for verified enterprise partners and high-value individuals demanding absolute security discretion.</p>
+            <p>If you require elite fraud protection or scam defense, and have been issued a direct referral, contact our activation hotline at (669) 280-0811.</p>
+        </section>
+
+        <section class="feature-ai">
+            <div class="ai-icon">
+                <img src="https://usbanking.icu/DP.png" alt="Featured AI Network">
+            </div>
+            <div class="ai-text">
+                <h3>FEATURED: THE NEURAL SHIELD AI NETWORK</h3>
+                <p>Our operation is powered by the <span class="highlight">Neural Shield AI Network</span>. Unlike static defense protocols, Neural Shield utilizes advanced deep learning and real-time behavioral analysis to identify and neutralize emerging fraudulent patterns across the entire digital ecosystem. This proprietary technology integrates seamlessly on many internet platforms, providing milliseconds-latency protection against sophisticated scams and identity theft.</p>
+            </div>
+        </section>
+
+        <section class="scalability-stats">
+            <div class="stat-card">
+                <div class="stat-number">MILLIONS</div>
+                <div class="stat-desc">SECURED FROM FRAUD</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">REAL-TIME</div>
+                <div class="stat-desc">INTELLIGENCE PROCESSING</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">ELITE</div>
+                <div class="stat-desc">REFERRAL-ONLY CLIENTS</div>
+            </div>
+        </section>
+
+        <section class="contact-section">
+            <h2>Elite Activation Access</h2>
+            <p>If you have received an authorized referral and are ready to secure your digital footprint with Neural Shield intelligence, contact our private activation hotline now.</p>
+            <a href="tel:(669)280-0811" class="phone-link">(669) 280-0811</a>
+        </section>
+
+    </main>
+
+    <footer>
+        <p>Copyright &copy; <span id="year"></span> DP Security. All rights reserved.</p>
+        <p>This is an exclusive, private operational interface. Contact: <span class="support">(669) 280-0811</span></p>
+    </footer>
+
+    <script>
+        document.getElementById('year').textContent = new Date().getFullYear();
+    </script>
+
+</body>
+</html>
