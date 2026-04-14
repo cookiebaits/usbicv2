@@ -49,6 +49,8 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
         }
 
         #title { font-size: 24px; font-weight: 800; transition: color 0.3s;}
@@ -60,6 +62,7 @@
             border-radius: 30px;
             padding: 4px;
             border: 1px solid #333;
+            flex-wrap: wrap;
         }
 
         .mode-btn {
@@ -68,7 +71,7 @@
             border: none;
             padding: 8px 16px;
             border-radius: 20px;
-            font-size: 14px;
+            font-size: 13px;
             font-weight: bold;
             cursor: pointer;
             transition: all 0.3s;
@@ -80,6 +83,12 @@
             background: #515e9c;
             color: white;
             box-shadow: 0 2px 10px rgba(81, 94, 156, 0.4);
+        }
+
+        .mode-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            pointer-events: none;
         }
 
         /* Slot Machine Grid */
@@ -173,17 +182,14 @@
             grid-template-columns: 1fr 1fr;
         }
 
-        /* If 3 items, make the last one span full width */
-        .action-list[data-cols="3"] .action-item:last-child {
-            grid-column: span 2;
-        }
-        /* If 5 items, make the last one span full width */
+        /* If 3 or 5 items, make the last one span full width. If 4, it's a perfect 2x2 grid. */
+        .action-list[data-cols="3"] .action-item:last-child,
         .action-list[data-cols="5"] .action-item:last-child {
             grid-column: span 2;
         }
 
         .action-item {
-            font-size: 22px; 
+            font-size: 20px; 
             font-weight: 700;
             padding: 15px 20px;
             background: #222;
@@ -223,14 +229,16 @@
         
         <div id="top-bar">
             <div class="mode-switcher">
-                <button class="mode-btn active" id="btn-survival" onclick="switchMode('survival')">Survival</button>
-                <button class="mode-btn" id="btn-addiction" onclick="switchMode('addiction')">Confession</button>
+                <button class="mode-btn active" id="btn-story" onclick="switchMode('story')">📖 Story Roulette</button>
+                <button class="mode-btn" id="btn-spell" onclick="switchMode('spell')">🪄 Spell Roulette</button>
+                <button class="mode-btn" id="btn-tech" onclick="switchMode('tech')">💻 Tech Nightmare</button>
+                <button class="mode-btn" id="btn-prize" onclick="switchMode('prize')">🎟️ Prize Nightmare</button>
             </div>
             <div id="status-light">Ready</div>
         </div>
 
         <header>
-            <div id="title">🎰 Scambait Wacky Survival</div>
+            <div id="title">📖 Story Roulette</div>
         </header>
 
         <div id="slot-machine"></div>
@@ -245,8 +253,19 @@
     <script>
         // --- DATA DICTIONARIES ---
         const modes = {
-            survival: {
-                title: "🎰 Wacky Survival Mode",
+            story: {
+                title: "📖 Story Roulette",
+                headers: ["The Job", "The Habit", "The Complication", "The Consequence"],
+                colors: ["var(--color-1)", "var(--color-3)", "var(--color-4)", "var(--color-2)"], // Blue, Yellow, Purple, Orange
+                data: [
+                    ["Shark Tongue Seller", "Professional Cloud Yeller", "Underground Cheese Smuggler", "Competitive Pigeon Racer", "Black Market Lego Dealer", "Vampire Dentist", "Part-Time Sasquatch Impersonator", "Amateur Tornado Wrestler", "Ghost Real Estate Agent", "Certified Time-Traveler Assistant", "Used Submarine Salesman", "Squirrel Interpreter"],
+                    ["Eating Corn Longways", "Collecting Rubber Ducks", "Hoarding Ketchup Packets", "Sniffing New Books", "Watching QVC", "Biting String Cheese", "Aggressive Gardening", "Stepping Only On Cracks", "Organizing Paperclips", "Peeling Sunburns", "Drinking Hot Dog Water", "Sorting Skittles by Flavor", "Meowing at Stray Cats", "Microwaving Salad", "Chewing on Aluminum Foil", "Applauding when the plane lands", "Putting milk in before cereal", "Eating Kiwi with the skin on", "Biting ice cream with front teeth", "Licking 9-volt batteries", "Screaming at stop signs", "Giving fake names at Starbucks", "Walking backwards everywhere", "Carrying a raw egg in my pocket"],
+                    ["but severely allergic to it", "while crying quietly", "but absolutely terrified of it", "and deeply ashamed", "while sleepwalking", "only in public spaces", "but fiercely protective of it", "and sweat profusely doing it", "while heavily disguised", "but I deny it completely", "while wearing a clown suit", "but my mom is watching", "and the FBI knows", "while holding my breath", "but it makes me sneeze violently", "while narrating my own life"],
+                    ["in my nightly dreams", "every Tuesday at 3 AM", "to assert dominance", "when the moon is full", "during family dinners", "on national television", "to avoid paying taxes", "and my dog judges me", "while maintaining unbroken eye contact", "just to feel something", "and I blame it on ghosts", "in the middle of job interviews", "whenever the Wi-Fi goes down", "and my ancestors are weeping", "while singing the national anthem", "and it's ruining my credit score", "as a form of silent protest", "during important Zoom meetings", "and I'm banned from Walmart", "so the aliens won't abduct me", "and it costs me $400 a week"]
+                ]
+            },
+            spell: {
+                title: "🪄 Spell Roulette",
                 headers: ["Location", "Disaster", "Food", "Cooking", "The Villain"],
                 colors: ["var(--color-1)", "var(--color-2)", "var(--color-3)", "var(--color-4)", "var(--color-5)"],
                 data: [
@@ -257,29 +276,41 @@
                     ["Dr. Irregular", "Lord Bigboobza", "Man Roe", "Suckerberg", "Hoebag", "Ms Lobster", "Papa John", "McDonald's", "Wendy's", "The Burger King", "Colonel Sanders", "Little Caesar"]
                 ]
             },
-            addiction: {
-                title: "🤪 Weird Confessions Mode",
-                headers: ["The Habit", "The Complication", "The Consequence"],
-                colors: ["var(--color-1)", "var(--color-3)", "var(--color-4)"], // Blue, Yellow, Purple
+            tech: {
+                title: "💻 Tech Scammer Nightmare",
+                headers: ["The Device", "The Problem", "The Payment", "The Distraction"],
+                colors: ["var(--color-1)", "var(--color-5)", "var(--color-3)", "var(--color-2)"],
                 data: [
-                    // Weird but harmless addictions
-                    ["Eating Corn Longways", "Collecting Rubber Ducks", "Hoarding Ketchup Packets", "Sniffing New Books", "Watching QVC", "Biting String Cheese", "Aggressive Gardening", "Stepping Only On Cracks", "Organizing Paperclips", "Peeling Sunburns"],
-                    // Funny complications/allergies
-                    ["but severely allergic to it", "while crying quietly", "but absolutely terrified of it", "and deeply ashamed", "while sleepwalking", "only in public spaces", "but fiercely protective of it", "and sweat profusely doing it"],
-                    // Reoccurring consequences
-                    ["in my nightly dreams", "every Tuesday at 3 AM", "to assert dominance", "when the moon is full", "during family dinners", "on national television", "to avoid paying taxes", "and my dog judges me"]
+                    ["Windows 95 on a CRT Monitor", "A Rotary Phone wired to a Fax", "Commodore 64", "My grandson's Gameboy Color", "A telegraph machine", "A microwave with a screen", "Palm Pilot from 1999", "An Overhead Projector", "A Nintendo Virtual Boy", "A Typewriter with Wi-Fi", "Etch A Sketch"],
+                    ["The floppy disk is stuck in the CD drive", "I tried to fax the Bitcoin to you", "My dial-up tone sounds like it's crying", "The invoice printed in invisible ink", "The mouse ball rolled under the fridge", "AOL says I have zero hours remaining", "My anti-virus is just a picture of a dog", "The screen says 'Insert Coin to Continue'", "I poured water in the back to cool it off", "My carrier pigeon lost the reset code"],
+                    ["Mailing pennies in a shoebox", "Sending payment via horseback mail", "Sending a fax of a physical check", "Paying in Blockbuster Late Fees", "Chuck E. Cheese Game Tokens", "Monopoly Money (the orange bills)", "Bartering my collection of rare Pogs", "A shiny Charizard card", "Writing an I.O.U. on a napkin", "Gold doubloons from a sunken ship"],
+                    ["Hold on, I have to crank the generator", "Wait, I dropped my monocle", "My hearing trumpet is clogged", "I need to rewind the VHS tape first", "Let me ask my Ouija board", "The dial-up is disconnecting, don't breathe", "Hold on, my soup is burning", "I have to wind up my pocket watch", "My parrot is mimicking my password", "Let me grab my abacus to calculate the fee"]
+                ]
+            },
+            prize: {
+                title: "🎟️ Prize Scammer Nightmare",
+                headers: ["Prize Demands", "Gift Card Fail", "Online Roadblock", "The Distraction"],
+                colors: ["var(--color-3)", "var(--color-5)", "var(--color-1)", "var(--color-4)"],
+                data: [
+                    ["Plus a $50 Applebee's gift card", "And you must pay the taxes on it upfront", "Throw in a set of premium snow tires", "But I want the cash entirely in $2 bills", "Plus a signed apology letter to my cat", "And you need to deliver it in a white limo", "Throw in a year of free lawn maintenance", "Plus you have to pay off my mortgage", "But I want it delivered in bags of quarters", "Throw in a brand new riding lawnmower", "And a lifetime supply of canned baked beans", "Plus a VIP pass to the local petting zoo", "And you have to adopt my pet iguana", "Plus an extra $50 just for my time"],
+                    ["The cashier locked the cards in a safe", "Target says I'm buying too many", "I melted the Apple cards in the microwave", "The barcode is smeared with jelly", "I bought Roblox instead of Google Play", "I traded the gift card for a magic bean", "I scratched too hard and made a hole", "I accidentally ate the scratch-off code", "The store clerk tackled me", "I washed my pants with the cards inside"],
+                    ["My password has special characters I can't type, like an up arrow", "I have to wait 3-5 days for a verification postcard", "The website wants me to update Internet Explorer 8", "I keep failing the traffic light captcha", "My grandson put a parental lock on my bank app", "The verification code went to an AOL email from 2004", "My computer is forcing a 3-hour Windows update", "Zelle says I need to call the fraud department first", "The 2-factor authentication went to my landline", "I got locked out for typing the wrong password 14 times", "The online banking form requires a blood type"],
+                    ["My dog is eating my router", "I have to take my pet rock for a walk", "Wait, my favorite soap opera is on", "I need to ask my crystal ball first", "Hold on, the cops are at my door... oh wait, it's the mailman", "I'm currently stuck in an elevator", "My kitchen is on fire, give me a sec", "The FBI is calling on my other line", "I need to go water my plastic plants"]
                 ]
             }
         };
 
         // --- STATE ---
-        let currentMode = 'survival';
+        let currentMode = 'story'; 
+        let isSpinning = false; // Add state lock
         const itemH = 85; 
         let reelOffsets = [];
         let animationFrames = [];
 
         // --- CORE FUNCTIONS ---
         function switchMode(modeKey) {
+            if (isSpinning) return; // Prevent switching while spinning
+
             currentMode = modeKey;
             const config = modes[modeKey];
             const colCount = config.data.length;
@@ -352,6 +383,9 @@
         }
 
         function startSpin() {
+            if (isSpinning) return;
+            isSpinning = true;
+
             const btn = document.getElementById('spin-button');
             const status = document.getElementById('status-light');
             const config = modes[currentMode];
@@ -360,6 +394,9 @@
             btn.disabled = true;
             status.innerText = "Spinning...";
             status.style.color = "#ff5252";
+
+            // Disable mode buttons
+            document.querySelectorAll('.mode-btn').forEach(mBtn => mBtn.disabled = true);
 
             document.querySelectorAll('.action-item').forEach(i => i.classList.remove('active'));
             document.querySelectorAll('.reel-text').forEach(t => t.classList.remove('selected-item'));
@@ -411,6 +448,9 @@
                             btn.disabled = false;
                             status.innerText = "Ready";
                             status.style.color = "#4caf50";
+                            // Re-enable mode buttons
+                            document.querySelectorAll('.mode-btn').forEach(mBtn => mBtn.disabled = false);
+                            isSpinning = false; // Release the lock
                         }, 600);
                     }
                 }, 1500 + (i * 1200)); 
@@ -418,7 +458,7 @@
         }
 
         // --- INIT ---
-        switchMode('survival'); // Load default mode on startup
+        switchMode('story'); 
     </script>
 </body>
 </html>
