@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cookie's Wacky Multi-Slot</title>
+    <style>
+        :root {
+            --bg-color: #0b0b0e;
+            --container-bg: #16161c;
+            --slot-bg: #1e1e24;
+            --border-color: #3a3a4a;
+            --text-color: #e0e0e0;
+            
+            /* High-Vis Neon Accent Colors */
+            --color-1: #00e5ff; /* Cyan */
+            --color-2: #ff3d00; /* Neon Orange */
+            --color-3: #ffea00; /* Neon Yellow */
+            --color-4: #d500f9; /* Neon Purple */
+            --color-5: #ff1744; /* Neon Red */
+            
+            --item-h: 85px; 
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            background-image: 
+                linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+            background-size: 40px 40px;
+            color: var(--text-color);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        #app-container {
+            background-color: var(--container-bg);
+            border-radius: 16px;
+            padding: 30px;
+            width: 100%;
+            max-width: 1150px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.8), inset 0 1px 1px rgba(255,255,255,0.05);
+            border: 1px solid #2a2a35;
+        }
+
+        /* Mode Switcher UI */
+        #top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        #title { 
+            font-size: 28px; 
+            font-weight: 900; 
+            transition: color 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 0 2px 10px rgba(255,255,255,0.1);
+        }
+
+        #status-light { 
+            font-weight: 900; 
+            font-size: 18px; 
+            color: #00e676; 
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 0 0 10px #00e676;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.8; }
+            50% { opacity: 1; text-shadow: 0 0 20px currentColor; }
+            100% { opacity: 0.8; }
+        }
+
+        .mode-switcher {
+            display: flex;
+            background: #0f0f13;
+            border-radius: 30px;
+            padding: 6px;
+            border: 1px solid #222;
+            box-shadow: inset 0 2px 10px rgba(0,0,0,0.5);
+            flex-wrap: wrap;
+        }
+
+        .mode-btn {
+            background: transparent;
+            color: #666;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .mode-btn:hover:not(:disabled) {
+            color: #fff;
+            transform: translateY(-2px);
+        }
+
+        .mode-btn.active {
+            background: linear-gradient(135deg, #3f51b5, #5c6bc0);
+            color: white;
+            box-shadow: 0 4px 15px rgba(63, 81, 181, 0.5);
+        }
+
+        .mode-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        /* Slot Machine Grid */
+        #slot-machine {
+            display: grid;
+            gap: 15px;
+            margin-bottom: 30px;
+            position: relative;
+            transition: grid-template-columns 0.5s ease-in-out;
+        }
+
+        /* The Neon Target Line */
+        #slot-machine::after {
+            content: "";
+            position: absolute;
+            top: calc(var(--item-h) + 45px); 
+            left: -10px;
+            right: -10px;
+            height: var(--item-h);
+            border: 2px solid rgba(255,255,255,0.15);
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.03) 20%, rgba(255,255,255,0.03) 80%, transparent);
+            box-shadow: 0 0 15px rgba(255,255,255,0.05), inset 0 0 20px rgba(255,255,255,0.02);
+            pointer-events: none;
+            border-radius: 8px;
+            z-index: 10;
+        }
+
+        .column {
+            background-color: var(--slot-bg);
+            border-radius: 12px;
+            height: calc(var(--item-h) * 3 + 45px); 
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border: 2px solid var(--border-color);
+            position: relative;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        /* Flash effect when a reel locks */
+        @keyframes lock-flash {
+            0% { border-color: #fff; box-shadow: 0 0 30px rgba(255,255,255,0.8); }
+            100% { border-color: var(--border-color); box-shadow: 0 10px 20px rgba(0,0,0,0.5); }
+        }
+        .column.locked {
+            animation: lock-flash 0.6s ease-out;
+        }
+
+        .col-header {
+            height: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            font-size: 12px;
+            letter-spacing: 1.5px;
+            background: #111115;
+            color: #888;
+            z-index: 20;
+            border-bottom: 2px solid #222;
+            text-transform: uppercase;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+        }
+
+        .slot-display {
+            height: calc(var(--item-h) * 3);
+            position: relative;
+            overflow: hidden;
+            /* Inner shadow makes the reels look like they are set deep inside the machine */
+            box-shadow: inset 0 20px 20px -20px rgba(0,0,0,0.9), inset 0 -20px 20px -20px rgba(0,0,0,0.9);
+        }
+
+        .reel-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+        }
+
+        .reel-text {
+            font-size: 16px;
+            font-weight: 800;
+            text-align: center;
+            height: var(--item-h);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 15px;
+            box-sizing: border-box;
+            opacity: 0.1;
+            transition: opacity 0.3s, transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), text-shadow 0.3s;
+            filter: grayscale(100%);
+        }
+
+        .spinning .reel-text { 
+            filter: blur(2px) grayscale(50%); 
+            opacity: 0.3;
+        }
+        
+        .selected-item { 
+            opacity: 1 !important;
+            transform: scale(1.15);
+            text-shadow: 0 0 15px currentColor, 0 0 30px currentColor;
+            filter: grayscale(0%);
+            font-weight: 900;
+        }
+
+        /* Dynamic Actions Box */
+        .action-list {
+            display: grid;
+            gap: 15px;
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .action-list[data-cols="3"] .action-item:last-child,
+        .action-list[data-cols="5"] .action-item:last-child {
+            grid-column: span 2;
+        }
+
+        .action-item {
+            font-size: 21px; 
+            font-weight: 800;
+            padding: 18px 22px;
+            background: #1a1a20;
+            border-radius: 10px;
+            transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+            opacity: 0.5;
+            transform: translateY(10px) scale(0.98);
+            border: 1px solid #2a2a35;
+        }
+
+        /* Bouncy pop-in effect when activated */
+        .action-item.active {
+            background: #23232c;
+            border-left-width: 14px !important;
+            opacity: 1;
+            transform: translateY(0) scale(1);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+        }
+
+        .label { 
+            font-weight: 900; 
+            color: #777; 
+            font-size: 12px; 
+            display: block; 
+            margin-bottom: 6px; 
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        #spin-button {
+            width: 100%;
+            background: linear-gradient(to right, #4facfe, #00f2fe);
+            color: #000;
+            border: none;
+            border-radius: 12px;
+            padding: 22px;
+            font-size: 24px;
+            font-weight: 900;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 5px;
+            margin-top: 30px;
+            box-shadow: 0 8px 25px rgba(0, 242, 254, 0.4);
+            transition: all 0.2s ease;
+        }
+
+        #spin-button:hover:not(:disabled) {
+            transform: translateY(-3px) scale(1.01);
+            box-shadow: 0 15px 35px rgba(0, 242, 254, 0.6);
+            background: linear-gradient(to right, #00f2fe, #4facfe);
+        }
+
+        #spin-button:active:not(:disabled) {
+            transform: translateY(2px) scale(0.99);
+            box-shadow: 0 5px 15px rgba(0, 242, 254, 0.4);
+        }
+
+        #spin-button:disabled { 
+            background: #2a2a35; 
+            color: #555; 
+            box-shadow: none;
+            cursor: not-allowed; 
+        }
+    </style>
+</head>
+<body>
+
+    <div id="app-container">
+        
+        <div id="top-bar">
+            <div class="mode-switcher">
+                <button class="mode-btn active" id="btn-story" onclick="switchMode('story')">📖 Story Roulette</button>
+                <button class="mode-btn" id="btn-spell" onclick="switchMode('spell')">🪄 Spell Roulette</button>
+                <button class="mode-btn" id="btn-tech" onclick="switchMode('tech')">💻 Tech Nightmare</button>
+                <button class="mode-btn" id="btn-prize" onclick="switchMode('prize')">🎟️ Prize Nightmare</button>
+            </div>
+            <div id="status-light">Ready</div>
+        </div>
+
+        <header>
+            <div id="title">📖 Story Roulette</div>
+        </header>
+
+        <div id="slot-machine"></div>
+        
+        <div id="action-box">
+            <div class="action-list" id="action-list"></div>
+        </div>
+
+        <button id="spin-button" onclick="startSpin()">Randomize!</button>
+    </div>
+
+    <script>
+        // --- DATA DICTIONARIES (Exactly 33 items per array for 3% odds) ---
+        const modes = {
+            story: {
+                title: "📖 Story Roulette",
+                headers: ["The Job", "The Habit", "The Complication", "The Consequence"],
+                colors: ["var(--color-1)", "var(--color-3)", "var(--color-4)", "var(--color-2)"],
+                state: null,
+                data: [
+                    ["Black Market Shark Tooth Dealer", "Certified Alien Travel Assistant", "Underground Cheese Smuggler", "Competitive Pigeon Racer", "Black Market Lego Dealer", "Holistic Pet Psychic", "Part-Time Sasquatch Impersonator", "Amateur UFO Tour Guide", "Haunted Real Estate Agent", "Freelance Cloud Yeller", "Used Mattress Influencer", "Certified Squirrel Whisperer", "DIY Cryptocurrency Dentist", "Professional Line Stander", "Boutique Mayonnaise Artisan", "Freelance Pothole Inspector", "Certified Bigfoot Tracker", "Underwater Welder's Assistant", "Black Market Hot Sauce Broker", "Competitive Thumb Wrestler", "Professional Apologizer", "Illicit Kombucha Brewer", "Vintage Furby Appraiser", "Rogue Zamboni Driver", "Underground Bingo Caller", "Feral Cat Negotiator", "Miniature Horse Stylist", "Professional Bridesmaid", "Unlicensed Ostrich Handler", "Subprime Scooter Salesman", "Freelance Kazoo Tuner", "Boutique Dirt Sommelier", "Certified Hamster Therapist"],
+                    ["Eating Corn Longways", "Collecting Rubber Ducks", "Hoarding Ketchup Packets", "Sniffing New Books", "Watching QVC for 8 hours straight", "Biting String Cheese", "Aggressive Community Gardening", "Stepping Only On Cracks", "Organizing Paperclips by size", "Peeling Sunburns", "Drinking Hot Dog Water", "Sorting Skittles by Flavor", "Meowing at Stray Cats", "Microwaving Salad", "Chewing on Aluminum Foil", "Applauding when the plane lands", "Putting milk in before cereal", "Eating Kiwi with the skin on", "Biting ice cream with front teeth", "Licking 9-volt batteries", "Reviewing local stop signs on Yelp", "Giving fake names at Starbucks", "Walking backwards everywhere", "Carrying a raw egg in my pocket", "Vacuuming the driveway", "Barking back at neighborhood dogs", "Ironing my socks", "Knitting sweaters for tree frogs", "Practicing karate in the grocery aisle", "Yodeling instead of knocking", "Putting googly eyes on produce", "Wearing scuba flippers in the bath", "Apologizing to inanimate objects"],
+                    ["but severely allergic to it", "while crying quietly", "but absolutely terrified of it", "and deeply ashamed", "while sleepwalking", "only in public spaces", "but fiercely protective of it", "and sweat profusely doing it", "while heavily disguised as a bush", "but I deny it completely", "while wearing a Spirit Halloween suit", "but my HOA president is watching", "and my dog is judging me", "while holding my breath", "but it makes me sneeze violently", "while live-streaming to 3 viewers", "but my parole officer is present", "while wrapped in tin foil", "but I have a sprained ankle", "while aggressively chewing gum", "but only on leap years", "while dressed as Abraham Lincoln", "but my mom is on speakerphone", "while covered in expired glitter", "but I get motion sickness", "while maintaining a fake British accent", "but only when it rains", "while handcuffed to a lawnmower", "but I owe the mob money", "while eating a raw onion", "but my pants are inside out", "while actively fleeing a goose", "but I forgot my safe word"],
+                    ["in my nightly dreams", "every Tuesday at 3 AM", "to assert dominance", "when the moon is full", "during family dinners", "on public access television", "to bypass the facial recognition scanner", "and my therapist told me to stop", "while maintaining unbroken eye contact", "just to feel something", "and I blame it on ghosts", "in the middle of job interviews", "whenever the Wi-Fi goes down", "so the 5G towers don't track me", "while singing the national anthem", "and it locks me out of my email", "as a form of silent protest", "during important Zoom meetings", "and I'm banned from Walmart", "and it triggers my home security alarm", "to confuse my smart fridge", "while dodging child support", "and it ruined my credit score", "to spite my ex-wife", "while waiting for the bus", "and now I owe the IRS", "to avoid eye contact with neighbors", "while hiding from the milkman", "and my ancestors are weeping", "to secure a better table at Denny's", "while auditing my own taxes", "and now I'm legally a boat", "to impress a feral raccoon"]
+                ]
+            },
+            spell: {
+                title: "🪄 Spell Roulette",
+                headers: ["Location", "Disaster", "Food", "Cooking", "The Villain"],
+                colors: ["var(--color-1)", "var(--color-2)", "var(--color-3)", "var(--color-4)", "var(--color-5)"],
+                state: null,
+                data: [
+                    ["Bathroom of a busy supermarket", "Inside a Chuck E. Cheese tube maze", "Behind the dumpster at Wendy's", "The changing room of a Spirit Halloween", "A crowded DMV waiting line", "Stuck in a carnival ball pit", "The freezer section of a gas station", "Baggage claim carousel at the airport", "Trapped in an escape room", "A very aggressive timeshare presentation", "The back of a moving garbage truck", "A broken Ferris wheel cart", "Middle of a synchronized swimming class", "A midnight showing of Cats the Musical", "A severely overbooked Waffle House", "Inside a Bass Pro Shops display tent", "The ball return at a bowling alley", "A porta-potty at a music festival", "The VIP section of a Rainforest Cafe", "An abandoned Blockbuster video", "A sweaty laser tag arena", "The clearance aisle at TJ Maxx", "A malfunctioning car wash", "The back of an Uber Pool", "A hot air balloon during a storm", "A poorly lit parking garage", "A chaotic Tupperware party", "The reptile house at the local zoo", "A bouncy castle for adults", "The waiting room of a sketchy dentist", "A crowded megachurch parking lot", "Inside a broken elevator with a mime", "The ball pit at a local IKEA"],
+                    ["Catastrophic Pothole Collapse", "City-wide Power Grid Failure", "Unprecedented Locust Swarm", "Aggressive Baboon Invasion", "Earthquake", "Hurricane", "Flash Flood", "Monsoon Rainstorm", "Wildfire", "Mudslide", "Dust Storm", "Feral Hog Stampede", "Spontaneous Sinkhole", "Rogue Roomba Uprising", "Exploding Sewage Pipe", "Massive Mustard Gas Leak", "Weaponized Hailstorm", "Aggressive Canadian Goose Migration", "Localized Gravity Failure", "Rampant Tumbleweed Infestation", "Sudden Plague of Frogs", "Exploding Transformer Box", "Swarm of Murder Hornets", "Spontaneous Combusting Dumpster", "Sub-zero Flash Freeze", "Massive Traffic Light Glitch", "Toxic Algae Bloom", "Aggressive Raccoon Turf War", "Stampede of Escaped Emus", "Localized Meteor Shower", "Rogue Blimp Crash", "Uncontrolled Firework Explosion", "Sudden Sinkhole Swallow"],
+                    ["Used Pizza", "Pocket Lint Salad", "Liquid Hotdog", "Coughed-On Apple", "Floor Spice Ramen", "Gas Station Sushi", "Half-Eaten Shoe", "Drywall Burrito", "Deep-Fried AA Battery", "Gas Station Nacho Cheese Soup", "Loose Tooth Tacos", "Sweaty Cheese Cubes", "Sock of Pudding", "Microwaved Ham Water", "Lawnmower Clippings", "Used Band-Aid Stew", "Cereal with Tap Water", "Mustard and Skittles Sandwich", "Pickled Jellybeans", "A Can of Room-Temperature Gravy", "Toenail Clipping Casserole", "Day-Old Hot Dog Smoothie", "Ketchup Soup", "Deep-Fried Toothpaste", "Mashed Potatoes with M&Ms", "Leftover Sushi Lasagna", "Raw Onion and Mayo Parfait", "Canned Beans with Sprinkles", "Burnt Toast Crunch", "Expired Mayonnaise Popsicle", "Flamin' Hot Cheetos Milk", "Moldy Bologna Sandwich", "Gravel and Ranch Dip"],
+                    ["On a hot car engine block", "Using a stolen hotel iron", "By Hairdryer", "Over a burning trash can", "In a Dirty Shoe", "Under a heat lamp at 7-Eleven", "Aggressive Shaking", "Microwaved in a plastic bag", "In a Dishwasher", "Boiled in a coffee maker", "Toasted on a server rack", "Steamed in a hot tub", "Fried on a sunbaked manhole cover", "Smoked over a vape pen", "Cooked in a George Foreman grill", "Microwaved on defrost for 40 minutes", "Wrapped in foil and sat on", "Boiled in a public fountain", "Roasted with a magnifying glass", "Stir-fried in a hubcap", "Baked inside a mailbox", "Heated with a curling iron", "Simmered in a pothole", "Cooked via pure friction", "Steamed over a sewer grate", "Defrosted in my armpit", "Fried on a graphics card", "Baked in a tanning bed", "Roasted over a scented candle", "Heated by staring at it intensely", "Cooked in a running dryer", "Boiled in a fish tank", "Smoked in a chiminea"],
+                    ["Dr. Irregular", "Lord Bigboobza", "Man Roe", "Suckerberg", "Hoebag", "Ms Lobster", "Papa John", "McDonald's", "Wendy's", "The Burger King", "Colonel Sanders", "Little Caesar", "Auntie Anne", "The Michelin Man", "Chuck E. Cheese", "Tony the Tiger", "The Quaker Oats Tiger", "Mr. Clean", "The Geico Gecko", "Flo from Progressive", "The Monopoly Man", "Chef Boyardee", "The Kool-Aid Man", "Betty Crocker", "The Pillsbury Doughboy", "Captain Crunch", "Toucan Sam", "Count Chocula", "The Jolly Green Giant", "Mrs. Butterworth", "The Brawny Man", "Uncle Ben", "The Hamburglar"]
+                ]
+            },
+            tech: {
+                title: "💻 Tech Scammer Nightmare",
+                headers: ["The Device", "The Problem", "Tech Distraction"],
+                colors: ["var(--color-1)", "var(--color-5)", "var(--color-2)"],
+                state: null,
+                data: [
+                    ["A 2004 Dell Desktop running XP", "My grandson's cracked Nintendo Switch", "2008 MacBook that sounds like a jet engine", "A first-generation iPad", "A flip phone with internet access", "A dusty ThinkPad missing the 'E' key", "An eMachine desktop tower with 512MB RAM", "A smart fridge from 2016", "A Blackberry Playbook", "A heavily virus-infected public library computer", "A Zune tablet", "A Nokia N-Gage", "An original Xbox with a browser mod", "A Raspberry Pi taped to a monitor", "A Tamagotchi with a Wi-Fi dongle", "A Palm Treo", "A Sega Dreamcast", "An ancient WebTV terminal", "A LeapFrog learning tablet", "A modified TiVo box", "A Sony Ericsson brick phone", "A first-gen Kindle Fire", "A Garmin GPS from 2006", "A Peloton screen", "A Tesla bike screen", "A hacked baby monitor", "An Apple Newton", "A Compaq Presario", "A Sony Vaio laptop", "A Gateway cow-box PC", "A Samsung PSP", "A Casio PDA", "A Packard Bell desktop"],
+                    ["The computer is downloading random programs on its own", "My router is making a high-pitched screaming noise", "A blue screen keeps flashing every 5 minutes", "I have 47 toolbars on my browser", "Everything on the screen is upside down", "Loud siren noises come from the speakers", "My email is sending spam to my pastor", "The screen goes black when I press 'Enter'", "Ransomware locked my files behind an impossible CAPTCHA", "McAfee says I have 4 million viruses", "The mouse ball rolled under the fridge", "The CD tray keeps opening and hitting me", "The keyboard only types in Wingdings", "The monitor smells like burning plastic", "The webcam keeps snapping photos of the wall", "The speakers are whispering in Latin", "The start button is physically hot to the touch", "The trackpad is covered in dried syrup", "The charger sparks when I plug it in", "The screen only shows inverted colors", "The fan is vibrating the whole desk", "The laptop hinges are completely snapped", "The mouse double-clicks everything", "The spacebar is permanently stuck down", "The WiFi disconnects when I blink", "The battery bulged and popped the keyboard out", "The screen flickers to static every 10 seconds", "The hard drive sounds like a coffee grinder", "The microphone is stuck on full volume", "The headphone jack is full of lint", "The shift key opens the calculator", "The screen has permanent burn-in of a Solitaire game", "The CPU is throttling at 100% just idling"],
+                    ["My neighbor keeps turning off the guest WiFi", "Windows is forcing a 2-hour update", "My antivirus popup won't close", "The battery died and I can't find the charger", "The keyboard is typing in a different language", "The screen brightness is stuck on the lowest setting", "I clicked something and it all zoomed in 500%", "The laptop fan is so loud I can't hear you", "My Bluetooth hearing aids connected to the TV instead", "I accidentally turned on airplane mode and broke the button", "My screensaver kicked in and locked me out", "The mouse inverted its axes", "Sticky keys turned on and won't turn off", "I accidentally launched a massive virus scan", "I bumped the power cord and it restarted", "The display driver just crashed", "I opened 50 tabs of Internet Explorer", "Cortana started reading my emails out loud", "The printer started spewing blank pages", "My smart lights started flashing red", "The laptop overheated and shut down", "I spilled diet soda on the numpad", "The cat stepped on the power button", "The dog tripped over the ethernet cable", "A Windows firewall warning is covering the screen", "I accidentally hit F11 and don't know how to exit full screen", "The Caps Lock key is physically jammed", "The mouse laser got blocked by a crumb", "I clicked a popup and now there's loud music", "The screen resolution changed to 640x480", "I accidentally deleted the shortcut on my desktop", "My email client is downloading 10,000 old emails", "The taskbar completely disappeared"]
+                ]
+            },
+            prize: {
+                title: "🎟️ Prize Scammer Nightmare",
+                headers: ["Prize Demands", "Security Blocker", "The Distraction"],
+                colors: ["var(--color-3)", "var(--color-5)", "var(--color-4)"],
+                state: null,
+                data: [
+                    ["A Solid Golden Toilet", "An all-expenses-paid trip to a luxury bunker", "A Diamond-Encrusted Lawnmower", "A Refrigerator that dispenses Nacho Cheese", "A Life-Sized Bronze Statue of Myself", "A lifetime subscription to AOL dial-up", "A Custom Hovercraft", "A Smart-Bed shaped like a Giant Taco", "A 2006 Honda Civic with under 10k miles", "A Chandelier made of Crystal Skulls", "Plus a signed apology letter to my cat", "Plus VIP security clearance to Applebee's", "And you must bypass the laser grid to deliver it", "But I want the prize secured in a titanium briefcase", "Plus the master override password for your server", "A pair of platinum-plated Crocs", "A 50-gallon drum of premium ranch dressing", "The original Declaration of Independence", "A personal submarine shaped like a shark", "A year of free chiropracty for my iguana", "A fully staffed medieval castle", "A lifetime pass to the local car wash", "A solid silver bowling ball", "A jetpack fueled by Diet Coke", "A 10-foot tall topiary of my face", "A private concert by a mediocre Elvis impersonator", "A vault filled with vintage Beanie Babies", "A custom suit of armor made of Kevlar", "A hot tub machine time-traveler", "A personal bodyguard named 'Tiny'", "A flock of aggressively trained attack geese", "A vintage tank from WW2", "A blimp with my name in neon lights"],
+                    ["The bank app requires a retinal scan but I have a black eye", "My account is locked behind a 16-step CAPTCHA involving traffic lights", "My authenticator app is on a phone I dropped in the lake", "The fraud prevention AI froze everything because I typed too fast", "I forgot the answer to my secret question about my first pet's maiden name", "The 2-factor authentication code was sent to my defunct pager", "My smart-house thinks I'm an intruder and locked me inside", "Facial recognition says I don't look like myself today", "My VPN routed me through Antarctica and triggered a lockdown", "The dog chewed up my physical hardware security token", "Voice ID won't recognize me because I have a sore throat", "The bank requires a physical blood sample mailed to them", "I have to wait 72 hours for a security cooldown period", "My anti-virus quarantined the banking portal as malware", "The system demands a thumbprint but I'm wearing oven mitts", "I microwaved my phone to disable the tracking chip", "My IP address was flagged for suspicious soliloquies", "The firewall requires me to solve a riddle from a sphinx", "The security token is locked in a timed safe", "My bio-metrics failed because I shaved my mustache", "The secure portal requires Internet Explorer 6", "The bank sent a verification pigeon but it got lost", "The fraud department put me on hold for 6 hours", "The site requires a password with an ancient rune", "I failed the 'prove you are human' test by crying", "The system thinks my clicking pattern is too robotic", "My secondary email was hacked by my ex-wife", "The bank's server is down for routine maintenance until Tuesday", "The app crashed and deleted my login credentials", "I have to authenticate using a fax machine", "The security software flagged my mouse as a threat", "The login page is rendering in wingdings", "My hardware key ran out of battery"],
+                    ["My Roomba is smeared in dog poop and chasing me", "A raccoon got into the kitchen", "The smoke alarm won't stop beeping", "My 40-year-old son needs me to make his pizza rolls", "A stray cat jumped through the window", "The delivery guy is refusing to leave", "My hearing trumpet is clogged", "I accidentally turned on the blender with no lid", "My dog is eating my router", "Hold on, the cops are at my door... oh wait, it's the pizza guy", "Wait, my favorite soap opera is on", "Hold on, my soup is burning", "My kitchen is on fire, give me a sec", "A swarm of bees got into the living room", "The toilet is overflowing into the hallway", "My neighbor is aggressively weed-whacking", "The Jehovah's Witnesses won't leave my porch", "A localized earthquake just shook my desk", "My parrot is screaming my social security number", "The microwave just sparked and died", "A rogue bat is flying around my ceiling fan", "My grandchild just flushed my keys down the toilet", "The local SWAT team is conducting a raid next door", "My waterbed just ruptured", "The ceiling is leaking directly onto my head", "A feral hog is trapped in my backyard", "The ice cream truck is outside and I need a Choco Taco", "My car alarm won't turn off", "The local power line just exploded", "A golf ball just smashed through my window", "My pet snake escaped its terrarium", "The local marching band is practicing in my driveway", "I think someone is stealing my catalytic converter"]
+                ]
+            }
+        };
+
+        // --- STATE ---
+        let currentMode = 'story'; 
+        let isSpinning = false;
+        const itemH = 85; 
+        let reelOffsets = [];
+        let animationFrames = [];
+
+        // --- CORE FUNCTIONS ---
+        function switchMode(modeKey) {
+            if (isSpinning) return; 
+
+            currentMode = modeKey;
+            const config = modes[modeKey];
+            const colCount = config.data.length;
+
+            document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(`btn-${modeKey}`).classList.add('active');
+            document.getElementById('title').innerText = config.title;
+
+            if (!config.state) {
+                config.state = {
+                    offsets: new Array(colCount).fill(0),
+                    results: new Array(colCount).fill(""),
+                    indices: new Array(colCount).fill(0)
+                };
+                for (let i = 0; i < colCount; i++) {
+                    const randIndex = Math.floor(Math.random() * config.data[i].length);
+                    config.state.indices[i] = randIndex;
+                    config.state.offsets[i] = -(randIndex * itemH) + itemH;
+                    config.state.results[i] = config.data[i][randIndex];
+                }
+            }
+
+            reelOffsets = [...config.state.offsets];
+
+            const slotGrid = document.getElementById('slot-machine');
+            slotGrid.style.gridTemplateColumns = `repeat(${colCount}, 1fr)`;
+            slotGrid.innerHTML = '';
+            
+            const actionList = document.getElementById('action-list');
+            actionList.setAttribute('data-cols', colCount);
+            actionList.innerHTML = '';
+
+            animationFrames.forEach(cancelAnimationFrame);
+            animationFrames = new Array(colCount).fill(null);
+
+            for (let i = 0; i < colCount; i++) {
+                const color = config.colors[i];
+                
+                slotGrid.innerHTML += `
+                    <div class="column" id="col-${i}">
+                        <div class="col-header" style="color: ${color}; border-bottom-color: ${color};">${config.headers[i]}</div>
+                        <div class="slot-display">
+                            <div class="reel-container" id="reel-${i}"></div>
+                        </div>
+                    </div>
+                `;
+
+                actionList.innerHTML += `
+                    <div class="action-item" id="item-${i}" style="border-left-color: ${color}">
+                        <span class="label">${config.headers[i]}</span> 
+                        <span id="res-${i}" style="color: ${color}">-</span>
+                    </div>
+                `;
+            }
+
+            setTimeout(() => {
+                for(let i=0; i<colCount; i++) {
+                    initReel(i, config.state.indices[i]);
+                    const reelContainer = document.getElementById(`reel-${i}`);
+                    reelContainer.style.color = config.colors[i];
+                    
+                    document.getElementById(`res-${i}`).innerText = config.state.results[i];
+                    document.getElementById(`item-${i}`).classList.add('active');
+                }
+            }, 50);
+        }
+
+        function initReel(index, selectedIndex) {
+            const container = document.getElementById(`reel-${index}`);
+            const items = modes[currentMode].data[index];
+            const content = [...items, ...items, ...items].map(text => `<div class="reel-text">${text}</div>`).join('');
+            container.innerHTML = content;
+            
+            container.style.transform = `translateY(${reelOffsets[index]}px)`;
+            container.children[selectedIndex].classList.add('selected-item');
+        }
+
+        function startSpin() {
+            if (isSpinning) return;
+            isSpinning = true;
+
+            const btn = document.getElementById('spin-button');
+            const status = document.getElementById('status-light');
+            const config = modes[currentMode];
+            const colCount = config.data.length;
+
+            btn.disabled = true;
+            status.innerText = "Spinning...";
+            status.style.color = "#ff5252";
+            status.style.textShadow = "0 0 10px #ff5252";
+
+            document.querySelectorAll('.mode-btn').forEach(mBtn => mBtn.disabled = true);
+            document.querySelectorAll('.action-item').forEach(i => i.classList.remove('active'));
+            document.querySelectorAll('.reel-text').forEach(t => t.classList.remove('selected-item'));
+            document.querySelectorAll('.column').forEach(c => {
+                c.classList.add('spinning');
+                c.classList.remove('locked');
+            });
+
+            for (let i = 0; i < colCount; i++) {
+                const container = document.getElementById(`reel-${i}`);
+                // Bouncy speed logic
+                const speed = 12 + (Math.random() * 8); 
+                const itemsCount = config.data[i].length;
+                
+                function animate() {
+                    reelOffsets[i] -= speed;
+                    const loopPoint = -(itemsCount * itemH);
+                    if (reelOffsets[i] <= loopPoint) {
+                        reelOffsets[i] += (itemsCount * itemH);
+                    }
+                    container.style.transform = `translateY(${reelOffsets[i]}px)`;
+                    animationFrames[i] = requestAnimationFrame(animate);
+                }
+                animate();
+            }
+
+            for (let i = 0; i < colCount; i++) {
+                setTimeout(() => {
+                    cancelAnimationFrame(animationFrames[i]);
+                    const container = document.getElementById(`reel-${i}`);
+                    const col = document.getElementById(`col-${i}`);
+                    col.classList.remove('spinning');
+                    col.classList.add('locked');
+                    
+                    const items = config.data[i];
+                    // Exact 3% odds calculation based on array index
+                    const finalIndex = Math.floor(Math.random() * items.length);
+                    const snapPoint = -(finalIndex * itemH) + itemH;
+                    
+                    config.state.offsets[i] = snapPoint;
+                    config.state.results[i] = items[finalIndex];
+                    config.state.indices[i] = finalIndex;
+                    reelOffsets[i] = snapPoint;
+
+                    // Extreme bouncing CSS cubic-bezier
+                    container.style.transition = "transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1)";
+                    container.style.transform = `translateY(${snapPoint}px)`;
+                    
+                    setTimeout(() => {
+                        const nodes = container.querySelectorAll('.reel-text');
+                        nodes[finalIndex].classList.add('selected-item');
+                        document.getElementById(`res-${i}`).innerText = items[finalIndex];
+                        document.getElementById(`item-${i}`).classList.add('active');
+                        container.style.transition = "";
+                    }, 150);
+
+                    if (i === colCount - 1) {
+                        setTimeout(() => {
+                            btn.disabled = false;
+                            status.innerText = "Ready";
+                            status.style.color = "#00e676";
+                            status.style.textShadow = "0 0 10px #00e676";
+                            document.querySelectorAll('.mode-btn').forEach(mBtn => mBtn.disabled = false);
+                            isSpinning = false; 
+                        }, 800);
+                    }
+                }, 1000 + (i * 900)); // Staggered stops
+            }
+        }
+
+        // --- INIT ---
+        switchMode('story'); 
+    </script>
+</body>
+</html>
