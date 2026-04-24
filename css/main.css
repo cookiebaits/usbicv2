@@ -1,0 +1,7 @@
+/* Example: simple two‑column layout for the “About” page */
+.about {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 2rem;
+  align-items: start;
+}
